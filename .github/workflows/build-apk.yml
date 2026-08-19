@@ -1,0 +1,67 @@
+name: Build APK
+
+# با هر push یا pull request روی هر برنچی، به‌صورت خودکار اجرا می‌شود
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Build Flutter APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.24.0'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze project (non-blocking)
+        run: flutter analyze || true
+
+      - name: Build release APK
+        run: flutter build apk --release --split-per-abi
+
+      - name: Rename APKs with version + commit info
+        run: |
+          mkdir -p output
+          short_sha=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          for f in build/app/outputs/flutter-apk/*.apk; do
+            base=$(basename "$f")
+            cp "$f" "output/MyAssistant-${base%.apk}-${short_sha}.apk"
+          done
+
+      - name: Upload APK as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyAssistant-apk
+          path: output/*.apk
+          retention-days: 30
+
+      # اختیاری: ساخت یک Release در گیت‌هاب با APK پیوست‌شده وقتی روی main پوش می‌کنید
+      - name: Create GitHub Release with APK
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "MyAssistant build #${{ github.run_number }}"
+          files: output/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

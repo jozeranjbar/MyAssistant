@@ -1,0 +1,44 @@
+name: my_assistant
+description: "MyAssistant - آب و هوا، تقویم و یادآوری"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+  # شبکه و اتصال اینترنت
+  http: ^1.2.1
+  connectivity_plus: ^6.0.3
+
+  # ذخیره‌سازی دائمی (لوکیشن‌ها، کش آب‌وهوا، یادآوری‌ها)
+  shared_preferences: ^2.2.3
+
+  # اعلان‌های محلی (کار می‌کنند حتی وقتی برنامه بسته است)
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+
+  # اجرای پس‌زمینه برای بروزرسانی آب‌وهوا / یادآوری بعد از ری‌استارت
+  workmanager: ^0.5.2
+
+  # تقویم شمسی و میلادی
+  table_calendar: ^3.1.2
+  shamsi_date: ^1.1.1
+
+  # فرمت اعداد فارسی
+  intl: ^0.19.0
+
+  # آیکون‌ها
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
