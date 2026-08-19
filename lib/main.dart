@@ -85,23 +85,3 @@ class MyAssistantApp extends StatelessWidget {
     );
   }
 }
-
-      builder: (context, child) {
-        // اجرای کل برنامه به‌صورت راست‌به‌چپ (فارسی) و مدیریت ابعاد/چرخش صفحه
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: MediaQuery.of(context).textScaler.clamp(
-                    minScaleFactor: 0.9,
-                    maxScaleFactor: 1.2,
-                  ),
-            ),
-            child: child!,
-          ),
-        );
-      },
-      home: const HomeScreen(),
-    );
-  }
-}
