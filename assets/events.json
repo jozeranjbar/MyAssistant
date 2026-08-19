@@ -1,0 +1,969 @@
+[
+  {
+    "date": "01-01",
+    "title": "نوروز، آغاز سال نو",
+    "description": "جشن آغاز سال نو ایرانی"
+  },
+  {
+    "date": "01-01",
+    "gregorianDate": "2026-03-21",
+    "title": "روز جهانی نوروز",
+    "description": "مناسبت بین‌المللی — International Day of Nowruz"
+  },
+  {
+    "date": "01-01",
+    "gregorianDate": "2026-03-21",
+    "title": "روز جهانی جنگل‌ها",
+    "description": "مناسبت بین‌المللی — International Day of Forests"
+  },
+  {
+    "date": "01-01",
+    "gregorianDate": "2026-03-21",
+    "title": "روز جهانی سندرم داون",
+    "description": "مناسبت بین‌المللی — World Down Syndrome Day"
+  },
+  {
+    "date": "01-02",
+    "title": "نوروز",
+    "description": "جشن نوروز"
+  },
+  {
+    "date": "01-02",
+    "gregorianDate": "2026-03-22",
+    "title": "روز جهانی آب",
+    "description": "مناسبت بین‌المللی — World Water Day"
+  },
+  {
+    "date": "01-03",
+    "title": "نوروز",
+    "description": "جشن نوروز"
+  },
+  {
+    "date": "01-03",
+    "gregorianDate": "2026-03-23",
+    "title": "روز جهانی هواشناسی",
+    "description": "مناسبت بین‌المللی — World Meteorological Day"
+  },
+  {
+    "date": "01-04",
+    "title": "نوروز",
+    "description": "جشن نوروز"
+  },
+  {
+    "date": "01-04",
+    "gregorianDate": "2026-03-24",
+    "title": "روز جهانی سل",
+    "description": "مناسبت بین‌المللی — World Tuberculosis Day"
+  },
+  {
+    "date": "01-06",
+    "title": "زادروز زرتشت / خردادروز",
+    "description": "مناسبت زرتشتی"
+  },
+  {
+    "date": "01-13",
+    "title": "سیزده‌بدر / روز طبیعت",
+    "description": "آیین نوروزی و روز طبیعت"
+  },
+  {
+    "date": "01-13",
+    "gregorianDate": "2026-04-02",
+    "title": "روز جهانی آگاهی از اوتیسم",
+    "description": "مناسبت بین‌المللی — World Autism Awareness Day"
+  },
+  {
+    "date": "01-15",
+    "gregorianDate": "2026-04-04",
+    "title": "روز جهانی آگاهی از مین و کمک به اقدام علیه مین",
+    "description": "مناسبت بین‌المللی — International Day for Mine Awareness and Assistance in Mine Action"
+  },
+  {
+    "date": "01-16",
+    "gregorianDate": "2026-04-05",
+    "title": "روز جهانی وجدان",
+    "description": "مناسبت بین‌المللی — International Day of Conscience"
+  },
+  {
+    "date": "01-17",
+    "gregorianDate": "2026-04-06",
+    "title": "روز جهانی ورزش برای توسعه و صلح",
+    "description": "مناسبت بین‌المللی — International Day of Sport for Development and Peace"
+  },
+  {
+    "date": "01-18",
+    "gregorianDate": "2026-04-07",
+    "title": "روز جهانی بهداشت",
+    "description": "مناسبت بین‌المللی — World Health Day"
+  },
+  {
+    "date": "01-19",
+    "title": "فروردینگان",
+    "description": "جشن فروردینگان"
+  },
+  {
+    "date": "01-23",
+    "gregorianDate": "2026-04-12",
+    "title": "روز جهانی پرواز انسان به فضا",
+    "description": "مناسبت بین‌المللی — International Day of Human Space Flight"
+  },
+  {
+    "date": "01-29",
+    "gregorianDate": "2026-04-18",
+    "title": "روز جهانی بناها و محوطه‌های تاریخی",
+    "description": "مناسبت بین‌المللی — International Day for Monuments and Sites"
+  },
+  {
+    "date": "02-02",
+    "title": "اردیبهشتگان",
+    "description": "جشن اردیبهشتگان در تقویم امروزی"
+  },
+  {
+    "date": "02-02",
+    "gregorianDate": "2026-04-22",
+    "title": "روز جهانی زمین",
+    "description": "مناسبت بین‌المللی — International Mother Earth Day"
+  },
+  {
+    "date": "02-03",
+    "title": "اردیبهشتگان",
+    "description": "جشن اردیبهشتگان در گاهشماری زرتشتی"
+  },
+  {
+    "date": "02-03",
+    "gregorianDate": "2026-04-23",
+    "title": "روز جهانی کتاب و حق مؤلف",
+    "description": "مناسبت بین‌المللی — World Book and Copyright Day"
+  },
+  {
+    "date": "02-05",
+    "gregorianDate": "2026-04-25",
+    "title": "روز جهانی مالاریا",
+    "description": "مناسبت بین‌المللی — World Malaria Day"
+  },
+  {
+    "date": "02-06",
+    "gregorianDate": "2026-04-26",
+    "title": "روز جهانی مالکیت فکری",
+    "description": "مناسبت بین‌المللی — World Intellectual Property Day"
+  },
+  {
+    "date": "02-08",
+    "gregorianDate": "2026-04-28",
+    "title": "روز جهانی ایمنی و بهداشت کار",
+    "description": "مناسبت بین‌المللی — World Day for Safety and Health at Work"
+  },
+  {
+    "date": "02-10",
+    "title": "جشن چهلم نوروز",
+    "description": "جشن کهن ایرانی"
+  },
+  {
+    "date": "02-10",
+    "gregorianDate": "2026-04-30",
+    "title": "روز جهانی جاز",
+    "description": "مناسبت بین‌المللی — International Jazz Day"
+  },
+  {
+    "date": "02-13",
+    "gregorianDate": "2026-05-03",
+    "title": "روز جهانی آزادی مطبوعات",
+    "description": "مناسبت بین‌المللی — World Press Freedom Day"
+  },
+  {
+    "date": "02-25",
+    "title": "بزرگداشت فردوسی",
+    "description": "مناسبت فرهنگی"
+  },
+  {
+    "date": "02-25",
+    "gregorianDate": "2026-05-15",
+    "title": "روز جهانی خانواده",
+    "description": "مناسبت بین‌المللی — International Day of Families"
+  },
+  {
+    "date": "02-26",
+    "gregorianDate": "2026-05-16",
+    "title": "روز جهانی نور",
+    "description": "مناسبت بین‌المللی — International Day of Light"
+  },
+  {
+    "date": "02-27",
+    "gregorianDate": "2026-05-17",
+    "title": "روز جهانی ارتباطات و جامعه اطلاعاتی",
+    "description": "مناسبت بین‌المللی — World Telecommunication and Information Society Day"
+  },
+  {
+    "date": "02-28",
+    "title": "بزرگداشت خیام",
+    "description": "مناسبت فرهنگی"
+  },
+  {
+    "date": "02-30",
+    "gregorianDate": "2026-05-20",
+    "title": "روز جهانی زنبور",
+    "description": "مناسبت بین‌المللی — World Bee Day"
+  },
+  {
+    "date": "02-31",
+    "gregorianDate": "2026-05-21",
+    "title": "روز جهانی تنوع فرهنگی برای گفت‌وگو و توسعه",
+    "description": "مناسبت بین‌المللی — World Day for Cultural Diversity for Dialogue and Development"
+  },
+  {
+    "date": "03-01",
+    "title": "روز بهره‌وری و بهینه‌سازی مصرف",
+    "description": "مناسبت فرهنگی"
+  },
+  {
+    "date": "03-01",
+    "gregorianDate": "2026-05-22",
+    "title": "روز جهانی تنوع زیستی",
+    "description": "مناسبت بین‌المللی — International Day for Biological Diversity"
+  },
+  {
+    "date": "03-04",
+    "title": "خردادگان",
+    "description": "جشن خردادگان در تقویم امروزی"
+  },
+  {
+    "date": "03-06",
+    "title": "خردادگان",
+    "description": "جشن خردادگان در گاهشماری زرتشتی"
+  },
+  {
+    "date": "03-08",
+    "gregorianDate": "2026-05-29",
+    "title": "روز جهانی حافظان صلح سازمان ملل",
+    "description": "مناسبت بین‌المللی — International Day of UN Peacekeepers"
+  },
+  {
+    "date": "03-10",
+    "gregorianDate": "2026-05-31",
+    "title": "روز جهانی بدون دخانیات",
+    "description": "مناسبت بین‌المللی — World No Tobacco Day"
+  },
+  {
+    "date": "03-13",
+    "gregorianDate": "2026-06-03",
+    "title": "روز جهانی دوچرخه",
+    "description": "مناسبت بین‌المللی — World Bicycle Day"
+  },
+  {
+    "date": "03-15",
+    "gregorianDate": "2026-06-05",
+    "title": "روز جهانی محیط زیست",
+    "description": "مناسبت بین‌المللی — World Environment Day"
+  },
+  {
+    "date": "03-17",
+    "gregorianDate": "2026-06-07",
+    "title": "روز جهانی ایمنی غذا",
+    "description": "مناسبت بین‌المللی — World Food Safety Day"
+  },
+  {
+    "date": "03-18",
+    "gregorianDate": "2026-06-08",
+    "title": "روز جهانی اقیانوس‌ها",
+    "description": "مناسبت بین‌المللی — World Oceans Day"
+  },
+  {
+    "date": "03-22",
+    "gregorianDate": "2026-06-12",
+    "title": "روز جهانی مبارزه با کار کودک",
+    "description": "مناسبت بین‌المللی — World Day Against Child Labour"
+  },
+  {
+    "date": "03-24",
+    "gregorianDate": "2026-06-14",
+    "title": "روز جهانی اهدای خون",
+    "description": "مناسبت بین‌المللی — World Blood Donor Day"
+  },
+  {
+    "date": "03-25",
+    "title": "روز گل و گیاه",
+    "description": "مناسبت فرهنگی"
+  },
+  {
+    "date": "03-25",
+    "gregorianDate": "2026-06-15",
+    "title": "روز جهانی مقابله با خشونت علیه سالمندان",
+    "description": "مناسبت بین‌المللی — World Elder Abuse Awareness Day"
+  },
+  {
+    "date": "03-27",
+    "gregorianDate": "2026-06-17",
+    "title": "روز جهانی مقابله با بیابان‌زایی و خشکسالی",
+    "description": "مناسبت بین‌المللی — World Day to Combat Desertification and Drought"
+  },
+  {
+    "date": "03-30",
+    "gregorianDate": "2026-06-20",
+    "title": "روز جهانی پناهندگان",
+    "description": "مناسبت بین‌المللی — World Refugee Day"
+  },
+  {
+    "date": "03-31",
+    "gregorianDate": "2026-06-21",
+    "title": "روز جهانی یوگا",
+    "description": "مناسبت بین‌المللی — International Day of Yoga"
+  },
+  {
+    "date": "04-01",
+    "title": "جشن آغاز تابستان",
+    "description": "مناسبت باستانی"
+  },
+  {
+    "date": "04-02",
+    "gregorianDate": "2026-06-23",
+    "title": "روز خدمات عمومی سازمان ملل",
+    "description": "مناسبت بین‌المللی — United Nations Public Service Day"
+  },
+  {
+    "date": "04-05",
+    "gregorianDate": "2026-06-26",
+    "title": "روز جهانی مبارزه با سوءمصرف و قاچاق مواد مخدر",
+    "description": "مناسبت بین‌المللی — International Day Against Drug Abuse and Illicit Trafficking"
+  },
+  {
+    "date": "04-06",
+    "gregorianDate": "2026-06-27",
+    "title": "روز جهانی بنگاه‌های کوچک و متوسط",
+    "description": "مناسبت بین‌المللی — Micro-, Small and Medium-sized Enterprises Day"
+  },
+  {
+    "date": "04-09",
+    "gregorianDate": "2026-06-30",
+    "title": "روز جهانی سیارک‌ها",
+    "description": "مناسبت بین‌المللی — International Asteroid Day"
+  },
+  {
+    "date": "04-09",
+    "gregorianDate": "2026-06-30",
+    "title": "روز جهانی پارلمانتاریسم",
+    "description": "مناسبت بین‌المللی — International Day of Parliamentarism"
+  },
+  {
+    "date": "04-10",
+    "title": "تیرگان",
+    "description": "جشن تیرگان در تقویم امروزی"
+  },
+  {
+    "date": "04-13",
+    "title": "تیرگان",
+    "description": "جشن تیرگان در گاهشماری زرتشتی"
+  },
+  {
+    "date": "04-20",
+    "gregorianDate": "2026-07-11",
+    "title": "روز جهانی جمعیت",
+    "description": "مناسبت بین‌المللی — World Population Day"
+  },
+  {
+    "date": "04-21",
+    "title": "روز بدون پلاستیک",
+    "description": "مناسبت فرهنگی"
+  },
+  {
+    "date": "04-24",
+    "gregorianDate": "2026-07-15",
+    "title": "روز جهانی مهارت‌های جوانان",
+    "description": "مناسبت بین‌المللی — World Youth Skills Day"
+  },
+  {
+    "date": "04-25",
+    "title": "روز بهزیستی و تأمین اجتماعی",
+    "description": "مناسبت فرهنگی"
+  },
+  {
+    "date": "04-27",
+    "gregorianDate": "2026-07-18",
+    "title": "روز جهانی نلسون ماندلا",
+    "description": "مناسبت بین‌المللی — Nelson Mandela International Day"
+  },
+  {
+    "date": "04-29",
+    "gregorianDate": "2026-07-20",
+    "title": "روز جهانی شطرنج",
+    "description": "مناسبت بین‌المللی — International Chess Day"
+  },
+  {
+    "date": "05-03",
+    "title": "امردادگان",
+    "description": "جشن امردادگان در تقویم امروزی"
+  },
+  {
+    "date": "05-06",
+    "gregorianDate": "2026-07-28",
+    "title": "روز جهانی هپاتیت",
+    "description": "مناسبت بین‌المللی — World Hepatitis Day"
+  },
+  {
+    "date": "05-07",
+    "title": "امردادگان",
+    "description": "جشن امردادگان در گاهشماری زرتشتی"
+  },
+  {
+    "date": "05-08",
+    "gregorianDate": "2026-07-30",
+    "title": "روز جهانی دوستی",
+    "description": "مناسبت بین‌المللی — International Day of Friendship"
+  },
+  {
+    "date": "05-08",
+    "gregorianDate": "2026-07-30",
+    "title": "روز جهانی مبارزه با قاچاق انسان",
+    "description": "مناسبت بین‌المللی — World Day Against Trafficking in Persons"
+  },
+  {
+    "date": "05-10",
+    "title": "چله تابستان",
+    "description": "جشن کهن ایرانی"
+  },
+  {
+    "date": "05-18",
+    "gregorianDate": "2026-08-09",
+    "title": "روز جهانی مردمان بومی",
+    "description": "مناسبت بین‌المللی — International Day of the World's Indigenous Peoples"
+  },
+  {
+    "date": "05-21",
+    "gregorianDate": "2026-08-12",
+    "title": "روز جهانی جوانان",
+    "description": "مناسبت بین‌المللی — International Youth Day"
+  },
+  {
+    "date": "05-28",
+    "gregorianDate": "2026-08-19",
+    "title": "روز جهانی بشردوستی",
+    "description": "مناسبت بین‌المللی — World Humanitarian Day"
+  },
+  {
+    "date": "05-30",
+    "title": "شهریورگان",
+    "description": "جشن شهریورگان در تقویم امروزی"
+  },
+  {
+    "date": "05-30",
+    "gregorianDate": "2026-08-21",
+    "title": "روز جهانی یادبود و بزرگداشت قربانیان تروریسم",
+    "description": "مناسبت بین‌المللی — International Day of Remembrance and Tribute to the Victims of Terrorism"
+  },
+  {
+    "date": "06-01",
+    "title": "بزرگداشت ابوعلی سینا",
+    "description": "مناسبت فرهنگی"
+  },
+  {
+    "date": "06-01",
+    "gregorianDate": "2026-08-23",
+    "title": "روز جهانی یادبود تجارت برده و لغو آن",
+    "description": "مناسبت بین‌المللی — International Day for the Remembrance of the Slave Trade and its Abolition"
+  },
+  {
+    "date": "06-04",
+    "title": "شهریورگان",
+    "description": "جشن شهریورگان در گاهشماری زرتشتی"
+  },
+  {
+    "date": "06-07",
+    "gregorianDate": "2026-08-29",
+    "title": "روز جهانی مقابله با آزمایش‌های هسته‌ای",
+    "description": "مناسبت بین‌المللی — International Day Against Nuclear Tests"
+  },
+  {
+    "date": "06-08",
+    "title": "روز مبارزه با تروریسم",
+    "description": "مناسبت رسمی"
+  },
+  {
+    "date": "06-08",
+    "gregorianDate": "2026-08-30",
+    "title": "روز جهانی قربانیان ناپدیدشدن‌های قهری",
+    "description": "مناسبت بین‌المللی — International Day of the Victims of Enforced Disappearances"
+  },
+  {
+    "date": "06-14",
+    "gregorianDate": "2026-09-05",
+    "title": "روز جهانی امور خیریه",
+    "description": "مناسبت بین‌المللی — International Day of Charity"
+  },
+  {
+    "date": "06-16",
+    "gregorianDate": "2026-09-07",
+    "title": "روز جهانی هوای پاک برای آسمان آبی",
+    "description": "مناسبت بین‌المللی — International Day of Clean Air for Blue Skies"
+  },
+  {
+    "date": "06-17",
+    "gregorianDate": "2026-09-08",
+    "title": "روز جهانی سوادآموزی",
+    "description": "مناسبت بین‌المللی — International Literacy Day"
+  },
+  {
+    "date": "06-24",
+    "gregorianDate": "2026-09-15",
+    "title": "روز جهانی دموکراسی",
+    "description": "مناسبت بین‌المللی — International Day of Democracy"
+  },
+  {
+    "date": "06-25",
+    "gregorianDate": "2026-09-16",
+    "title": "روز جهانی حفاظت از لایه اوزون",
+    "description": "مناسبت بین‌المللی — International Day for the Preservation of the Ozone Layer"
+  },
+  {
+    "date": "06-27",
+    "title": "بزرگداشت شهریار",
+    "description": "مناسبت فرهنگی"
+  },
+  {
+    "date": "06-30",
+    "gregorianDate": "2026-09-21",
+    "title": "روز جهانی صلح",
+    "description": "مناسبت بین‌المللی — International Day of Peace"
+  },
+  {
+    "date": "07-01",
+    "gregorianDate": "2026-09-23",
+    "title": "روز جهانی زبان اشاره",
+    "description": "مناسبت بین‌المللی — International Day of Sign Languages"
+  },
+  {
+    "date": "07-05",
+    "gregorianDate": "2026-09-27",
+    "title": "روز جهانی گردشگری",
+    "description": "مناسبت بین‌المللی — World Tourism Day"
+  },
+  {
+    "date": "07-06",
+    "gregorianDate": "2026-09-28",
+    "title": "روز جهانی دسترسی همگانی به اطلاعات",
+    "description": "مناسبت بین‌المللی — International Day for Universal Access to Information"
+  },
+  {
+    "date": "07-07",
+    "gregorianDate": "2026-09-29",
+    "title": "روز جهانی قلب",
+    "description": "مناسبت بین‌المللی — World Heart Day"
+  },
+  {
+    "date": "07-08",
+    "gregorianDate": "2026-09-30",
+    "title": "روز جهانی ترجمه",
+    "description": "مناسبت بین‌المللی — International Translation Day"
+  },
+  {
+    "date": "07-09",
+    "gregorianDate": "2026-10-01",
+    "title": "روز جهانی سالمندان",
+    "description": "مناسبت بین‌المللی — International Day of Older Persons"
+  },
+  {
+    "date": "07-10",
+    "title": "مهرگان",
+    "description": "جشن مهرگان در تقویم امروزی"
+  },
+  {
+    "date": "07-10",
+    "gregorianDate": "2026-10-02",
+    "title": "روز جهانی عدم خشونت",
+    "description": "مناسبت بین‌المللی — International Day of Non-Violence"
+  },
+  {
+    "date": "07-13",
+    "gregorianDate": "2026-10-05",
+    "title": "روز جهانی معلم",
+    "description": "مناسبت بین‌المللی — World Teachers' Day"
+  },
+  {
+    "date": "07-16",
+    "title": "مهرگان",
+    "description": "جشن مهرگان در گاهشماری زرتشتی"
+  },
+  {
+    "date": "07-18",
+    "gregorianDate": "2026-10-10",
+    "title": "روز جهانی سلامت روان",
+    "description": "مناسبت بین‌المللی — World Mental Health Day"
+  },
+  {
+    "date": "07-19",
+    "gregorianDate": "2026-10-11",
+    "title": "روز جهانی دختر",
+    "description": "مناسبت بین‌المللی — International Day of the Girl Child"
+  },
+  {
+    "date": "07-20",
+    "title": "بزرگداشت حافظ",
+    "description": "مناسبت فرهنگی"
+  },
+  {
+    "date": "07-21",
+    "gregorianDate": "2026-10-13",
+    "title": "روز جهانی کاهش خطر بلایا",
+    "description": "مناسبت بین‌المللی — International Day for Disaster Risk Reduction"
+  },
+  {
+    "date": "07-23",
+    "gregorianDate": "2026-10-15",
+    "title": "روز جهانی شست‌وشوی دست",
+    "description": "مناسبت بین‌المللی — Global Handwashing Day"
+  },
+  {
+    "date": "07-24",
+    "gregorianDate": "2026-10-16",
+    "title": "روز جهانی غذا",
+    "description": "مناسبت بین‌المللی — World Food Day"
+  },
+  {
+    "date": "07-25",
+    "gregorianDate": "2026-10-17",
+    "title": "روز جهانی ریشه‌کنی فقر",
+    "description": "مناسبت بین‌المللی — International Day for the Eradication of Poverty"
+  },
+  {
+    "date": "08-01",
+    "title": "روز آمار و برنامه‌ریزی",
+    "description": "مناسبت فرهنگی"
+  },
+  {
+    "date": "08-02",
+    "gregorianDate": "2026-10-24",
+    "title": "روز ملل متحد",
+    "description": "مناسبت بین‌المللی — United Nations Day"
+  },
+  {
+    "date": "08-02",
+    "gregorianDate": "2026-10-24",
+    "title": "روز جهانی توسعه اطلاعات",
+    "description": "مناسبت بین‌المللی — World Development Information Day"
+  },
+  {
+    "date": "08-04",
+    "title": "آبانگان",
+    "description": "جشن آبانگان در تقویم امروزی"
+  },
+  {
+    "date": "08-05",
+    "gregorianDate": "2026-10-27",
+    "title": "روز جهانی میراث سمعی و بصری",
+    "description": "مناسبت بین‌المللی — World Day for Audiovisual Heritage"
+  },
+  {
+    "date": "08-07",
+    "title": "روز بزرگداشت کوروش بزرگ",
+    "description": "مناسبت فرهنگی؛ تاریخ و عنوان مورد اختلاف"
+  },
+  {
+    "date": "08-09",
+    "gregorianDate": "2026-10-31",
+    "title": "روز جهانی شهرها",
+    "description": "مناسبت بین‌المللی — World Cities Day"
+  },
+  {
+    "date": "08-10",
+    "title": "آبانگان",
+    "description": "جشن آبانگان در گاهشماری زرتشتی"
+  },
+  {
+    "date": "08-14",
+    "gregorianDate": "2026-11-05",
+    "title": "روز جهانی آگاهی از سونامی",
+    "description": "مناسبت بین‌المللی — World Tsunami Awareness Day"
+  },
+  {
+    "date": "08-19",
+    "gregorianDate": "2026-11-10",
+    "title": "روز جهانی علم برای صلح و توسعه",
+    "description": "مناسبت بین‌المللی — World Science Day for Peace and Development"
+  },
+  {
+    "date": "08-23",
+    "gregorianDate": "2026-11-14",
+    "title": "روز جهانی دیابت",
+    "description": "مناسبت بین‌المللی — World Diabetes Day"
+  },
+  {
+    "date": "08-25",
+    "gregorianDate": "2026-11-16",
+    "title": "روز جهانی مدارا",
+    "description": "مناسبت بین‌المللی — International Day for Tolerance"
+  },
+  {
+    "date": "08-28",
+    "gregorianDate": "2026-11-19",
+    "title": "روز جهانی فلسفه",
+    "description": "مناسبت بین‌المللی — World Philosophy Day"
+  },
+  {
+    "date": "08-28",
+    "gregorianDate": "2026-11-19",
+    "title": "روز جهانی توالت",
+    "description": "مناسبت بین‌المللی — World Toilet Day"
+  },
+  {
+    "date": "08-29",
+    "gregorianDate": "2026-11-20",
+    "title": "روز جهانی کودک",
+    "description": "مناسبت بین‌المللی — World Children's Day"
+  },
+  {
+    "date": "09-03",
+    "title": "آذرگان",
+    "description": "جشن آذرگان در تقویم امروزی"
+  },
+  {
+    "date": "09-04",
+    "gregorianDate": "2026-11-25",
+    "title": "روز جهانی منع خشونت علیه زنان",
+    "description": "مناسبت بین‌المللی — International Day for the Elimination of Violence against Women"
+  },
+  {
+    "date": "09-08",
+    "gregorianDate": "2026-11-29",
+    "title": "روز همبستگی با مردم فلسطین",
+    "description": "مناسبت بین‌المللی — International Day of Solidarity with the Palestinian People"
+  },
+  {
+    "date": "09-09",
+    "title": "آذرگان",
+    "description": "جشن آذرگان در گاهشماری زرتشتی"
+  },
+  {
+    "date": "09-10",
+    "gregorianDate": "2026-12-01",
+    "title": "روز جهانی ایدز",
+    "description": "مناسبت بین‌المللی — World AIDS Day"
+  },
+  {
+    "date": "09-11",
+    "gregorianDate": "2026-12-02",
+    "title": "روز جهانی لغو برده‌داری",
+    "description": "مناسبت بین‌المللی — International Day for the Abolition of Slavery"
+  },
+  {
+    "date": "09-12",
+    "gregorianDate": "2026-12-03",
+    "title": "روز جهانی افراد دارای معلولیت",
+    "description": "مناسبت بین‌المللی — International Day of Persons with Disabilities"
+  },
+  {
+    "date": "09-14",
+    "gregorianDate": "2026-12-05",
+    "title": "روز جهانی داوطلب",
+    "description": "مناسبت بین‌المللی — International Volunteer Day"
+  },
+  {
+    "date": "09-16",
+    "title": "روز دانشجو",
+    "description": "مناسبت رسمی"
+  },
+  {
+    "date": "09-16",
+    "gregorianDate": "2026-12-07",
+    "title": "روز جهانی هوانوردی غیرنظامی",
+    "description": "مناسبت بین‌المللی — International Civil Aviation Day"
+  },
+  {
+    "date": "09-18",
+    "gregorianDate": "2026-12-09",
+    "title": "روز جهانی مبارزه با فساد",
+    "description": "مناسبت بین‌المللی — International Anti-Corruption Day"
+  },
+  {
+    "date": "09-19",
+    "gregorianDate": "2026-12-10",
+    "title": "روز جهانی حقوق بشر",
+    "description": "مناسبت بین‌المللی — Human Rights Day"
+  },
+  {
+    "date": "09-20",
+    "gregorianDate": "2026-12-11",
+    "title": "روز جهانی کوهستان",
+    "description": "مناسبت بین‌المللی — International Mountain Day"
+  },
+  {
+    "date": "09-27",
+    "gregorianDate": "2026-12-18",
+    "title": "روز جهانی مهاجران",
+    "description": "مناسبت بین‌المللی — International Migrants Day"
+  },
+  {
+    "date": "09-29",
+    "gregorianDate": "2026-12-20",
+    "title": "روز جهانی همبستگی انسانی",
+    "description": "مناسبت بین‌المللی — International Human Solidarity Day"
+  },
+  {
+    "date": "09-30",
+    "title": "شب یلدا / شب چله",
+    "description": "جشن زمستانی ایرانی"
+  },
+  {
+    "date": "10-01",
+    "title": "خرم‌روز / دیگان",
+    "description": "جشن کهن ایرانی و زرتشتی"
+  },
+  {
+    "date": "10-05",
+    "title": "درگذشت زرتشت",
+    "description": "مناسبت زرتشتی"
+  },
+  {
+    "date": "10-08",
+    "title": "دیگان",
+    "description": "جشن دیگان"
+  },
+  {
+    "date": "10-14",
+    "gregorianDate": "2026-01-04",
+    "title": "روز جهانی بریل",
+    "description": "مناسبت بین‌المللی — World Braille Day"
+  },
+  {
+    "date": "10-15",
+    "title": "دیگان",
+    "description": "جشن دیگان"
+  },
+  {
+    "date": "10-20",
+    "title": "جشن میلاد خورشید / خرم‌روز",
+    "description": "مناسبت کهن ایرانی"
+  },
+  {
+    "date": "10-23",
+    "title": "دیگان",
+    "description": "جشن دیگان"
+  },
+  {
+    "date": "10-26",
+    "title": "بهمنگان",
+    "description": "جشن بهمنگان در تقویم امروزی"
+  },
+  {
+    "date": "11-02",
+    "title": "بهمنگان",
+    "description": "جشن بهمنگان در گاهشماری زرتشتی"
+  },
+  {
+    "date": "11-04",
+    "gregorianDate": "2026-01-24",
+    "title": "روز جهانی آموزش",
+    "description": "مناسبت بین‌المللی — International Day of Education"
+  },
+  {
+    "date": "11-06",
+    "gregorianDate": "2026-01-26",
+    "title": "روز جهانی انرژی پاک",
+    "description": "مناسبت بین‌المللی — International Day of Clean Energy"
+  },
+  {
+    "date": "11-07",
+    "gregorianDate": "2026-01-27",
+    "title": "روز جهانی یادبود هولوکاست",
+    "description": "مناسبت بین‌المللی — International Holocaust Remembrance Day"
+  },
+  {
+    "date": "11-10",
+    "title": "سده",
+    "description": "جشن بزرگ آتش"
+  },
+  {
+    "date": "11-13",
+    "gregorianDate": "2026-02-02",
+    "title": "روز جهانی تالاب‌ها",
+    "description": "مناسبت بین‌المللی — World Wetlands Day"
+  },
+  {
+    "date": "11-15",
+    "gregorianDate": "2026-02-04",
+    "title": "روز جهانی سرطان",
+    "description": "مناسبت بین‌المللی — World Cancer Day"
+  },
+  {
+    "date": "11-17",
+    "gregorianDate": "2026-02-06",
+    "title": "روز جهانی عدم تحمل ناقص‌سازی اندام تناسلی زنان",
+    "description": "مناسبت بین‌المللی — International Day of Zero Tolerance for Female Genital Mutilation"
+  },
+  {
+    "date": "11-21",
+    "gregorianDate": "2026-02-10",
+    "title": "روز جهانی حبوبات",
+    "description": "مناسبت بین‌المللی — World Pulses Day"
+  },
+  {
+    "date": "11-22",
+    "gregorianDate": "2026-02-11",
+    "title": "روز جهانی زنان و دختران در علم",
+    "description": "مناسبت بین‌المللی — International Day of Women and Girls in Science"
+  },
+  {
+    "date": "11-24",
+    "gregorianDate": "2026-02-13",
+    "title": "روز جهانی رادیو",
+    "description": "مناسبت بین‌المللی — World Radio Day"
+  },
+  {
+    "date": "11-29",
+    "title": "اسفندگان",
+    "description": "جشن اسفندگان در تقویم امروزی"
+  },
+  {
+    "date": "12-01",
+    "gregorianDate": "2026-02-20",
+    "title": "روز جهانی عدالت اجتماعی",
+    "description": "مناسبت بین‌المللی — World Day of Social Justice"
+  },
+  {
+    "date": "12-02",
+    "gregorianDate": "2026-02-21",
+    "title": "روز جهانی زبان مادری",
+    "description": "مناسبت بین‌المللی — International Mother Language Day"
+  },
+  {
+    "date": "12-05",
+    "title": "سپندارمذگان / اسفندگان",
+    "description": "جشن زمین و بزرگداشت زنان"
+  },
+  {
+    "date": "12-10",
+    "gregorianDate": "2026-03-01",
+    "title": "روز جهانی عدم تبعیض",
+    "description": "مناسبت بین‌المللی — Zero Discrimination Day"
+  },
+  {
+    "date": "12-12",
+    "gregorianDate": "2026-03-03",
+    "title": "روز جهانی حیات وحش",
+    "description": "مناسبت بین‌المللی — World Wildlife Day"
+  },
+  {
+    "date": "12-17",
+    "gregorianDate": "2026-03-08",
+    "title": "روز جهانی زن",
+    "description": "مناسبت بین‌المللی — International Women's Day"
+  },
+  {
+    "date": "12-19",
+    "gregorianDate": "2026-03-10",
+    "title": "روز جهانی حبوبات/مناسبت‌های کشاورزی سازمان ملل",
+    "description": "مناسبت بین‌المللی — UN observance"
+  },
+  {
+    "date": "12-25",
+    "title": "پیشواز نوروز",
+    "description": "آیین‌های پیشواز نوروز"
+  },
+  {
+    "date": "12-29",
+    "title": "چهارشنبه‌سوری",
+    "description": "جشن آتش پیش از نوروز"
+  },
+  {
+    "date": "12-29",
+    "gregorianDate": "2026-03-20",
+    "title": "روز جهانی شادی",
+    "description": "مناسبت بین‌المللی — International Day of Happiness"
+  }
+]

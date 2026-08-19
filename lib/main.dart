@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/notification_service.dart';
 import 'services/reminder_storage_service.dart';
 import 'services/background_service.dart';
@@ -62,30 +63,15 @@ class MyAssistantApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       locale: const Locale('fa', 'IR'),
       supportedLocales: const [Locale('fa', 'IR'), Locale('en', 'US')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: Colors.green,
       ),
-      builder: (context, child) {
-        // اجرای کل برنامه به‌صورت راست‌به‌چپ (فارسی) و مدیریت ابعاد/چرخش صفحه
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: MediaQuery.of(context).textScaler.clamp(
-                    minScaleFactor: 0.9,
-                    maxScaleFactor: 1.2,
-                  ),
-            ),
-            child: child!,
-          ),
-        );
-      },
-      home: const HomeScreen(),
-    );
-  }
-}
-
       builder: (context, child) {
         // اجرای کل برنامه به‌صورت راست‌به‌چپ (فارسی) و مدیریت ابعاد/چرخش صفحه
         return Directionality(
