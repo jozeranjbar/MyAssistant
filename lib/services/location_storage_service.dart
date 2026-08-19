@@ -9,12 +9,35 @@ import '../models/weather_data.dart';
 class LocationStorageService {
   static const _locationsKey = 'weather_locations';
   static const _cachePrefix = 'weather_cache_';
+  static const _seededKey = 'weather_default_seeded';
   static const int maxLocations = 4;
 
   Future<List<WeatherLocation>> loadLocations() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_locationsKey);
-    if (raw == null) return [];
+
+    // در اولین اجرای برنامه (وقتی هنوز هیچ لوکیشنی ذخیره نشده و قبلاً هم
+    // این کار انجام نشده)، به‌صورت پیش‌فرض «تهران» اضافه می‌شود تا کاربر
+    // بلافاصله نمونه‌ای از نمایش آب‌وهوا را ببیند. اگر کاربر بعداً آن را
+    // حذف کند، دوباره خودکار اضافه نمی‌شود.
+    if (raw == null) {
+      final alreadySeeded = prefs.getBool(_seededKey) ?? false;
+      if (!alreadySeeded) {
+        final defaultTehran = WeatherLocation(
+          id: 'default-tehran',
+          name: 'تهران',
+          latitude: 35.6892,
+          longitude: 51.3890,
+          source: 'iran_city',
+          province: 'تهران',
+        );
+        await saveLocations([defaultTehran]);
+        await prefs.setBool(_seededKey, true);
+        return [defaultTehran];
+      }
+      return [];
+    }
+
     final list = jsonDecode(raw) as List;
     return list.map((e) => WeatherLocation.fromJson(e)).toList();
   }
