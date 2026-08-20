@@ -1,7 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:shamsi_date/shamsi_date.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hijri/hijri_calendar.dart';
+import 'package:intl/intl.dart';
+import '../services/events_service.dart';
+import '../data/iranian_holidays.dart';
+
+String _toPersianDigits(String input) {
+  const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+  var result = input;
+  for (var i = 0; i < western.length; i++) {
+    result = result.replaceAll(western[i], persian[i]);
+  }
+  return result;
+}
+
+/// اطلاعات تعطیلی یک روز مشخص شمسی (بررسی جمعه، تعطیلات شمسی و قمری)
+class _HolidayInfo {
+  final bool isHoliday;
+  final List<String> titles;
+  final bool hasLunar;
+  const _HolidayInfo(this.isHoliday, this.titles, this.hasLunar);
+}
+
+_HolidayInfo _checkHoliday(Jalali jDate, HijriCalendar hijri) {
+  final titles = <String>[];
+  var hasLunar = false;
+
+  if (jDate.weekDay == 7) {
+    titles.add('جمعه');
+  }
+  for (final h in solarHolidays) {
+    if (h.month == jDate.month && h.day == jDate.day) titles.add(h.title);
+  }
+  for (final h in lunarHolidays) {
+    if (h.month == hijri.hMonth && h.day == hijri.hDay) {
+      titles.add(h.title);
+      hasLunar = true;
+    }
+  }
+  return _HolidayInfo(titles.isNotEmpty, titles, hasLunar);
+}
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -11,124 +50,41 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  DateTime _focusedDay = DateTime.now();
-  DateTime _selectedDay = DateTime.now();
-  Map<String, List<String>> _events = {}; // key: yyyy-MM-dd میلادی
-
-  static const _key = 'calendar_events_v1';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadEvents();
-  }
-
-  String _dateKey(DateTime d) => '${d.year}-${d.month}-${d.day}';
-
-  Future<void> _loadEvents() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key);
-    if (raw != null) {
-      final map = jsonDecode(raw) as Map<String, dynamic>;
-      setState(() {
-        _events = map.map((k, v) => MapEntry(k, List<String>.from(v)));
-      });
-    }
-  }
-
-  Future<void> _saveEvents() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key, jsonEncode(_events));
-  }
-
-  Future<void> _addEvent(String title) async {
-    final key = _dateKey(_selectedDay);
-    setState(() {
-      _events.putIfAbsent(key, () => []).add(title);
-    });
-    await _saveEvents();
-  }
-
-  String _shamsiString(DateTime date) {
-    final jalali = Jalali.fromDateTime(date);
-    const weekdays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-    return '${weekdays[jalali.weekDay - 1]}، ${jalali.day} ${jalali.formatter.mN} ${jalali.year}';
-  }
-
-  void _showAddEventDialog() {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('افزودن مناسبت'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'عنوان رویداد'),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('انصراف')),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                _addEvent(controller.text.trim());
-              }
-              Navigator.pop(context);
-            },
-            child: const Text('ذخیره'),
-          ),
-        ],
-      ),
-    );
-  }
+  String _mode = 'year'; // 'year' یا 'events'
+  final _eventsService = EventsService();
 
   @override
   Widget build(BuildContext context) {
-    final todayEvents = _events[_dateKey(_selectedDay)] ?? [];
-
     return Scaffold(
-      appBar: AppBar(title: const Text('تقویم')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddEventDialog,
-        child: const Icon(Icons.add),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      appBar: AppBar(title: const Text('تقویم کامل 🗓️')),
+      body: Column(
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(_shamsiString(_selectedDay),
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  if (todayEvents.isEmpty)
-                    const Text('امروز رویداد یا برنامه‌ای ثبت نشده است.')
-                  else
-                    ...todayEvents.map((e) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.event, size: 18, color: Colors.green),
-                              const SizedBox(width: 8),
-                              Expanded(child: Text(e)),
-                            ],
-                          ),
-                        )),
-                ],
-              ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _ModeButton(
+                    label: 'تقویم سال',
+                    selected: _mode == 'year',
+                    onTap: () => setState(() => _mode = 'year'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _ModeButton(
+                    label: 'مناسبت‌ها',
+                    selected: _mode == 'events',
+                    onTap: () => setState(() => _mode = 'events'),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          _SimpleMonthGrid(
-            focusedDay: _focusedDay,
-            selectedDay: _selectedDay,
-            events: _events,
-            dateKeyBuilder: _dateKey,
-            onDaySelected: (day) => setState(() => _selectedDay = day),
-            onMonthChanged: (day) => setState(() => _focusedDay = day),
+          Expanded(
+            child: _mode == 'year'
+                ? const _YearCalendarView()
+                : _EventsListView(eventsService: _eventsService),
           ),
         ],
       ),
@@ -136,93 +92,374 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 }
 
-/// یک گرید ساده ماهانه بر پایه تقویم شمسی (جایگزین سبک برای table_calendar
-/// در مواردی که نیاز به تقویم شمسی کامل باشد).
-class _SimpleMonthGrid extends StatelessWidget {
-  final DateTime focusedDay;
-  final DateTime selectedDay;
-  final Map<String, List<String>> events;
-  final String Function(DateTime) dateKeyBuilder;
-  final ValueChanged<DateTime> onDaySelected;
-  final ValueChanged<DateTime> onMonthChanged;
-
-  const _SimpleMonthGrid({
-    required this.focusedDay,
-    required this.selectedDay,
-    required this.events,
-    required this.dateKeyBuilder,
-    required this.onDaySelected,
-    required this.onMonthChanged,
-  });
+class _ModeButton extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _ModeButton({required this.label, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final jFocused = Jalali.fromDateTime(focusedDay);
-    final firstOfMonth = Jalali(jFocused.year, jFocused.month, 1);
+    return Material(
+      color: selected ? Colors.purple : Colors.purple.shade50,
+      borderRadius: BorderRadius.circular(24),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: selected ? Colors.white : Colors.purple,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ------------------ نمای تقویم سال (۱۲ ماه) ------------------
+
+class _YearCalendarView extends StatelessWidget {
+  const _YearCalendarView();
+
+  @override
+  Widget build(BuildContext context) {
+    final today = Jalali.now();
+    final months = List.generate(12, (i) => i + 1);
+
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 6,
+            children: [
+              Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+              const Text('تاریخ سبز رنگ، تاریخ امروز است و', style: TextStyle(fontSize: 12)),
+              Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
+              const Text('تاریخ‌های قرمز، تعطیلات رسمی هستند. برای دیدن جزئیات، روی هر روز بزنید.',
+                  style: TextStyle(fontSize: 12)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...months.map((m) => _MonthBlock(year: today.year, month: m, today: today)),
+      ],
+    );
+  }
+}
+
+class _MonthBlock extends StatelessWidget {
+  final int year;
+  final int month;
+  final Jalali today;
+  const _MonthBlock({required this.year, required this.month, required this.today});
+
+  static const _weekdayHeaders = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج']; // شنبه تا جمعه
+
+  @override
+  Widget build(BuildContext context) {
+    final firstOfMonth = Jalali(year, month, 1);
     final daysInMonth = firstOfMonth.monthLength;
     final firstWeekday = firstOfMonth.weekDay; // 1=شنبه ... 7=جمعه
 
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: () => onMonthChanged(jFocused.addMonths(-1).toDateTime()),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFF7B1FA2), Color(0xFFE91E8C)]),
+              borderRadius: BorderRadius.circular(24),
             ),
-            Text('${jFocused.formatter.mN} ${jFocused.year}',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: () => onMonthChanged(jFocused.addMonths(1).toDateTime()),
+            child: Text(
+              '${firstOfMonth.formatter.mN} ${_toPersianDigits(year.toString())}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
             ),
-          ],
-        ),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
-          itemCount: daysInMonth + (firstWeekday - 1),
-          itemBuilder: (context, index) {
-            if (index < firstWeekday - 1) return const SizedBox();
-            final day = index - (firstWeekday - 1) + 1;
-            final jDate = Jalali(jFocused.year, jFocused.month, day);
-            final gDate = jDate.toDateTime();
-            final hasEvent = events.containsKey(dateKeyBuilder(gDate));
-            final isSelected = dateKeyBuilder(gDate) == dateKeyBuilder(selectedDay);
-
-            return GestureDetector(
-              onTap: () => onDaySelected(gDate),
-              child: Container(
-                margin: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: isSelected ? Colors.green : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('$day',
-                          style: TextStyle(color: isSelected ? Colors.white : Colors.black)),
-                      if (hasEvent)
-                        Container(
-                          width: 4,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: isSelected ? Colors.white : Colors.green,
-                            shape: BoxShape.circle,
-                          ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: _weekdayHeaders
+                .map((w) => Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        decoration: BoxDecoration(
+                          color: w == 'ج' ? Colors.red.shade50 : Colors.deepPurple.shade50,
+                          borderRadius: BorderRadius.circular(8),
                         ),
+                        child: Text(w, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
+                      ),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 4),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              childAspectRatio: 0.72,
+              mainAxisSpacing: 3,
+              crossAxisSpacing: 3,
+            ),
+            itemCount: daysInMonth + (firstWeekday - 1),
+            itemBuilder: (context, index) {
+              if (index < firstWeekday - 1) return const SizedBox();
+              final day = index - (firstWeekday - 1) + 1;
+              final jDate = Jalali(year, month, day);
+              final gDate = jDate.toDateTime();
+              final hijri = HijriCalendar.fromDate(gDate);
+              final holidayInfo = _checkHoliday(jDate, hijri);
+              final isToday = jDate.year == today.year && jDate.month == today.month && jDate.day == today.day;
+
+              final bg = isToday
+                  ? Colors.green.shade200
+                  : holidayInfo.isHoliday
+                      ? Colors.red.shade50
+                      : Colors.grey.shade100;
+              final fg = isToday
+                  ? Colors.green.shade900
+                  : holidayInfo.isHoliday
+                      ? Colors.red.shade700
+                      : Colors.black87;
+
+              return GestureDetector(
+                onTap: () => _showDayDetail(context, jDate, gDate, hijri, holidayInfo),
+                child: Container(
+                  decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${holidayInfo.isHoliday ? '• ' : ''}${_toPersianDigits(day.toString())}',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: fg),
+                      ),
+                      Text(DateFormat('MMM d').format(gDate),
+                          style: TextStyle(fontSize: 9, color: fg.withOpacity(0.8))),
+                      Text(
+                        '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]}',
+                        style: TextStyle(fontSize: 9, color: fg.withOpacity(0.8)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDayDetail(
+    BuildContext context,
+    Jalali jDate,
+    DateTime gDate,
+    HijriCalendar hijri,
+    _HolidayInfo holidayInfo,
+  ) async {
+    const weekdays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+    final events = await EventsService().getEventsForJalali(jDate);
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text('${weekdays[jDate.weekDay - 1]}',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                    ),
+                  ],
+                ),
+                Text(
+                  'شمسی: ${_toPersianDigits(jDate.day.toString())} ${jDate.formatter.mN} ${_toPersianDigits(jDate.year.toString())}',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 4),
+                Text('میلادی: ${DateFormat('d MMMM y').format(gDate)}', style: const TextStyle(fontSize: 14)),
+                const SizedBox(height: 4),
+                Text(
+                  'قمری: ${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]} ${_toPersianDigits(hijri.hYear.toString())}',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const Divider(height: 24),
+                if (holidayInfo.isHoliday) ...[
+                  ...holidayInfo.titles.map((t) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.circle, size: 8, color: Colors.red),
+                            const SizedBox(width: 6),
+                            Expanded(child: Text(t, style: const TextStyle(color: Colors.red))),
+                          ],
+                        ),
+                      )),
+                  if (holidayInfo.hasLunar)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        'تاریخ‌های قمری بر پایه محاسبه نجومی است و ممکن است با اعلام رسمی یک روز اختلاف داشته باشد.',
+                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                    ),
+                ],
+                if (events.isEmpty && !holidayInfo.isHoliday)
+                  const Text('مناسبتی برای این روز ثبت نشده است.', style: TextStyle(color: Colors.grey))
+                else
+                  ...events.map((e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          children: [
+                            Icon(e.isPublic ? Icons.circle : Icons.star,
+                                size: e.isPublic ? 8 : 14,
+                                color: e.isPublic ? Colors.grey : Colors.purple),
+                            const SizedBox(width: 6),
+                            Expanded(child: Text(e.title)),
+                          ],
+                        ),
+                      )),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// ------------------ نمای لیست مناسبت‌ها (افزودن/حذف) ------------------
+
+class _EventsListView extends StatefulWidget {
+  final EventsService eventsService;
+  const _EventsListView({required this.eventsService});
+
+  @override
+  State<_EventsListView> createState() => _EventsListViewState();
+}
+
+class _EventsListViewState extends State<_EventsListView> {
+  List<CalendarEvent> _events = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final events = await widget.eventsService.getAllEvents();
+    setState(() {
+      _events = events;
+      _loading = false;
+    });
+  }
+
+  Future<void> _addEvent() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 5),
+    );
+    if (picked == null || !mounted) return;
+
+    final titleController = TextEditingController();
+    final jPicked = Jalali.fromDateTime(picked);
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+            'مناسبت جدید برای ${_toPersianDigits(jPicked.day.toString())} ${jPicked.formatter.mN}'),
+        content: TextField(
+          controller: titleController,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: 'عنوان مناسبت'),
         ),
-      ],
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('انصراف')),
+          ElevatedButton(
+            onPressed: () async {
+              if (titleController.text.trim().isEmpty) return;
+              await widget.eventsService.addPrivateEvent(jPicked, titleController.text.trim());
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+              await _load();
+            },
+            child: const Text('افزودن'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteEvent(CalendarEvent e) async {
+    if (e.isPublic) {
+      await widget.eventsService.hidePublicEvent(e.month, e.day, e.title);
+    } else if (e.id != null) {
+      await widget.eventsService.removePrivateEvent(e.id!);
+    }
+    await _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) return const Center(child: CircularProgressIndicator());
+
+    return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addEvent,
+        icon: const Icon(Icons.add),
+        label: const Text('مناسبت جدید'),
+      ),
+      body: _events.isEmpty
+          ? const Center(child: Text('هیچ مناسبتی ثبت نشده است.'))
+          : ListView.builder(
+              padding: const EdgeInsets.only(bottom: 80),
+              itemCount: _events.length,
+              itemBuilder: (context, index) {
+                final e = _events[index];
+                return ListTile(
+                  leading: Icon(e.isPublic ? Icons.public : Icons.star, color: e.isPublic ? Colors.grey : Colors.purple),
+                  title: Text(e.title),
+                  subtitle: Text(
+                      '${_toPersianDigits(e.day.toString())} ${Jalali(1400, e.month, 1).formatter.mN}${e.year != null ? ' ${_toPersianDigits(e.year.toString())}' : ' (هرساله)'}'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteEvent(e),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
