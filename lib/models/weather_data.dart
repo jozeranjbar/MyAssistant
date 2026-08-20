@@ -1,3 +1,37 @@
+class DailyForecast {
+  final DateTime date;
+  final double minTemp;
+  final double maxTemp;
+  final int weatherCode;
+  final int precipitationProbability;
+
+  DailyForecast({
+    required this.date,
+    required this.minTemp,
+    required this.maxTemp,
+    required this.weatherCode,
+    required this.precipitationProbability,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'date': date.toIso8601String(),
+        'minTemp': minTemp,
+        'maxTemp': maxTemp,
+        'weatherCode': weatherCode,
+        'precipitationProbability': precipitationProbability,
+      };
+
+  factory DailyForecast.fromJson(Map<String, dynamic> json) => DailyForecast(
+        date: DateTime.parse(json['date']),
+        minTemp: (json['minTemp'] as num).toDouble(),
+        maxTemp: (json['maxTemp'] as num).toDouble(),
+        weatherCode: json['weatherCode'] as int,
+        precipitationProbability: json['precipitationProbability'] as int,
+      );
+
+  String get iconEmoji => WeatherData.emojiForCode(weatherCode);
+}
+
 class WeatherData {
   final double temperature; // دما
   final double feelsLike; // احساس دما
@@ -7,6 +41,7 @@ class WeatherData {
   final double uvIndex; // شاخص UV
   final int weatherCode; // کد وضعیت هوا (Open-Meteo WMO code)
   final DateTime updatedAt; // زمان بروزرسانی
+  final List<DailyForecast> forecast; // پیش‌بینی ۱۰ روزه
 
   WeatherData({
     required this.temperature,
@@ -17,6 +52,7 @@ class WeatherData {
     required this.uvIndex,
     required this.weatherCode,
     required this.updatedAt,
+    this.forecast = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -28,6 +64,7 @@ class WeatherData {
         'uvIndex': uvIndex,
         'weatherCode': weatherCode,
         'updatedAt': updatedAt.toIso8601String(),
+        'forecast': forecast.map((f) => f.toJson()).toList(),
       };
 
   factory WeatherData.fromJson(Map<String, dynamic> json) => WeatherData(
@@ -39,10 +76,15 @@ class WeatherData {
         uvIndex: (json['uvIndex'] as num).toDouble(),
         weatherCode: json['weatherCode'] as int,
         updatedAt: DateTime.parse(json['updatedAt']),
+        forecast: json['forecast'] != null
+            ? (json['forecast'] as List).map((f) => DailyForecast.fromJson(f)).toList()
+            : const [],
       );
 
   /// توضیح وضعیت هوا بر اساس کد WMO (استفاده‌شده در Open-Meteo)
-  String get description {
+  String get description => descriptionForCode(weatherCode);
+
+  static String descriptionForCode(int weatherCode) {
     if (weatherCode == 0) return 'آفتابی';
     if (weatherCode <= 2) return 'کمی ابری';
     if (weatherCode == 3) return 'ابری';
@@ -57,7 +99,9 @@ class WeatherData {
   }
 
   /// نام آیکون Material متناظر با وضعیت هوا
-  String get iconEmoji {
+  String get iconEmoji => emojiForCode(weatherCode);
+
+  static String emojiForCode(int weatherCode) {
     if (weatherCode == 0) return '☀️';
     if (weatherCode <= 2) return '🌤️';
     if (weatherCode == 3) return '☁️';

@@ -52,6 +52,21 @@ const List<LunarHoliday> lunarHolidays = [
   LunarHoliday(12, 18, 'عید سعید غدیر خم'),
 ];
 
+const List<String> gregorianMonthNamesFa = [
+  'ژانویه',
+  'فوریه',
+  'مارس',
+  'آوریل',
+  'مه',
+  'ژوئن',
+  'ژوئیه',
+  'آگوست',
+  'سپتامبر',
+  'اکتبر',
+  'نوامبر',
+  'دسامبر',
+];
+
 const List<String> hijriMonthNamesFa = [
   'محرم',
   'صفر',

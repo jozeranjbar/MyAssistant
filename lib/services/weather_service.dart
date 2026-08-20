@@ -24,7 +24,14 @@ class WeatherService {
         'wind_speed_10m',
         'weather_code',
       ].join(','),
-      'daily': 'uv_index_max',
+      'daily': [
+        'uv_index_max',
+        'temperature_2m_max',
+        'temperature_2m_min',
+        'weather_code',
+        'precipitation_probability_max',
+      ].join(','),
+      'forecast_days': '10',
       'timezone': 'auto',
     });
 
@@ -51,6 +58,28 @@ class WeatherService {
         uv = 0;
       }
 
+      final forecast = <DailyForecast>[];
+      try {
+        final times = daily?['time'] as List?;
+        final maxTemps = daily?['temperature_2m_max'] as List?;
+        final minTemps = daily?['temperature_2m_min'] as List?;
+        final codes = daily?['weather_code'] as List?;
+        final precipProbs = daily?['precipitation_probability_max'] as List?;
+        if (times != null) {
+          for (var i = 0; i < times.length; i++) {
+            forecast.add(DailyForecast(
+              date: DateTime.parse(times[i] as String),
+              maxTemp: (maxTemps?[i] as num?)?.toDouble() ?? 0,
+              minTemp: (minTemps?[i] as num?)?.toDouble() ?? 0,
+              weatherCode: (codes?[i] as num?)?.toInt() ?? 0,
+              precipitationProbability: (precipProbs?[i] as num?)?.toInt() ?? 0,
+            ));
+          }
+        }
+      } catch (_) {
+        // پیش‌بینی روزانه اختیاری است؛ در صورت خطا نادیده گرفته می‌شود
+      }
+
       return WeatherData(
         temperature: (current['temperature_2m'] as num).toDouble(),
         feelsLike: (current['apparent_temperature'] as num).toDouble(),
@@ -60,6 +89,7 @@ class WeatherService {
         uvIndex: uv,
         weatherCode: (current['weather_code'] as num).toInt(),
         updatedAt: DateTime.now(),
+        forecast: forecast,
       );
     } on WeatherException {
       rethrow;

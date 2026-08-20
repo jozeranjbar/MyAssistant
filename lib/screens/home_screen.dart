@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shamsi_date/shamsi_date.dart';
+import 'package:hijri/hijri_calendar.dart';
 import '../models/weather_location.dart';
 import '../models/weather_data.dart';
 import '../services/weather_service.dart';
@@ -8,10 +9,21 @@ import '../services/location_storage_service.dart';
 import '../services/reminder_storage_service.dart';
 import '../services/notification_service.dart';
 import '../services/events_service.dart';
+import '../data/iranian_holidays.dart';
 import '../widgets/weather_card.dart';
 import 'weather_settings_screen.dart';
 import 'calendar_screen.dart';
 import 'reminder_screen.dart';
+
+String _toPersianDigits(String input) {
+  const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+  var result = input;
+  for (var i = 0; i < western.length; i++) {
+    result = result.replaceAll(western[i], persian[i]);
+  }
+  return result;
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -244,7 +256,14 @@ class _TodayCalendarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = '${_weekdays[today.weekDay - 1]}، ${today.day} ${today.formatter.mN} ${today.year}';
+    final gDate = today.toDateTime();
+    final hijri = HijriCalendar.fromDate(gDate);
+
+    final jalaliStr = '${_toPersianDigits(today.day.toString())} ${today.formatter.mN} ${_toPersianDigits(today.year.toString())}';
+    final gregorianStr = '${gDate.day} ${gregorianMonthNamesFa[gDate.month - 1]} ${gDate.year}';
+    final hijriStr = '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]} ${_toPersianDigits(hijri.hYear.toString())}';
+
+    final dateStr = '${_weekdays[today.weekDay - 1]}، $jalaliStr ، $gregorianStr ، $hijriStr';
 
     return Material(
       color: Colors.transparent,
@@ -259,35 +278,25 @@ class _TodayCalendarCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.grey.shade200),
           ),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(dateStr,
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 10),
-                    if (events.isEmpty)
-                      Text('امروز مناسبتی وجود ندارد',
-                          style: TextStyle(color: Colors.grey.shade700, fontSize: 13))
-                    else
-                      ...events.map((e) => Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(
-                              '${e.isPublic ? '•' : '★'} ${e.title}',
-                              style: TextStyle(
-                                color: e.isPublic ? Colors.grey.shade800 : Colors.purple.shade700,
-                                fontSize: 13,
-                              ),
-                            ),
-                          )),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text('🗓️', style: TextStyle(fontSize: 36)),
+              Text(dateStr, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              if (events.isEmpty)
+                Text('امروز مناسبتی وجود ندارد',
+                    style: TextStyle(color: Colors.grey.shade700, fontSize: 13))
+              else
+                ...events.map((e) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        '${e.isPublic ? '•' : '★'} ${e.title}',
+                        style: TextStyle(
+                          color: e.isPublic ? Colors.grey.shade800 : Colors.purple.shade700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    )),
             ],
           ),
         ),
