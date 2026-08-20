@@ -209,9 +209,9 @@ class _MonthBlock extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              childAspectRatio: 0.72,
-              mainAxisSpacing: 3,
-              crossAxisSpacing: 3,
+              childAspectRatio: 1.9,
+              mainAxisSpacing: 1,
+              crossAxisSpacing: 1,
             ),
             itemCount: daysInMonth + (firstWeekday - 1),
             itemBuilder: (context, index) {
@@ -237,20 +237,21 @@ class _MonthBlock extends StatelessWidget {
               return GestureDetector(
                 onTap: () => _showDayDetail(context, jDate, gDate, hijri, holidayInfo),
                 child: Container(
-                  decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
-                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
+                  padding: const EdgeInsets.symmetric(vertical: 1),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${holidayInfo.isHoliday ? '• ' : ''}${_toPersianDigits(day.toString())}',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: fg),
+                        '${holidayInfo.isHoliday ? '•' : ''}${_toPersianDigits(day.toString())}',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 8, color: fg),
                       ),
                       Text(DateFormat('MMM d').format(gDate),
-                          style: TextStyle(fontSize: 9, color: fg.withOpacity(0.8))),
+                          style: TextStyle(fontSize: 5, color: fg.withOpacity(0.8))),
                       Text(
                         '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]}',
-                        style: TextStyle(fontSize: 9, color: fg.withOpacity(0.8)),
+                        style: TextStyle(fontSize: 5, color: fg.withOpacity(0.8)),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -395,16 +396,29 @@ class _EventsListViewState extends State<_EventsListView> {
 
     final titleController = TextEditingController();
     final jPicked = Jalali.fromDateTime(picked);
+    final hPicked = HijriCalendar.fromDate(picked);
 
     await showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(
-            'مناسبت جدید برای ${_toPersianDigits(jPicked.day.toString())} ${jPicked.formatter.mN}'),
-        content: TextField(
-          controller: titleController,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'عنوان مناسبت'),
+        backgroundColor: Colors.green.shade50,
+        title: const Text('مناسبت جدید'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('شمسی: ${_toPersianDigits(jPicked.day.toString())} ${jPicked.formatter.mN} ${_toPersianDigits(jPicked.year.toString())}'),
+            const SizedBox(height: 4),
+            Text('میلادی: ${DateFormat('d MMMM y').format(picked)}'),
+            const SizedBox(height: 4),
+            Text('قمری: ${_toPersianDigits(hPicked.hDay.toString())} ${hijriMonthNamesFa[hPicked.hMonth - 1]} ${_toPersianDigits(hPicked.hYear.toString())}'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: titleController,
+              autofocus: true,
+              decoration: const InputDecoration(hintText: 'عنوان مناسبت', filled: true, fillColor: Colors.white),
+            ),
+          ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('انصراف')),
@@ -436,6 +450,7 @@ class _EventsListViewState extends State<_EventsListView> {
     if (_loading) return const Center(child: CircularProgressIndicator());
 
     return Scaffold(
+      backgroundColor: Colors.pink.shade50,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addEvent,
         icon: const Icon(Icons.add),
@@ -452,7 +467,7 @@ class _EventsListViewState extends State<_EventsListView> {
                   leading: Icon(e.isPublic ? Icons.public : Icons.star, color: e.isPublic ? Colors.grey : Colors.purple),
                   title: Text(e.title),
                   subtitle: Text(
-                      '${_toPersianDigits(e.day.toString())} ${Jalali(1400, e.month, 1).formatter.mN}${e.year != null ? ' ${_toPersianDigits(e.year.toString())}' : ' (هرساله)'}'),
+                      '${_toPersianDigits(e.day.toString())} ${Jalali(1400, e.month, 1).formatter.mN}${e.year != null ? ' ${_toPersianDigits(e.year.toString())}' : ''}'),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () => _deleteEvent(e),
