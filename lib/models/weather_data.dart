@@ -4,6 +4,8 @@ class DailyForecast {
   final double maxTemp;
   final int weatherCode;
   final int precipitationProbability;
+  final int humidity; // رطوبت میانگین روز %
+  final double uvIndex; // شاخص UV روز
 
   DailyForecast({
     required this.date,
@@ -11,6 +13,8 @@ class DailyForecast {
     required this.maxTemp,
     required this.weatherCode,
     required this.precipitationProbability,
+    this.humidity = 0,
+    this.uvIndex = 0,
   });
 
   Map<String, dynamic> toJson() => {
@@ -19,6 +23,8 @@ class DailyForecast {
         'maxTemp': maxTemp,
         'weatherCode': weatherCode,
         'precipitationProbability': precipitationProbability,
+        'humidity': humidity,
+        'uvIndex': uvIndex,
       };
 
   factory DailyForecast.fromJson(Map<String, dynamic> json) => DailyForecast(
@@ -27,6 +33,8 @@ class DailyForecast {
         maxTemp: (json['maxTemp'] as num).toDouble(),
         weatherCode: json['weatherCode'] as int,
         precipitationProbability: json['precipitationProbability'] as int,
+        humidity: (json['humidity'] as num?)?.toInt() ?? 0,
+        uvIndex: (json['uvIndex'] as num?)?.toDouble() ?? 0,
       );
 
   String get iconEmoji => WeatherData.emojiForCode(weatherCode);
@@ -39,6 +47,7 @@ class WeatherData {
   final double precipitation; // بارندگی mm
   final double windSpeed; // سرعت باد km/h
   final double uvIndex; // شاخص UV
+  final double visibility; // دید افقی (کیلومتر)
   final int weatherCode; // کد وضعیت هوا (Open-Meteo WMO code)
   final DateTime updatedAt; // زمان بروزرسانی
   final List<DailyForecast> forecast; // پیش‌بینی ۱۰ روزه
@@ -50,6 +59,7 @@ class WeatherData {
     required this.precipitation,
     required this.windSpeed,
     required this.uvIndex,
+    this.visibility = 0,
     required this.weatherCode,
     required this.updatedAt,
     this.forecast = const [],
@@ -62,6 +72,7 @@ class WeatherData {
         'precipitation': precipitation,
         'windSpeed': windSpeed,
         'uvIndex': uvIndex,
+        'visibility': visibility,
         'weatherCode': weatherCode,
         'updatedAt': updatedAt.toIso8601String(),
         'forecast': forecast.map((f) => f.toJson()).toList(),
@@ -74,6 +85,7 @@ class WeatherData {
         precipitation: (json['precipitation'] as num).toDouble(),
         windSpeed: (json['windSpeed'] as num).toDouble(),
         uvIndex: (json['uvIndex'] as num).toDouble(),
+        visibility: (json['visibility'] as num?)?.toDouble() ?? 0,
         weatherCode: json['weatherCode'] as int,
         updatedAt: DateTime.parse(json['updatedAt']),
         forecast: json['forecast'] != null

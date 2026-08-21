@@ -15,6 +15,7 @@ import '../data/iranian_holidays.dart';
 import '../widgets/weather_card.dart';
 import 'weather_settings_screen.dart';
 import 'ten_day_forecast_screen.dart';
+import 'chart_maker_screen.dart';
 import 'calendar_screen.dart';
 import 'reminder_screen.dart';
 import 'about_screen.dart';
@@ -188,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text('🌤️ آب و هوا',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
+                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
                           if (_locations.isEmpty) ...[
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -217,8 +218,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                     const SizedBox(height: 8),
                                     _NavButton(
                                       icon: Icons.calendar_view_week,
-                                      label: 'وضعیت ده روز آینده',
+                                      label: 'وضعیت هوای ده روز آینده ${loc.name}',
                                       onTap: () => _openTenDayForecast(loc),
+                                      backgroundColor: Colors.blue.shade50,
+                                      foregroundColor: Colors.blue.shade300,
+                                      showArrow: false,
                                     ),
                                   ],
                                 )),
@@ -276,6 +280,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                   ),
+                  const SizedBox(height: 16),
+
+                  _SectionHeader(emoji: '📊', title: 'نمودار ساز'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _NavButton(
+                      icon: Icons.bar_chart,
+                      label: 'ساخت نمودار',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
+                        );
+                      },
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -323,7 +342,7 @@ class _SectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
       child: Text('$emoji $title',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
     );
   }
 }
@@ -332,12 +351,24 @@ class _NavButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _NavButton({required this.icon, required this.label, required this.onTap});
+  final Color? backgroundColor;
+  final Color? foregroundColor;
+  final bool showArrow;
+  const _NavButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.backgroundColor,
+    this.foregroundColor,
+    this.showArrow = true,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final bg = backgroundColor ?? Colors.purple.shade50;
+    final fg = foregroundColor ?? Colors.purple;
     return Material(
-      color: Colors.purple.shade50,
+      color: bg,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -346,10 +377,10 @@ class _NavButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              Icon(icon, color: Colors.purple),
+              Icon(icon, color: fg),
               const SizedBox(width: 12),
-              Expanded(child: Text(label, style: const TextStyle(color: Colors.purple))),
-              const Icon(Icons.chevron_left, color: Colors.purple),
+              Expanded(child: Text(label, style: TextStyle(color: fg))),
+              if (showArrow) Icon(Icons.chevron_left, color: fg),
             ],
           ),
         ),

@@ -22,6 +22,7 @@ class WeatherService {
         'relative_humidity_2m',
         'precipitation',
         'wind_speed_10m',
+        'visibility',
         'weather_code',
       ].join(','),
       'daily': [
@@ -30,6 +31,7 @@ class WeatherService {
         'temperature_2m_min',
         'weather_code',
         'precipitation_probability_max',
+        'relative_humidity_2m_mean',
       ].join(','),
       // ۱۱ روز درخواست می‌شود: امروز + ۱۰ روز آینده (برای صفحه «وضعیت ده روز آینده»)
       'forecast_days': '11',
@@ -66,6 +68,8 @@ class WeatherService {
         final minTemps = daily?['temperature_2m_min'] as List?;
         final codes = daily?['weather_code'] as List?;
         final precipProbs = daily?['precipitation_probability_max'] as List?;
+        final uvList = daily?['uv_index_max'] as List?;
+        final humidityList = daily?['relative_humidity_2m_mean'] as List?;
         if (times != null) {
           for (var i = 0; i < times.length; i++) {
             forecast.add(DailyForecast(
@@ -74,6 +78,8 @@ class WeatherService {
               minTemp: (minTemps?[i] as num?)?.toDouble() ?? 0,
               weatherCode: (codes?[i] as num?)?.toInt() ?? 0,
               precipitationProbability: (precipProbs?[i] as num?)?.toInt() ?? 0,
+              humidity: (humidityList?[i] as num?)?.toInt() ?? 0,
+              uvIndex: (uvList?[i] as num?)?.toDouble() ?? 0,
             ));
           }
         }
@@ -88,6 +94,8 @@ class WeatherService {
         precipitation: (current['precipitation'] as num).toDouble(),
         windSpeed: (current['wind_speed_10m'] as num).toDouble(),
         uvIndex: uv,
+        // Open-Meteo مقدار visibility را به متر می‌دهد؛ به کیلومتر تبدیل می‌شود
+        visibility: ((current['visibility'] as num?)?.toDouble() ?? 0) / 1000,
         weatherCode: (current['weather_code'] as num).toInt(),
         updatedAt: DateTime.now(),
         forecast: forecast,

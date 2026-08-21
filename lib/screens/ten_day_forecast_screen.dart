@@ -30,7 +30,7 @@ class TenDayForecastScreen extends StatelessWidget {
     final days = data.next10DaysForecast;
 
     return Scaffold(
-      appBar: AppBar(title: Text('وضعیت ده روز آینده - ${location.name}')),
+      appBar: AppBar(title: Text('وضعیت هوای ده روز آینده ${location.name}')),
       body: days.isEmpty
           ? const Center(child: Text('پیش‌بینی ده روز آینده در دسترس نیست'))
           : ListView.separated(
@@ -49,36 +49,60 @@ class TenDayForecastScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: Colors.blue.shade100),
                   ),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SizedBox(
-                        width: 84,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(weekday, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                            Text(dateStr, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                          ],
-                        ),
-                      ),
-                      Text(f.iconEmoji, style: const TextStyle(fontSize: 28)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          WeatherData.descriptionForCode(f.weatherCode),
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
-                      Text(
-                        '${_toPersianDigits(f.minTemp.round().toString())}° / ${_toPersianDigits(f.maxTemp.round().toString())}°',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
+                      // ردیف اول: تاریخ، حالت ابرها، احتمال بارش، رطوبت
+                      Row(
                         children: [
-                          Icon(Icons.water_drop, size: 14, color: Colors.blue.shade400),
+                          SizedBox(
+                            width: 84,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(weekday, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                Text(dateStr, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                              ],
+                            ),
+                          ),
+                          Text(f.iconEmoji, style: const TextStyle(fontSize: 26)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              WeatherData.descriptionForCode(f.weatherCode),
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                          Icon(Icons.grain, size: 16, color: Colors.blue.shade400),
+                          const SizedBox(width: 2),
                           Text('${_toPersianDigits(f.precipitationProbability.toString())}%',
-                              style: TextStyle(fontSize: 11, color: Colors.grey.shade700)),
+                              style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                          const SizedBox(width: 10),
+                          Icon(Icons.water_drop, size: 16, color: Colors.blue.shade400),
+                          const SizedBox(width: 2),
+                          Text('${_toPersianDigits(f.humidity.toString())}%',
+                              style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Divider(height: 1),
+                      const SizedBox(height: 8),
+                      // ردیف دوم: حداقل و حداکثر دما، شاخص UV
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${_toPersianDigits(f.minTemp.round().toString())}° / ${_toPersianDigits(f.maxTemp.round().toString())}°',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          Row(
+                            children: [
+                              Icon(Icons.wb_sunny, size: 16, color: Colors.orange.shade400),
+                              const SizedBox(width: 2),
+                              Text('UV ${_toPersianDigits(f.uvIndex.round().toString())}',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                            ],
+                          ),
                         ],
                       ),
                     ],

@@ -101,17 +101,33 @@ class WeatherCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            // ردیف آمار وضعیت آب‌وهوا (احساس دما، رطوبت، باد، بارندگی، UV) - فونت و آیکون دو برابر
+            // ردیف اول: احساس دما، رطوبت، بارندگی
             Wrap(
               alignment: WrapAlignment.spaceBetween,
               runSpacing: 8,
               children: [
                 _StatChip(icon: Icons.thermostat, color: Colors.red, value: '${_toPersianDigits(data!.feelsLike.round().toString())}°', label: 'احساس دما'),
                 _StatChip(icon: Icons.water_drop, color: Colors.blue, value: '${_toPersianDigits(data!.humidity.toString())}%', label: 'رطوبت'),
-                _StatChip(icon: Icons.air, color: Colors.blue, value: '${_toPersianDigits(data!.windSpeed.round().toString())} km/h', label: 'باد'),
                 _StatChip(icon: Icons.grain, color: Colors.blueGrey, value: '${_toPersianDigits(data!.precipitation.toStringAsFixed(1))} mm', label: 'بارندگی'),
-                _StatChip(icon: Icons.wb_sunny, color: Colors.orange, value: 'UV ${_toPersianDigits(data!.uvIndex.round().toString())}', label: ''),
               ],
+            ),
+            const SizedBox(height: 10),
+            // ردیف دوم: باد، دید افقی، شاخص UV - با خط فاصله بین آن‌ها
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _StatChip(icon: Icons.air, color: Colors.blue, value: '${_toPersianDigits(data!.windSpeed.round().toString())} km/h', label: 'باد'),
+                  const SizedBox(width: 10),
+                  Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
+                  const SizedBox(width: 10),
+                  _StatChip(icon: Icons.visibility, color: Colors.teal, value: '${_toPersianDigits(data!.visibility.toStringAsFixed(1))} km', label: 'دید افقی'),
+                  const SizedBox(width: 10),
+                  Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
+                  const SizedBox(width: 10),
+                  _StatChip(icon: Icons.wb_sunny, color: Colors.orange, value: 'UV ${_toPersianDigits(data!.uvIndex.round().toString())}', label: ''),
+                ],
+              ),
             ),
             if (error != null) ...[
               const SizedBox(height: 8),
