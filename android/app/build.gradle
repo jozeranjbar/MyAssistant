@@ -64,11 +64,13 @@ flutter {
     source '../..'
 }
 
-// اجبار به استفاده از یک نسخه‌ی مشخص از desugar_jdk_libs تا با نسخه‌ای که
-// پکیج home_widget به‌طور خودکار اضافه می‌کند تداخل (کلاس تکراری) پیش نیاید.
+// اجبار به استفاده از یک نسخه‌ی مشخص از چند کتابخانه که بین پکیج‌های مختلف
+// (home_widget و workmanager) با نسخه‌های متفاوت تداخل «کلاس تکراری» دارند.
 configurations.all {
     resolutionStrategy {
         force 'com.android.tools:desugar_jdk_libs:2.0.4'
+        force 'androidx.work:work-runtime:2.8.1'
+        force 'androidx.work:work-runtime-ktx:2.8.1'
     }
 }
 
