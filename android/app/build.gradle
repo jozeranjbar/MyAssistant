@@ -52,8 +52,6 @@ android {
 
     buildTypes {
         release {
-            // برای انتشار واقعی روی گوگل‌پلی از یک کلید امضای اختصاصی استفاده کنید.
-            // فعلاً برای اینکه GitHub Actions بتواند APK قابل نصب بسازد، از کلید دیباگ استفاده می‌شود.
             signingConfig signingConfigs.debug
             minifyEnabled true
             shrinkResources true
@@ -64,6 +62,14 @@ android {
 
 flutter {
     source '../..'
+}
+
+// اجبار به استفاده از یک نسخه‌ی مشخص از desugar_jdk_libs تا با نسخه‌ای که
+// پکیج home_widget به‌طور خودکار اضافه می‌کند تداخل (کلاس تکراری) پیش نیاید.
+configurations.all {
+    resolutionStrategy {
+        force 'com.android.tools:desugar_jdk_libs:2.0.4'
+    }
 }
 
 dependencies {
