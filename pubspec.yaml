@@ -40,6 +40,12 @@ dependencies:
   # آیکون‌ها
   google_fonts: ^6.2.1
 
+  # باز کردن لینک ایمیل و کانال تلگرام
+  url_launcher: ^6.3.0
+
+  # ویجت صفحه اصلی گوشی
+  home_widget: ^0.6.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

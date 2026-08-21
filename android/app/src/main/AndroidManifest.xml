@@ -54,6 +54,19 @@
         <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
             android:exported="false" />
 
+        <!-- ویجت صفحه اصلی گوشی: ساعت، آب‌وهوا، تاریخ، یادآوری -->
+        <receiver
+            android:name=".WeatherClockWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.myassistant.app.WIDGET_TICK" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weather_clock_widget_info" />
+        </receiver>
+
     </application>
 
     <!-- برای اندروید ۱۱+ نیاز به اعلام صریح queries برای برخی intent ها -->
@@ -61,6 +74,14 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />
             <data android:mimeType="text/plain" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="mailto" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
         </intent>
     </queries>
 </manifest>

@@ -4,16 +4,19 @@ import 'package:shamsi_date/shamsi_date.dart';
 import 'package:hijri/hijri_calendar.dart';
 import '../models/weather_location.dart';
 import '../models/weather_data.dart';
+import '../models/reminder.dart';
 import '../services/weather_service.dart';
 import '../services/location_storage_service.dart';
 import '../services/reminder_storage_service.dart';
 import '../services/notification_service.dart';
 import '../services/events_service.dart';
+import '../services/widget_service.dart';
 import '../data/iranian_holidays.dart';
 import '../widgets/weather_card.dart';
 import 'weather_settings_screen.dart';
 import 'calendar_screen.dart';
 import 'reminder_screen.dart';
+import 'about_screen.dart';
 
 String _toPersianDigits(String input) {
   const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -67,6 +70,48 @@ class _HomeScreenState extends State<HomeScreen> {
       _loading = false;
     });
     await _refreshAllWeather();
+    await _updateWidget(reminders);
+    await _maybePromptAddWidget();
+  }
+
+  Future<void> _updateWidget(List<Reminder> reminders) async {
+    if (_locations.isEmpty) return;
+    final firstLoc = _locations.first;
+    await WidgetService.updateWidgetData(
+      location: firstLoc,
+      weather: _weatherByLocation[firstLoc.id],
+      reminders: reminders,
+    );
+  }
+
+  Future<void> _maybePromptAddWidget() async {
+    final alreadyPrompted = await WidgetService.hasPromptedBefore();
+    if (alreadyPrompted || !mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('افزودن ویجت'),
+        content: const Text('آیا می‌خواهید ویجت آب‌وهوا و ساعت را به صفحه اصلی گوشی اضافه کنید؟'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await WidgetService.markPrompted();
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+            },
+            child: const Text('نه، متشکرم'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await WidgetService.markPrompted();
+              await WidgetService.requestPinWidget();
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+            },
+            child: const Text('بله، اضافه کن'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _refreshAllWeather() async {
@@ -191,6 +236,36 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                         await _loadEverything();
                       },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Material(
+                      color: Colors.green.shade800,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const AboutScreen()),
+                          );
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline, color: Colors.white),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Text('اطلاعات برنامه و تنظیمات کلی',
+                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              ),
+                              Icon(Icons.chevron_left, color: Colors.white),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
