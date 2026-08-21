@@ -13,8 +13,6 @@ String _toPersianDigits(String input) {
   return result;
 }
 
-const _weekdayNamesFa = ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه', 'یکشنبه'];
-
 class WeatherCard extends StatelessWidget {
   final WeatherLocation location;
   final WeatherData? data;
@@ -37,14 +35,8 @@ class WeatherCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blue.shade100),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -65,40 +57,7 @@ class WeatherCard extends StatelessWidget {
               ),
             )
           else if (data != null) ...[
-            // ردیف بالا: توضیح وضعیت (سمت راست) + دمای بزرگ (سمت چپ)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(data!.iconEmoji, style: const TextStyle(fontSize: 26)),
-                      const SizedBox(height: 2),
-                      Text(data!.description, style: const TextStyle(fontSize: 13, color: Colors.black87)),
-                    ],
-                  ),
-                ),
-                Text(
-                  '${_toPersianDigits(data!.temperature.round().toString())}°',
-                  style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.blue),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // ردیف فشرده آمار (احساس دما، رطوبت، باد، بارندگی، UV) با کمترین فاصله
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              runSpacing: 4,
-              children: [
-                _StatChip(icon: Icons.thermostat, color: Colors.red, value: '${_toPersianDigits(data!.feelsLike.round().toString())}°', label: 'احساس دما'),
-                _StatChip(icon: Icons.water_drop, color: Colors.blue, value: '${_toPersianDigits(data!.humidity.toString())}%', label: 'رطوبت'),
-                _StatChip(icon: Icons.air, color: Colors.blue, value: '${_toPersianDigits(data!.windSpeed.round().toString())} km/h', label: 'باد'),
-                _StatChip(icon: Icons.grain, color: Colors.blueGrey, value: '${_toPersianDigits(data!.precipitation.toStringAsFixed(1))} mm', label: 'بارندگی'),
-                _StatChip(icon: Icons.wb_sunny, color: Colors.orange, value: 'UV ${_toPersianDigits(data!.uvIndex.round().toString())}', label: ''),
-              ],
-            ),
-            const SizedBox(height: 8),
+            // سطر اول: نام لوکیشن (تهران) و زمان بروزرسانی
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -107,43 +66,53 @@ class WeatherCard extends StatelessWidget {
                     style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
               ],
             ),
-            if (data!.forecast.isNotEmpty) ...[
-              const Divider(height: 20),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 5,
-                  childAspectRatio: 0.68,
-                  mainAxisSpacing: 4,
-                  crossAxisSpacing: 2,
+            const SizedBox(height: 6),
+            // سطر دوم: حالت ابر (آیکون + توضیح) و دما به همراه حداقل/حداکثر در پرانتز
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(data!.iconEmoji, style: const TextStyle(fontSize: 26)),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(data!.description, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                      ),
+                    ],
+                  ),
                 ),
-                itemCount: data!.forecast.length > 10 ? 10 : data!.forecast.length,
-                itemBuilder: (context, index) {
-                  final f = data!.forecast[index];
-                  return Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(_weekdayNamesFa[f.date.weekday - 1],
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                            overflow: TextOverflow.ellipsis),
-                        Text(f.iconEmoji, style: const TextStyle(fontSize: 16)),
-                        Text(
-                          '${_toPersianDigits(f.minTemp.round().toString())}°/${_toPersianDigits(f.maxTemp.round().toString())}°',
-                          style: const TextStyle(fontSize: 10),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '${_toPersianDigits(data!.temperature.round().toString())}°',
+                        style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.blue),
+                      ),
+                      if (data!.todayForecast != null)
+                        TextSpan(
+                          text:
+                              ' (${_toPersianDigits(data!.todayForecast!.minTemp.round().toString())}°-${_toPersianDigits(data!.todayForecast!.maxTemp.round().toString())}°)',
+                          style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.normal),
                         ),
-                        Text('بارش ${_toPersianDigits(f.precipitationProbability.toString())}%',
-                            style: TextStyle(fontSize: 8, color: Colors.grey.shade600)),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // ردیف آمار وضعیت آب‌وهوا (احساس دما، رطوبت، باد، بارندگی، UV) - فونت و آیکون دو برابر
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              runSpacing: 8,
+              children: [
+                _StatChip(icon: Icons.thermostat, color: Colors.red, value: '${_toPersianDigits(data!.feelsLike.round().toString())}°', label: 'احساس دما'),
+                _StatChip(icon: Icons.water_drop, color: Colors.blue, value: '${_toPersianDigits(data!.humidity.toString())}%', label: 'رطوبت'),
+                _StatChip(icon: Icons.air, color: Colors.blue, value: '${_toPersianDigits(data!.windSpeed.round().toString())} km/h', label: 'باد'),
+                _StatChip(icon: Icons.grain, color: Colors.blueGrey, value: '${_toPersianDigits(data!.precipitation.toStringAsFixed(1))} mm', label: 'بارندگی'),
+                _StatChip(icon: Icons.wb_sunny, color: Colors.orange, value: 'UV ${_toPersianDigits(data!.uvIndex.round().toString())}', label: ''),
+              ],
+            ),
             if (error != null) ...[
               const SizedBox(height: 8),
               Text('⚠️ $error (نمایش آخرین اطلاعات ذخیره‌شده)',
@@ -166,15 +135,16 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // فونت و آیکون این ردیف نسبت به نسخه قبلی دو برابر شده است
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 2),
-        Text(value, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+        Icon(icon, size: 28, color: color),
+        const SizedBox(width: 4),
+        Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
         if (label.isNotEmpty) ...[
-          const SizedBox(width: 2),
-          Text(label, style: TextStyle(fontSize: 10, color: Colors.grey.shade700)),
+          const SizedBox(width: 4),
+          Text(label, style: TextStyle(fontSize: 20, color: Colors.grey.shade700)),
         ],
       ],
     );

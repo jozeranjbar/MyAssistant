@@ -31,7 +31,8 @@ class WeatherService {
         'weather_code',
         'precipitation_probability_max',
       ].join(','),
-      'forecast_days': '10',
+      // ۱۱ روز درخواست می‌شود: امروز + ۱۰ روز آینده (برای صفحه «وضعیت ده روز آینده»)
+      'forecast_days': '11',
       'timezone': 'auto',
     });
 

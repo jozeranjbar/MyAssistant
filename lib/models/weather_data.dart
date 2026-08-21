@@ -81,6 +81,13 @@ class WeatherData {
             : const [],
       );
 
+  /// پیش‌بینی «امروز» (اولین آیتم لیست پیش‌بینی، در صورت وجود)
+  DailyForecast? get todayForecast => forecast.isNotEmpty ? forecast.first : null;
+
+  /// پیش‌بینی ده روز آینده، از «فردا» شروع می‌شود (آیتم اول لیست «امروز» است و کنار گذاشته می‌شود)
+  List<DailyForecast> get next10DaysForecast =>
+      forecast.length > 1 ? forecast.sublist(1, forecast.length > 11 ? 11 : forecast.length) : const [];
+
   /// توضیح وضعیت هوا بر اساس کد WMO (استفاده‌شده در Open-Meteo)
   String get description => descriptionForCode(weatherCode);
 

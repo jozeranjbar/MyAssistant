@@ -14,6 +14,7 @@ import '../services/widget_service.dart';
 import '../data/iranian_holidays.dart';
 import '../widgets/weather_card.dart';
 import 'weather_settings_screen.dart';
+import 'ten_day_forecast_screen.dart';
 import 'calendar_screen.dart';
 import 'reminder_screen.dart';
 import 'about_screen.dart';
@@ -153,6 +154,14 @@ class _HomeScreenState extends State<HomeScreen> {
     await _loadEverything();
   }
 
+  Future<void> _openTenDayForecast(WeatherLocation loc) async {
+    final data = _weatherByLocation[loc.id];
+    if (data == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => TenDayForecastScreen(location: loc, data: data)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -164,34 +173,63 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [
-                  _SectionHeader(emoji: '🌤️', title: 'آب و هوا'),
-                  if (_locations.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(24),
+                  // بخش «آب و هوا»: عنوان + کارت(های) آب‌وهوا + نوار «وضعیت ده روز آینده»
+                  // + نوار «تنظیمات آب و هوا»، همگی داخل یک مستطیل واحد
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.blue.shade100),
+                      ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('هنوز هیچ لوکیشنی اضافه نکرده‌اید.'),
+                          const Text('🌤️ آب و هوا',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
+                          if (_locations.isEmpty) ...[
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Column(
+                                children: [
+                                  const Text('هنوز هیچ لوکیشنی اضافه نکرده‌اید.'),
+                                  const SizedBox(height: 8),
+                                  ElevatedButton(
+                                    onPressed: _openWeatherSettings,
+                                    child: const Text('افزودن لوکیشن'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else
+                            ..._locations.map((loc) => Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    if (_locations.indexOf(loc) > 0) const Divider(height: 24),
+                                    WeatherCard(
+                                      location: loc,
+                                      data: _weatherByLocation[loc.id],
+                                      loading: _loading,
+                                      error: _errorByLocation[loc.id],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _NavButton(
+                                      icon: Icons.calendar_view_week,
+                                      label: 'وضعیت ده روز آینده',
+                                      onTap: () => _openTenDayForecast(loc),
+                                    ),
+                                  ],
+                                )),
                           const SizedBox(height: 8),
-                          ElevatedButton(
-                            onPressed: _openWeatherSettings,
-                            child: const Text('افزودن لوکیشن'),
+                          _NavButton(
+                            icon: Icons.settings,
+                            label: 'تنظیمات آب و هوا',
+                            onTap: _openWeatherSettings,
                           ),
                         ],
                       ),
-                    )
-                  else
-                    ..._locations.map((loc) => WeatherCard(
-                          location: loc,
-                          data: _weatherByLocation[loc.id],
-                          loading: _loading,
-                          error: _errorByLocation[loc.id],
-                        )),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _NavButton(
-                      icon: Icons.settings,
-                      label: 'تنظیمات آب و هوا',
-                      onTap: _openWeatherSettings,
                     ),
                   ),
                   const SizedBox(height: 16),
