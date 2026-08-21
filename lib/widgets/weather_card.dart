@@ -101,33 +101,22 @@ class WeatherCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            // ردیف اول: احساس دما، رطوبت، بارندگی
+            // همه‌ی آمار پشت سر هم؛ فقط اگر عرض صفحه کم باشد به ردیف بعد می‌روند - اعداد انگلیسی
             Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              runSpacing: 8,
+              alignment: WrapAlignment.start,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 14,
+              runSpacing: 10,
               children: [
-                _StatChip(icon: Icons.thermostat, color: Colors.red, value: '${_toPersianDigits(data!.feelsLike.round().toString())}°', label: 'احساس دما'),
-                _StatChip(icon: Icons.water_drop, color: Colors.blue, value: '${_toPersianDigits(data!.humidity.toString())}%', label: 'رطوبت'),
-                _StatChip(icon: Icons.grain, color: Colors.blueGrey, value: '${_toPersianDigits(data!.precipitation.toStringAsFixed(1))} mm', label: 'بارندگی'),
+                _StatChip(icon: Icons.thermostat, color: Colors.red, label: 'احساس دما', value: '${data!.feelsLike.round()}°'),
+                _StatChip(icon: Icons.water_drop, color: Colors.blue, label: 'رطوبت', value: '${data!.humidity}%'),
+                _StatChip(icon: Icons.grain, color: Colors.blueGrey, label: 'بارندگی', value: '${data!.precipitation.toStringAsFixed(1)} mm'),
+                _StatChip(icon: Icons.air, color: Colors.blue, label: 'باد', value: '${data!.windSpeed.round()} km/h'),
+                Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
+                _StatChip(icon: Icons.visibility, color: Colors.teal, label: 'دید افقی', value: '${data!.visibility.toStringAsFixed(1)} km'),
+                Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
+                _StatChip(icon: Icons.wb_sunny, color: Colors.orange, label: 'شاخص UV', value: '${data!.uvIndex.round()}'),
               ],
-            ),
-            const SizedBox(height: 10),
-            // ردیف دوم: باد، دید افقی، شاخص UV - با خط فاصله بین آن‌ها
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _StatChip(icon: Icons.air, color: Colors.blue, value: '${_toPersianDigits(data!.windSpeed.round().toString())} km/h', label: 'باد'),
-                  const SizedBox(width: 10),
-                  Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
-                  const SizedBox(width: 10),
-                  _StatChip(icon: Icons.visibility, color: Colors.teal, value: '${_toPersianDigits(data!.visibility.toStringAsFixed(1))} km', label: 'دید افقی'),
-                  const SizedBox(width: 10),
-                  Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
-                  const SizedBox(width: 10),
-                  _StatChip(icon: Icons.wb_sunny, color: Colors.orange, value: 'UV ${_toPersianDigits(data!.uvIndex.round().toString())}', label: ''),
-                ],
-              ),
             ),
             if (error != null) ...[
               const SizedBox(height: 8),
@@ -152,16 +141,17 @@ class _StatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // فونت و آیکون این ردیف نسبت به نسخه قبلی دو برابر شده است
+    // ترتیب: آیکون، کلمه فارسی، عدد انگلیسی
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 28, color: color),
         const SizedBox(width: 4),
-        Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
         if (label.isNotEmpty) ...[
-          const SizedBox(width: 4),
           Text(label, style: TextStyle(fontSize: 20, color: Colors.grey.shade700)),
+          const SizedBox(width: 4),
         ],
+        Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
       ],
     );
   }
