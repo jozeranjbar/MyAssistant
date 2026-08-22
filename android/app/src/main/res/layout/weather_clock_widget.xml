@@ -38,12 +38,12 @@
         </FrameLayout>
 
         <!-- خط جداکننده -->
-        <View
+        <FrameLayout
             android:layout_width="1.5dp"
             android:layout_height="match_parent"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:background="@drawable/widget_divider" />
+            android:background="@drawable/widget_divider"></FrameLayout>
 
         <!-- ستون ۲ - تاریخ + یادآوری -->
         <LinearLayout
@@ -106,9 +106,9 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <View
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="6dp" />
+                android:layout_height="6dp"></FrameLayout>
 
             <!-- پیل یادآوری -->
             <LinearLayout
@@ -145,12 +145,12 @@
         </LinearLayout>
 
         <!-- خط جداکننده -->
-        <View
+        <FrameLayout
             android:layout_width="1.5dp"
             android:layout_height="match_parent"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:background="@drawable/widget_divider" />
+            android:background="@drawable/widget_divider"></FrameLayout>
 
         <!-- ستون ۳ - آب‌وهوا -->
         <LinearLayout
