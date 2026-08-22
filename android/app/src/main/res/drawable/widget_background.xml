@@ -1,9 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <corners android:radius="24dp" />
-    <gradient
-        android:type="linear"
-        android:angle="0"
-        android:startColor="#D9B8F5"
-        android:endColor="#B693EA" />
-</shape>
+<!-- کارت شیشه‌ای بنفش با گرادیان مورب + یک لایه‌ی درخشش بالا، شبیه عکس نمونه -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape>
+            <corners android:radius="26dp" />
+            <gradient
+                android:type="linear"
+                android:angle="135"
+                android:startColor="#CEB9F2"
+                android:centerColor="#A98EE8"
+                android:endColor="#8F6FE0" />
+        </shape>
+    </item>
+
+    <!-- درخشش نرم بالا برای حس شیشه‌ای -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp">
+        <shape android:shape="rectangle">
+            <corners
+                android:topLeftRadius="26dp"
+                android:topRightRadius="26dp"
+                android:bottomLeftRadius="0dp"
+                android:bottomRightRadius="0dp" />
+            <gradient
+                android:type="linear"
+                android:angle="90"
+                android:startColor="#33FFFFFF"
+                android:endColor="#00FFFFFF" />
+            <size android:height="28dp" />
+        </shape>
+    </item>
+</layer-list>
