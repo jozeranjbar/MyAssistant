@@ -50,58 +50,45 @@ class TenDayForecastScreen extends StatelessWidget {
                     border: Border.all(color: Colors.blue.shade100),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ردیف اول: تاریخ، حالت ابرها، احتمال بارش، رطوبت
-                      Row(
+                      Text('$weekday $dateStr',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.blue.shade900)),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 14,
+                        runSpacing: 10,
                         children: [
-                          SizedBox(
-                            width: 84,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(weekday, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                Text(dateStr, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                              ],
-                            ),
-                          ),
-                          Text(f.iconEmoji, style: const TextStyle(fontSize: 26)),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              WeatherData.descriptionForCode(f.weatherCode),
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                          ),
-                          Icon(Icons.grain, size: 16, color: Colors.blue.shade400),
-                          const SizedBox(width: 2),
-                          Text('${_toPersianDigits(f.precipitationProbability.toString())}%',
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
-                          const SizedBox(width: 10),
-                          Icon(Icons.water_drop, size: 16, color: Colors.blue.shade400),
-                          const SizedBox(width: 2),
-                          Text('${_toPersianDigits(f.humidity.toString())}%',
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Divider(height: 1),
-                      const SizedBox(height: 8),
-                      // ردیف دوم: حداقل و حداکثر دما، شاخص UV
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${_toPersianDigits(f.minTemp.round().toString())}° / ${_toPersianDigits(f.maxTemp.round().toString())}°',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
                           Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.wb_sunny, size: 16, color: Colors.orange.shade400),
-                              const SizedBox(width: 2),
-                              Text('UV ${_toPersianDigits(f.uvIndex.round().toString())}',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                              Text(f.iconEmoji, style: const TextStyle(fontSize: 26)),
+                              const SizedBox(width: 6),
+                              Text(WeatherData.descriptionForCode(f.weatherCode), style: const TextStyle(fontSize: 18)),
                             ],
+                          ),
+                          Text(
+                            '${_toPersianDigits(f.minTemp.round().toString())}°/${_toPersianDigits(f.maxTemp.round().toString())}°',
+                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.brown.shade700),
+                          ),
+                          _DayStatChip(
+                            icon: Icons.grain,
+                            color: Colors.blue,
+                            label: 'بارش',
+                            value: '${_toPersianDigits(f.precipitationProbability.toString())}%',
+                          ),
+                          _DayStatChip(
+                            icon: Icons.water_drop,
+                            color: Colors.blue,
+                            label: 'رطوبت',
+                            value: '${_toPersianDigits(f.humidity.toString())}%',
+                          ),
+                          _DayStatChip(
+                            icon: Icons.wb_sunny,
+                            color: Colors.orange,
+                            label: 'UV',
+                            value: _toPersianDigits(f.uvIndex.round().toString()),
                           ),
                         ],
                       ),
@@ -110,6 +97,29 @@ class TenDayForecastScreen extends StatelessWidget {
                 );
               },
             ),
+    );
+  }
+}
+
+class _DayStatChip extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String value;
+  final String label;
+
+  const _DayStatChip({required this.icon, required this.color, required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 22, color: color),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(fontSize: 16, color: Colors.green.shade900)),
+        const SizedBox(width: 4),
+        Text(value, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.brown.shade700)),
+      ],
     );
   }
 }
