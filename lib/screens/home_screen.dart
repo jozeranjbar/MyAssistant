@@ -233,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       label: 'وضعیت هوای ده روز آینده ${loc.name}',
                                       onTap: () => _openTenDayForecast(loc),
                                       backgroundColor: Colors.blue.shade50,
-                                      foregroundColor: Colors.yellow.shade600,
+                                      foregroundColor: Colors.blue.shade900,
                                       showArrow: false,
                                       fontSize: 17,
                                       fontWeight: FontWeight.bold,
