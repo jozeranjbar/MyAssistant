@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shamsi_date/shamsi_date.dart';
 import '../models/weather_location.dart';
 import '../models/weather_data.dart';
 
@@ -13,10 +14,6 @@ String _toPersianDigits(String input) {
 }
 
 const _weekdayNamesFa = ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه', 'یکشنبه'];
-const _monthNamesFaGregorian = [
-  'ژانویه', 'فوریه', 'مارس', 'آوریل', 'می', 'ژوئن',
-  'ژوئیه', 'اوت', 'سپتامبر', 'اکتبر', 'نوامبر', 'دسامبر'
-];
 
 /// صفحه‌ی وضعیت ده روز آینده آب‌وهوا (از فردا شروع می‌شود)
 class TenDayForecastScreen extends StatelessWidget {
@@ -31,17 +28,23 @@ class TenDayForecastScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text('وضعیت هوای ده روز آینده ${location.name}')),
-      body: days.isEmpty
-          ? const Center(child: Text('پیش‌بینی ده روز آینده در دسترس نیست'))
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: days.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final f = days[index];
-                final weekday = _weekdayNamesFa[f.date.weekday - 1];
-                final dateStr =
-                    '${_toPersianDigits(f.date.day.toString())} ${_monthNamesFaGregorian[f.date.month - 1]}';
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          if ((details.primaryVelocity ?? 0).abs() > 200) {
+            Navigator.of(context).maybePop();
+          }
+        },
+        child: days.isEmpty
+            ? const Center(child: Text('پیش‌بینی ده روز آینده در دسترس نیست'))
+            : ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: days.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final f = days[index];
+                  final weekday = _weekdayNamesFa[f.date.weekday - 1];
+                  final jalali = Jalali.fromDateTime(f.date);
+                  final dateStr = '${_toPersianDigits(jalali.day.toString())} ${jalali.formatter.mN}';
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
@@ -97,6 +100,7 @@ class TenDayForecastScreen extends StatelessWidget {
                 );
               },
             ),
+      ),
     );
   }
 }
