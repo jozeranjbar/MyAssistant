@@ -1,7 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shamsi_date/shamsi_date.dart';
+import 'package:hijri/hijri_calendar.dart';
 import '../models/weather_location.dart';
 import '../models/weather_data.dart';
+import '../models/reminder.dart';
+import '../services/weather_service.dart';
+import '../services/location_storage_service.dart';
+import '../services/reminder_storage_service.dart';
+import '../services/notification_service.dart';
+import '../services/events_service.dart';
+import '../services/widget_service.dart';
+import '../data/iranian_holidays.dart';
+import '../widgets/weather_card.dart';
+import 'weather_settings_screen.dart';
+import 'ten_day_forecast_screen.dart';
+import 'chart_maker_screen.dart';
+import 'calendar_screen.dart';
+import 'reminder_screen.dart';
+import 'about_screen.dart';
 
 String _toPersianDigits(String input) {
   const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -13,117 +30,454 @@ String _toPersianDigits(String input) {
   return result;
 }
 
-const _weekdayNamesFa = ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه', 'یکشنبه'];
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
-/// صفحه‌ی وضعیت ده روز آینده آب‌وهوا (از فردا شروع می‌شود)
-class TenDayForecastScreen extends StatelessWidget {
-  final WeatherLocation location;
-  final WeatherData data;
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
-  const TenDayForecastScreen({super.key, required this.location, required this.data});
+class _HomeScreenState extends State<HomeScreen> {
+  final _weatherService = WeatherService();
+  final _locationStorage = LocationStorageService();
+  final _reminderStorage = ReminderStorageService();
+  final _eventsService = EventsService();
+
+  List<WeatherLocation> _locations = [];
+  final Map<String, WeatherData?> _weatherByLocation = {};
+  final Map<String, String?> _errorByLocation = {};
+  bool _loading = true;
+  int _activeReminderCount = 0;
+  List<CalendarEvent> _todayEvents = [];
+  final Jalali _today = Jalali.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEverything();
+  }
+
+  Future<void> _loadEverything() async {
+    final locations = await _locationStorage.loadLocations();
+    // بارگذاری فوری از کش (برای نمایش سریع/آفلاین)
+    for (final loc in locations) {
+      _weatherByLocation[loc.id] = await _locationStorage.getCachedWeather(loc.id);
+    }
+    final reminders = await _reminderStorage.loadReminders();
+    final todayEvents = await _eventsService.getEventsForJalali(_today);
+    setState(() {
+      _locations = locations;
+      _activeReminderCount = reminders.where((r) => r.isActive).length;
+      _todayEvents = todayEvents;
+      _loading = false;
+    });
+    await _refreshAllWeather();
+    await _updateWidget(reminders);
+    await _maybePromptAddWidget();
+  }
+
+  Future<void> _updateWidget(List<Reminder> reminders) async {
+    if (_locations.isEmpty) return;
+    final firstLoc = _locations.first;
+    await WidgetService.updateWidgetData(
+      location: firstLoc,
+      weather: _weatherByLocation[firstLoc.id],
+      reminders: reminders,
+    );
+  }
+
+  Future<void> _maybePromptAddWidget() async {
+    final alreadyPrompted = await WidgetService.hasPromptedBefore();
+    if (alreadyPrompted || !mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('افزودن ویجت'),
+        content: const Text('آیا می‌خواهید ویجت آب‌وهوا و ساعت را به صفحه اصلی گوشی اضافه کنید؟'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await WidgetService.markPrompted();
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+            },
+            child: const Text('نه، متشکرم'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await WidgetService.markPrompted();
+              await WidgetService.requestPinWidget();
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+            },
+            child: const Text('بله، اضافه کن'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _refreshAllWeather() async {
+    final connectivity = await Connectivity().checkConnectivity();
+    final hasInternet = !connectivity.contains(ConnectivityResult.none);
+
+    for (final loc in _locations) {
+      if (!hasInternet) {
+        setState(() {
+          _errorByLocation[loc.id] = 'اینترنت در دسترس نیست';
+        });
+        continue;
+      }
+      try {
+        final data = await _weatherService.fetchWeather(
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+        );
+        await _locationStorage.cacheWeather(loc.id, data);
+        if (!mounted) return;
+        setState(() {
+          _weatherByLocation[loc.id] = data;
+          _errorByLocation[loc.id] = null;
+        });
+      } on WeatherException catch (e) {
+        if (!mounted) return;
+        setState(() => _errorByLocation[loc.id] = e.message);
+      } catch (_) {
+        if (!mounted) return;
+        setState(() => _errorByLocation[loc.id] = 'خطای غیرمنتظره در دریافت آب‌وهوا');
+      }
+    }
+  }
+
+  Future<void> _openWeatherSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const WeatherSettingsScreen()),
+    );
+    await _loadEverything();
+  }
+
+  Future<void> _openTenDayForecast(WeatherLocation loc) async {
+    final data = _weatherByLocation[loc.id];
+    if (data == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => TenDayForecastScreen(location: loc, data: data)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final days = data.next10DaysForecast;
-
     return Scaffold(
-      appBar: AppBar(title: Text('وضعیت هوای ده روز آینده ${location.name}')),
-      body: GestureDetector(
-        onHorizontalDragEnd: (details) {
-          if ((details.primaryVelocity ?? 0).abs() > 200) {
-            Navigator.of(context).maybePop();
-          }
-        },
-        child: days.isEmpty
-            ? const Center(child: Text('پیش‌بینی ده روز آینده در دسترس نیست'))
-            : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: days.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final f = days[index];
-                  final weekday = _weekdayNamesFa[f.date.weekday - 1];
-                  final jalali = Jalali.fromDateTime(f.date);
-                  final dateStr = '${_toPersianDigits(jalali.day.toString())} ${jalali.formatter.mN}';
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.blue.shade100),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('$weekday $dateStr',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.blue.shade900)),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 14,
-                        runSpacing: 10,
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          'MyAssistant',
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            fontStyle: FontStyle.italic,
+            letterSpacing: 0.5,
+            color: Color(0xFF6366F1),
+          ),
+        ),
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _refreshAllWeather,
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 24),
+                children: [
+                  // بخش «آب و هوا»: عنوان بیرون از مستطیل + کارت(های) آب‌وهوا + نوار «وضعیت ده روز آینده»
+                  // + نوار «تنظیمات آب و هوا»، همگی داخل یک مستطیل واحد
+                  _SectionHeader(emoji: '🌤️', title: 'آب و هوا'),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.green.shade100),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(f.iconEmoji, style: const TextStyle(fontSize: 26)),
-                              const SizedBox(width: 6),
-                              Text(WeatherData.descriptionForCode(f.weatherCode), style: const TextStyle(fontSize: 18)),
-                            ],
-                          ),
-                          Text(
-                            '${_toPersianDigits(f.minTemp.round().toString())}°/${_toPersianDigits(f.maxTemp.round().toString())}°',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.brown.shade700),
-                          ),
-                          _DayStatChip(
-                            icon: Icons.grain,
-                            color: Colors.blue,
-                            label: 'بارش',
-                            value: '${_toPersianDigits(f.precipitationProbability.toString())}%',
-                          ),
-                          _DayStatChip(
-                            icon: Icons.water_drop,
-                            color: Colors.blue,
-                            label: 'رطوبت',
-                            value: '${_toPersianDigits(f.humidity.toString())}%',
-                          ),
-                          _DayStatChip(
-                            icon: Icons.wb_sunny,
-                            color: Colors.orange,
-                            label: 'UV',
-                            value: _toPersianDigits(f.uvIndex.round().toString()),
+                          if (_locations.isEmpty) ...[
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Column(
+                                children: [
+                                  const Text('هنوز هیچ لوکیشنی اضافه نکرده‌اید.'),
+                                  const SizedBox(height: 8),
+                                  ElevatedButton(
+                                    onPressed: _openWeatherSettings,
+                                    child: const Text('افزودن لوکیشن'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else
+                            ..._locations.map((loc) => Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    if (_locations.indexOf(loc) > 0) const Divider(height: 24),
+                                    WeatherCard(
+                                      location: loc,
+                                      data: _weatherByLocation[loc.id],
+                                      loading: _loading,
+                                      error: _errorByLocation[loc.id],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _NavButton(
+                                      icon: Icons.calendar_view_week,
+                                      label: 'وضعیت هوای ده روز آینده ${loc.name}',
+                                      onTap: () => _openTenDayForecast(loc),
+                                      backgroundColor: Colors.blue.shade50,
+                                      foregroundColor: Colors.blue.shade900,
+                                      showArrow: false,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ],
+                                )),
+                          const SizedBox(height: 8),
+                          _NavButton(
+                            icon: Icons.settings,
+                            label: 'تنظیمات آب و هوا',
+                            onTap: _openWeatherSettings,
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                );
-              },
+                  const SizedBox(height: 16),
+
+                  _SectionHeader(emoji: '🗓️', title: 'تقویم'),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.green.shade100),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _TodayCalendarCard(
+                            today: _today,
+                            events: _todayEvents,
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const CalendarScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          _NavButton(
+                            icon: Icons.calendar_month,
+                            label: 'مشاهده تقویم کامل و تنظیم مناسبت‌ها',
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const CalendarScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  _SectionHeader(emoji: '🔔', title: 'یادآوری'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _NavButton(
+                      icon: Icons.notifications,
+                      label: _activeReminderCount == 0
+                          ? 'یادآوری ثبت نشده است'
+                          : '$_activeReminderCount یادآوری فعال — تنظیمات یادآوری',
+                      backgroundColor: Colors.green.shade50,
+                      foregroundColor: Colors.green.shade900,
+                      onTap: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const ReminderScreen()),
+                        );
+                        await _loadEverything();
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  _SectionHeader(emoji: '📊', title: 'نمودار ساز'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _NavButton(
+                      icon: Icons.bar_chart,
+                      label: 'ساخت نمودار',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Material(
+                      color: Colors.green.shade800,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const AboutScreen()),
+                          );
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline, color: Colors.white),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Text('اطلاعات برنامه و تنظیمات کلی',
+                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              ),
+                              Icon(Icons.chevron_left, color: Colors.white),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String emoji;
+  final String title;
+  const _SectionHeader({required this.emoji, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      child: Text('$emoji $title',
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
+    );
+  }
+}
+
+class _NavButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
+  final bool showArrow;
+  final double? fontSize;
+  final FontWeight? fontWeight;
+  const _NavButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.backgroundColor,
+    this.foregroundColor,
+    this.showArrow = false,
+    this.fontSize,
+    this.fontWeight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = backgroundColor ?? Colors.purple.shade50;
+    final fg = foregroundColor ?? Colors.purple;
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(icon, color: fg),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(color: fg, fontSize: fontSize, fontWeight: fontWeight),
+                ),
+              ),
+              if (showArrow) Icon(Icons.chevron_left, color: fg),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-class _DayStatChip extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String value;
-  final String label;
+class _TodayCalendarCard extends StatelessWidget {
+  final Jalali today;
+  final List<CalendarEvent> events;
+  final VoidCallback onTap;
 
-  const _DayStatChip({required this.icon, required this.color, required this.value, required this.label});
+  const _TodayCalendarCard({required this.today, required this.events, required this.onTap});
+
+  static const _weekdays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 22, color: color),
-        const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 16, color: Colors.green.shade900)),
-        const SizedBox(width: 4),
-        Text(value, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.brown.shade700)),
-      ],
+    final gDate = today.toDateTime();
+    final hijri = HijriCalendar.fromDate(gDate);
+
+    final jalaliStr = '${_toPersianDigits(today.day.toString())} ${today.formatter.mN} ${_toPersianDigits(today.year.toString())}';
+    final gregorianStr = '${gDate.day} ${gregorianMonthNamesFa[gDate.month - 1]} ${gDate.year}';
+    final hijriStr = '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]} ${_toPersianDigits(hijri.hYear.toString())}';
+
+    final dateStr = '${_weekdays[today.weekDay - 1]}، $jalaliStr ، $gregorianStr ، $hijriStr';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(dateStr,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
+              const SizedBox(height: 10),
+              if (events.isEmpty)
+                Text('امروز مناسبتی وجود ندارد',
+                    style: TextStyle(color: Colors.grey.shade700, fontSize: 13))
+              else
+                ...events.map((e) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        '${e.isPublic ? '•' : '★'} ${e.title}',
+                        style: TextStyle(
+                          color: Colors.green.shade900,
+                          fontSize: 13,
+                        ),
+                      ),
+                    )),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
