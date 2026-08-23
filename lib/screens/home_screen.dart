@@ -403,4 +403,91 @@ class _NavButton extends StatelessWidget {
     final fg = foregroundColor ?? Colors.purple;
     return Material(
       color: bg,
-      borderRadius
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(icon, color: fg),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(color: fg, fontSize: fontSize, fontWeight: fontWeight),
+                ),
+              ),
+              if (showArrow) Icon(Icons.chevron_left, color: fg),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TodayCalendarCard extends StatelessWidget {
+  final Jalali today;
+  final List<CalendarEvent> events;
+  final VoidCallback onTap;
+
+  const _TodayCalendarCard({required this.today, required this.events, required this.onTap});
+
+  static const _weekdays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+
+  @override
+  Widget build(BuildContext context) {
+    final gDate = today.toDateTime();
+    final hijri = HijriCalendar.fromDate(gDate);
+
+    final jalaliStr = '${_toPersianDigits(today.day.toString())} ${today.formatter.mN} ${_toPersianDigits(today.year.toString())}';
+    final gregorianStr = '${gDate.day} ${gregorianMonthNamesFa[gDate.month - 1]} ${gDate.year}';
+    final hijriStr = '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]} ${_toPersianDigits(hijri.hYear.toString())}';
+
+    final dateStr = '${_weekdays[today.weekDay - 1]}، $jalaliStr ، $gregorianStr ، $hijriStr';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.calendar_today, size: 18, color: Colors.blue.shade900),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(dateStr,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              if (events.isEmpty)
+                Text('امروز مناسبتی وجود ندارد',
+                    style: TextStyle(color: Colors.grey.shade700, fontSize: 13))
+              else
+                ...events.map((e) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        '${e.isPublic ? '•' : '★'} ${e.title}',
+                        style: TextStyle(
+                          color: Colors.green.shade900,
+                          fontSize: 13,
+                        ),
+                      ),
+                    )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
