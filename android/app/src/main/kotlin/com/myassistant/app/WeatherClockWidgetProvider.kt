@@ -86,6 +86,8 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
             views.setTextViewText(R.id.widget_reminder, widgetData.getString("reminder_text", "امروز یادآوری ندارید"))
             views.setTextViewText(R.id.widget_clock, currentTimeText())
 
+            views.setOnClickPendingIntent(R.id.widget_root, buildLaunchAppIntent(context, appWidgetId))
+
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
@@ -100,9 +102,22 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
             for (appWidgetId in ids) {
                 val views = RemoteViews(context.packageName, R.layout.weather_clock_widget)
                 views.setTextViewText(R.id.widget_clock, currentTimeText())
+                views.setOnClickPendingIntent(R.id.widget_root, buildLaunchAppIntent(context, appWidgetId))
                 appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
             }
         }
+    }
+
+    private fun buildLaunchAppIntent(context: Context, appWidgetId: Int): PendingIntent {
+        val launchIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        } else {
+            PendingIntent.FLAG_UPDATE_CURRENT
+        }
+        return PendingIntent.getActivity(context, appWidgetId, launchIntent, flags)
     }
 
     private fun currentTimeText(): String {
