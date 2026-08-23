@@ -148,7 +148,7 @@ class _StatChip extends StatelessWidget {
         Icon(icon, size: 28, color: color),
         const SizedBox(width: 4),
         if (label.isNotEmpty) ...[
-          Text(label, style: TextStyle(fontSize: 20, color: Colors.grey.shade700)),
+          Text(label, style: TextStyle(fontSize: 20, color: Colors.green.shade900)),
           const SizedBox(width: 4),
         ],
         Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.brown.shade700)),
