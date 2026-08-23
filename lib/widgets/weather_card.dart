@@ -57,17 +57,17 @@ class WeatherCard extends StatelessWidget {
               ),
             )
           else if (data != null) ...[
-            // سطر اول: نام لوکیشن (تهران) و زمان بروزرسانی - فونت نام شهر درشت‌تر شد
+            // سطر اول: نام لوکیشن (تهران) و زمان بروزرسانی
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(location.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                Text(location.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 Text('بروزرسانی: ${_formattedUpdateTime()}',
                     style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
               ],
             ),
             const SizedBox(height: 6),
-            // سطر دوم: حالت ابر (آیکون + توضیح، به رنگ سبز) و دما به همراه حداقل/حداکثر در پرانتز
+            // سطر دوم: حالت ابر (آیکون + توضیح) و دما به همراه حداقل/حداکثر در پرانتز
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -77,10 +77,7 @@ class WeatherCard extends StatelessWidget {
                       Text(data!.iconEmoji, style: const TextStyle(fontSize: 26)),
                       const SizedBox(width: 6),
                       Flexible(
-                        child: Text(
-                          data!.description,
-                          style: TextStyle(fontSize: 13, color: Colors.green.shade700, fontWeight: FontWeight.w600),
-                        ),
+                        child: Text(data!.description, style: const TextStyle(fontSize: 13, color: Colors.black87)),
                       ),
                     ],
                   ),
@@ -105,7 +102,6 @@ class WeatherCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             // همه‌ی آمار پشت سر هم؛ فقط اگر عرض صفحه کم باشد به ردیف بعد می‌روند - اعداد انگلیسی
-            // بین احساس‌دما/رطوبت/بارندگی و بین باد/دیدافقی/UV خط جداکننده گذاشته شده
             Wrap(
               alignment: WrapAlignment.start,
               crossAxisAlignment: WrapCrossAlignment.center,
@@ -113,9 +109,7 @@ class WeatherCard extends StatelessWidget {
               runSpacing: 10,
               children: [
                 _StatChip(icon: Icons.thermostat, color: Colors.red, label: 'احساس دما', value: '${data!.feelsLike.round()}°'),
-                Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
                 _StatChip(icon: Icons.water_drop, color: Colors.blue, label: 'رطوبت', value: '${data!.humidity}%'),
-                Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
                 _StatChip(icon: Icons.grain, color: Colors.blueGrey, label: 'بارندگی', value: '${data!.precipitation.toStringAsFixed(1)} mm'),
                 _StatChip(icon: Icons.air, color: Colors.blue, label: 'باد', value: '${data!.windSpeed.round()} km/h'),
                 Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
@@ -147,17 +141,17 @@ class _StatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // فونت و آیکون این ردیف نسبت به نسخه قبلی دو برابر شده است
-    // ترتیب: آیکون، کلمه فارسی (سبز)، عدد انگلیسی
+    // ترتیب: آیکون، کلمه فارسی، عدد انگلیسی
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 28, color: color),
         const SizedBox(width: 4),
         if (label.isNotEmpty) ...[
-          Text(label, style: TextStyle(fontSize: 20, color: Colors.green.shade700, fontWeight: FontWeight.w600)),
+          Text(label, style: TextStyle(fontSize: 20, color: Colors.grey.shade700)),
           const SizedBox(width: 4),
         ],
-        Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.brown.shade700)),
       ],
     );
   }
