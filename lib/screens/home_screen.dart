@@ -166,7 +166,19 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('MyAssistant')),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          'MyAssistant',
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            fontStyle: FontStyle.italic,
+            letterSpacing: 0.5,
+            color: Color(0xFF6366F1),
+          ),
+        ),
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -174,10 +186,8 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [
-                  // بخش «آب و هوا»: عنوان (بیرون از مستطیل‌های داخلی) + یک مستطیل
-                  // داخلی جدا برای هر شهر (کارت آب‌وهوا + دکمه‌ی ده‌روزه‌ی همان شهر)
-                  // + یک مستطیل داخلی جدا برای دکمه‌ی «تنظیمات آب‌وهوا»
-                  // همگی داخل یک مستطیل بزرگ‌تر آبی‌رنگ
+                  // بخش «آب و هوا»: عنوان + کارت(های) آب‌وهوا + نوار «وضعیت ده روز آینده»
+                  // + نوار «تنظیمات آب و هوا»، همگی داخل یک مستطیل واحد
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Container(
@@ -192,7 +202,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           const Text('🌤️ آب و هوا',
                               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
-                          const SizedBox(height: 10),
                           if (_locations.isEmpty) ...[
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -208,54 +217,34 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ] else
-                            // هر شهر داخل مستطیل سفید جدای خودش، با فاصله‌ی کم از شهر بعدی
-                            ..._locations.map((loc) => Container(
-                                  margin: const EdgeInsets.only(bottom: 10),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: Colors.blue.shade100),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      WeatherCard(
-                                        location: loc,
-                                        data: _weatherByLocation[loc.id],
-                                        loading: _loading,
-                                        error: _errorByLocation[loc.id],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      _NavButton(
-                                        icon: Icons.calendar_view_week,
-                                        label: 'وضعیت هوای ده روز آینده ${loc.name}',
-                                        onTap: () => _openTenDayForecast(loc),
-                                        backgroundColor: Colors.blue.shade50,
-                                        foregroundColor: Colors.brown.shade700,
-                                        labelStyle: TextStyle(
-                                          color: Colors.brown.shade700,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                        ),
-                                        showArrow: false,
-                                      ),
-                                    ],
-                                  ),
+                            ..._locations.map((loc) => Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    if (_locations.indexOf(loc) > 0) const Divider(height: 24),
+                                    WeatherCard(
+                                      location: loc,
+                                      data: _weatherByLocation[loc.id],
+                                      loading: _loading,
+                                      error: _errorByLocation[loc.id],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _NavButton(
+                                      icon: Icons.calendar_view_week,
+                                      label: 'وضعیت هوای ده روز آینده ${loc.name}',
+                                      onTap: () => _openTenDayForecast(loc),
+                                      backgroundColor: Colors.blue.shade50,
+                                      foregroundColor: Colors.yellow.shade600,
+                                      showArrow: false,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ],
                                 )),
-                          // دکمه‌ی «تنظیمات آب‌وهوا» داخل مستطیل سفید جدای خودش
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.blue.shade100),
-                            ),
-                            child: _NavButton(
-                              icon: Icons.settings,
-                              label: 'تنظیمات آب و هوا',
-                              onTap: _openWeatherSettings,
-                            ),
+                          const SizedBox(height: 8),
+                          _NavButton(
+                            icon: Icons.settings,
+                            label: 'تنظیمات آب و هوا',
+                            onTap: _openWeatherSettings,
                           ),
                         ],
                       ),
@@ -378,16 +367,18 @@ class _NavButton extends StatelessWidget {
   final VoidCallback onTap;
   final Color? backgroundColor;
   final Color? foregroundColor;
-  final TextStyle? labelStyle;
   final bool showArrow;
+  final double? fontSize;
+  final FontWeight? fontWeight;
   const _NavButton({
     required this.icon,
     required this.label,
     required this.onTap,
     this.backgroundColor,
     this.foregroundColor,
-    this.labelStyle,
-    this.showArrow = true,
+    this.showArrow = false,
+    this.fontSize,
+    this.fontWeight,
   });
 
   @override
@@ -406,7 +397,12 @@ class _NavButton extends StatelessWidget {
             children: [
               Icon(icon, color: fg),
               const SizedBox(width: 12),
-              Expanded(child: Text(label, style: labelStyle ?? TextStyle(color: fg))),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(color: fg, fontSize: fontSize, fontWeight: fontWeight),
+                ),
+              ),
               if (showArrow) Icon(Icons.chevron_left, color: fg),
             ],
           ),
