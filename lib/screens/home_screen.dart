@@ -193,9 +193,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.blue.shade100),
+                        border: Border.all(color: Colors.green.shade100),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,28 +252,43 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  _SectionHeader(emoji: '🗓️', title: 'تقویم'),
-                  _TodayCalendarCard(
-                    today: _today,
-                    events: _todayEvents,
-                    onTap: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const CalendarScreen()),
-                      );
-                      await _loadEverything();
-                    },
-                  ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _NavButton(
-                      icon: Icons.calendar_month,
-                      label: 'مشاهده تقویم کامل و تنظیم مناسبت‌ها',
-                      onTap: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const CalendarScreen()),
-                        );
-                        await _loadEverything();
-                      },
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.blue.shade100),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('🗓️ تقویم',
+                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
+                          _TodayCalendarCard(
+                            today: _today,
+                            events: _todayEvents,
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const CalendarScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          _NavButton(
+                            icon: Icons.calendar_month,
+                            label: 'مشاهده تقویم کامل و تنظیم مناسبت‌ها',
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const CalendarScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -385,89 +400,4 @@ class _NavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = backgroundColor ?? Colors.purple.shade50;
     final fg = foregroundColor ?? Colors.purple;
-    return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, color: fg),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(color: fg, fontSize: fontSize, fontWeight: fontWeight),
-                ),
-              ),
-              if (showArrow) Icon(Icons.chevron_left, color: fg),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TodayCalendarCard extends StatelessWidget {
-  final Jalali today;
-  final List<CalendarEvent> events;
-  final VoidCallback onTap;
-
-  const _TodayCalendarCard({required this.today, required this.events, required this.onTap});
-
-  static const _weekdays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-
-  @override
-  Widget build(BuildContext context) {
-    final gDate = today.toDateTime();
-    final hijri = HijriCalendar.fromDate(gDate);
-
-    final jalaliStr = '${_toPersianDigits(today.day.toString())} ${today.formatter.mN} ${_toPersianDigits(today.year.toString())}';
-    final gregorianStr = '${gDate.day} ${gregorianMonthNamesFa[gDate.month - 1]} ${gDate.year}';
-    final hijriStr = '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]} ${_toPersianDigits(hijri.hYear.toString())}';
-
-    final dateStr = '${_weekdays[today.weekDay - 1]}، $jalaliStr ، $gregorianStr ، $hijriStr';
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(dateStr, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              if (events.isEmpty)
-                Text('امروز مناسبتی وجود ندارد',
-                    style: TextStyle(color: Colors.grey.shade700, fontSize: 13))
-              else
-                ...events.map((e) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        '${e.isPublic ? '•' : '★'} ${e.title}',
-                        style: TextStyle(
-                          color: e.isPublic ? Colors.grey.shade800 : Colors.purple.shade700,
-                          fontSize: 13,
-                        ),
-                      ),
-                    )),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+    return Material
