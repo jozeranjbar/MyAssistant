@@ -188,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   // بخش «آب و هوا»: عنوان بیرون از مستطیل + کارت(های) آب‌وهوا + نوار «وضعیت ده روز آینده»
                   // + نوار «تنظیمات آب و هوا»، همگی داخل یک مستطیل واحد
-                  _SectionHeader(emoji: '🌤️', title: 'آب و هوا'),
+                  _SectionHeader(title: 'آب و هوا'),
                   Padding(
                     padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
                     child: Container(
@@ -251,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  _SectionHeader(emoji: '🗓️', title: 'تقویم'),
+                  _SectionHeader(title: 'تقویم'),
                   Padding(
                     padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
                     child: Container(
@@ -276,8 +276,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 8),
                           _NavButton(
-                            icon: Icons.calendar_month,
-                            label: 'مشاهده تقویم کامل و تنظیم مناسبت‌ها',
+                            icon: Icons.settings,
+                            label: 'تنظیم مناسبت‌ها و مشاهده تقویم کامل',
                             onTap: () async {
                               await Navigator.of(context).push(
                                 MaterialPageRoute(builder: (_) => const CalendarScreen()),
@@ -291,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  _SectionHeader(emoji: '🔔', title: 'یادآوری'),
+                  _SectionHeader(title: 'یادآوری'),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: _NavButton(
@@ -311,12 +311,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  _SectionHeader(emoji: '📊', title: 'نمودار ساز'),
+                  _SectionHeader(title: 'نمودار ساز'),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: _NavButton(
                       icon: Icons.bar_chart,
                       label: 'ساخت نمودار',
+                      backgroundColor: Colors.green.shade50,
+                      foregroundColor: Colors.green.shade900,
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
@@ -362,15 +364,14 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _SectionHeader extends StatelessWidget {
-  final String emoji;
   final String title;
-  const _SectionHeader({required this.emoji, required this.title});
+  const _SectionHeader({required this.title});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-      child: Text('$emoji $title',
+      child: Text(title,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
     );
   }
@@ -402,82 +403,4 @@ class _NavButton extends StatelessWidget {
     final fg = foregroundColor ?? Colors.purple;
     return Material(
       color: bg,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, color: fg),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(color: fg, fontSize: fontSize, fontWeight: fontWeight),
-                ),
-              ),
-              if (showArrow) Icon(Icons.chevron_left, color: fg),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TodayCalendarCard extends StatelessWidget {
-  final Jalali today;
-  final List<CalendarEvent> events;
-  final VoidCallback onTap;
-
-  const _TodayCalendarCard({required this.today, required this.events, required this.onTap});
-
-  static const _weekdays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-
-  @override
-  Widget build(BuildContext context) {
-    final gDate = today.toDateTime();
-    final hijri = HijriCalendar.fromDate(gDate);
-
-    final jalaliStr = '${_toPersianDigits(today.day.toString())} ${today.formatter.mN} ${_toPersianDigits(today.year.toString())}';
-    final gregorianStr = '${gDate.day} ${gregorianMonthNamesFa[gDate.month - 1]} ${gDate.year}';
-    final hijriStr = '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]} ${_toPersianDigits(hijri.hYear.toString())}';
-
-    final dateStr = '${_weekdays[today.weekDay - 1]}، $jalaliStr ، $gregorianStr ، $hijriStr';
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(dateStr,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
-              const SizedBox(height: 10),
-              if (events.isEmpty)
-                Text('امروز مناسبتی وجود ندارد',
-                    style: TextStyle(color: Colors.grey.shade700, fontSize: 13))
-              else
-                ...events.map((e) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        '${e.isPublic ? '•' : '★'} ${e.title}',
-                        style: TextStyle(
-                          color: Colors.green.shade900,
-                          fontSize: 13,
-                        ),
-                      ),
-                    )),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+      borderRadius
