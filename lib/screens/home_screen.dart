@@ -355,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           _NavButton(
                             emoji: '📊',
-                            label: 'ساخت نمودار',
+                            label: 'نمودار وزن، مقدار خواب، تعداد قدم‌های روزانه، قند خون ...',
                             backgroundColor: Colors.green.shade50,
                             foregroundColor: Colors.green.shade900,
                             onTap: () {
@@ -470,7 +470,13 @@ class _NavButton extends StatelessWidget {
           decoration: borderColor != null
               ? BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: borderColor!, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: borderColor!.withOpacity(0.35),
+                      blurRadius: 10,
+                      spreadRadius: 1.5,
+                    ),
+                  ],
                 )
               : null,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -531,7 +537,7 @@ class _TodayCalendarCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('📅', style: const TextStyle(fontSize: 20)),
+                  Text('🗓️', style: const TextStyle(fontSize: 20)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(dateStr,
