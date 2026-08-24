@@ -166,7 +166,19 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('MyAssistant')),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          'MyAssistant',
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            fontStyle: FontStyle.italic,
+            letterSpacing: 0.5,
+            color: Color(0xFF6366F1),
+          ),
+        ),
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -174,22 +186,21 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [
-                  // بخش «آب و هوا»: عنوان + کارت(های) آب‌وهوا + نوار «وضعیت ده روز آینده»
+                  // بخش «آب و هوا»: عنوان بیرون از مستطیل + کارت(های) آب‌وهوا + نوار «وضعیت ده روز آینده»
                   // + نوار «تنظیمات آب و هوا»، همگی داخل یک مستطیل واحد
+                  _SectionHeader(title: 'آب و هوا'),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
                     child: Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.blue.shade100),
+                        border: Border.all(color: Colors.green.shade100),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('🌤️ آب و هوا',
-                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
                           if (_locations.isEmpty) ...[
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -221,14 +232,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                       label: 'وضعیت هوای ده روز آینده ${loc.name}',
                                       onTap: () => _openTenDayForecast(loc),
                                       backgroundColor: Colors.blue.shade50,
-                                      foregroundColor: Colors.amber.shade800,
+                                      foregroundColor: Colors.blue.shade900,
+                                      borderColor: const Color(0xFFC5DCEC),
                                       showArrow: false,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ],
                                 )),
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
+                            borderColor: const Color(0xFFC5DCEC),
                             label: 'تنظیمات آب و هوا',
                             onTap: _openWeatherSettings,
                           ),
@@ -238,61 +253,130 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  _SectionHeader(emoji: '🗓️', title: 'تقویم'),
-                  _TodayCalendarCard(
-                    today: _today,
-                    events: _todayEvents,
-                    onTap: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const CalendarScreen()),
-                      );
-                      await _loadEverything();
-                    },
-                  ),
+                  _SectionHeader(title: 'تقویم'),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _NavButton(
-                      icon: Icons.calendar_month,
-                      label: 'مشاهده تقویم کامل و تنظیم مناسبت‌ها',
-                      onTap: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const CalendarScreen()),
-                        );
-                        await _loadEverything();
-                      },
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.green.shade100),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _TodayCalendarCard(
+                            today: _today,
+                            events: _todayEvents,
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const CalendarScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          _NavButton(
+                            icon: Icons.settings,
+                            borderColor: const Color(0xFFC5DCEC),
+                            label: 'تنظیم مناسبت‌ها و مشاهده تقویم کامل',
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const CalendarScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  _SectionHeader(emoji: '🔔', title: 'یادآوری'),
+                  _SectionHeader(title: 'یادآوری'),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _NavButton(
-                      icon: Icons.notifications,
-                      label: _activeReminderCount == 0
-                          ? 'یادآوری ثبت نشده است'
-                          : '$_activeReminderCount یادآوری فعال — تنظیمات یادآوری',
-                      onTap: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const ReminderScreen()),
-                        );
-                        await _loadEverything();
-                      },
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.green.shade100),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _NavButton(
+                            emoji: '🔔',
+                            emoji2: '💊',
+                            label: _activeReminderCount == 0
+                                ? 'یادآوری ثبت نشده است'
+                                : '$_activeReminderCount یادآوری فعال',
+                            backgroundColor: Colors.green.shade50,
+                            foregroundColor: Colors.green.shade900,
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ReminderScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          _NavButton(
+                            icon: Icons.settings,
+                            borderColor: const Color(0xFFC5DCEC),
+                            label: 'تنظیمات یادآوری',
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ReminderScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  _SectionHeader(emoji: '📊', title: 'نمودار ساز'),
+                  _SectionHeader(title: 'نمودار ساز'),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _NavButton(
-                      icon: Icons.bar_chart,
-                      label: 'ساخت نمودار',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
-                        );
-                      },
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.green.shade100),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _NavButton(
+                            emoji: '📊',
+                            label: 'نمودار وزن، مقدار خواب، تعداد قدم‌های روزانه، قند خون ...',
+                            backgroundColor: Colors.green.shade50,
+                            foregroundColor: Colors.green.shade900,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          _NavButton(
+                            icon: Icons.settings,
+                            borderColor: const Color(0xFFC5DCEC),
+                            label: 'تنظیمات نمودار',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -333,34 +417,43 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _SectionHeader extends StatelessWidget {
-  final String emoji;
   final String title;
-  const _SectionHeader({required this.emoji, required this.title});
+  const _SectionHeader({required this.title});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-      child: Text('$emoji $title',
+      child: Text(title,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
     );
   }
 }
 
 class _NavButton extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? emoji;
+  final String? emoji2;
   final String label;
   final VoidCallback onTap;
   final Color? backgroundColor;
   final Color? foregroundColor;
+  final Color? borderColor;
   final bool showArrow;
+  final double? fontSize;
+  final FontWeight? fontWeight;
   const _NavButton({
-    required this.icon,
+    this.icon,
+    this.emoji,
+    this.emoji2,
     required this.label,
     required this.onTap,
     this.backgroundColor,
     this.foregroundColor,
-    this.showArrow = true,
+    this.borderColor,
+    this.showArrow = false,
+    this.fontSize,
+    this.fontWeight,
   });
 
   @override
@@ -373,13 +466,29 @@ class _NavButton extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        child: Padding(
+        child: Container(
+          decoration: borderColor != null
+              ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: borderColor!, width: 3),
+                )
+              : null,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              Icon(icon, color: fg),
+              if (emoji != null) Text(emoji!, style: const TextStyle(fontSize: 22)),
+              if (emoji2 != null) ...[
+                const SizedBox(width: 4),
+                Text(emoji2!, style: const TextStyle(fontSize: 22)),
+              ],
+              if (emoji == null && icon != null) Icon(icon, color: fg),
               const SizedBox(width: 12),
-              Expanded(child: Text(label, style: TextStyle(color: fg))),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(color: fg, fontSize: fontSize, fontWeight: fontWeight),
+                ),
+              ),
               if (showArrow) Icon(Icons.chevron_left, color: fg),
             ],
           ),
@@ -414,18 +523,22 @@ class _TodayCalendarCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(dateStr, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('🗓️', style: const TextStyle(fontSize: 20)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(dateStr,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
+                  ),
+                ],
+              ),
               const SizedBox(height: 10),
               if (events.isEmpty)
                 Text('امروز مناسبتی وجود ندارد',
@@ -436,7 +549,7 @@ class _TodayCalendarCard extends StatelessWidget {
                       child: Text(
                         '${e.isPublic ? '•' : '★'} ${e.title}',
                         style: TextStyle(
-                          color: e.isPublic ? Colors.grey.shade800 : Colors.purple.shade700,
+                          color: Colors.green.shade900,
                           fontSize: 13,
                         ),
                       ),
