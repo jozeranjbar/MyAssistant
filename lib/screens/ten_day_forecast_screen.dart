@@ -28,6 +28,8 @@ class TenDayForecastScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.lightBlue.shade100,
+        elevation: 0,
         automaticallyImplyLeading: false,
         centerTitle: true,
         title: Row(
