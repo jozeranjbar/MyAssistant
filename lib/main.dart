@@ -71,7 +71,12 @@ class MyAssistantApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: Colors.lightBlue,
-        scaffoldBackgroundColor: const Color(0xFFDCE7EF),
+        scaffoldBackgroundColor: Colors.lightBlue.shade100,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.lightBlue.shade100,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+        ),
       ),
       builder: (context, child) {
         // اجرای کل برنامه به‌صورت راست‌به‌چپ (فارسی) و مدیریت ابعاد/چرخش صفحه
