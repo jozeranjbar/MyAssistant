@@ -106,8 +106,38 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('تنظیمات آب و هوا')),
-      body: ListView(
+      appBar: AppBar(
+        backgroundColor: Colors.lightBlue.shade100,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.arrow_back_ios, size: 16, color: Colors.brown.shade400),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                'تنظیمات آب و هوا',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.brown.shade700,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.brown.shade400),
+          ],
+        ),
+      ),
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          if ((details.primaryVelocity ?? 0).abs() > 200) {
+            Navigator.of(context).maybePop();
+          }
+        },
+        child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text('لوکیشن‌های شما (${_locations.length}/${LocationStorageService.maxLocations})',
@@ -219,6 +249,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                   style: TextStyle(color: Colors.orange)),
             ),
         ],
+      ),
       ),
     );
   }
