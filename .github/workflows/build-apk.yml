@@ -39,14 +39,13 @@ jobs:
       - name: Build release APK
         run: flutter build apk --release --split-per-abi
 
-      - name: Rename APKs with version + commit info
+      - name: Rename APK (arm64-v8a only) with version + commit info
         run: |
           mkdir -p output
           short_sha=$(echo "${GITHUB_SHA}" | cut -c1-7)
-          for f in build/app/outputs/flutter-apk/*.apk; do
-            base=$(basename "$f")
-            cp "$f" "output/MyAssistant-${base%.apk}-${short_sha}.apk"
-          done
+          f=build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          base=$(basename "$f")
+          cp "$f" "output/MyAssistant-${base%.apk}-${short_sha}.apk"
 
       - name: Upload APK as build artifact
         uses: actions/upload-artifact@v4
