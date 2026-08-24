@@ -233,6 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       onTap: () => _openTenDayForecast(loc),
                                       backgroundColor: Colors.blue.shade50,
                                       foregroundColor: Colors.blue.shade900,
+                                      borderColor: Colors.blue.shade900,
                                       showArrow: false,
                                       fontSize: 17,
                                       fontWeight: FontWeight.bold,
@@ -242,6 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
+                            borderColor: Colors.purple.shade700,
                             label: 'تنظیمات آب و هوا',
                             onTap: _openWeatherSettings,
                           ),
@@ -277,6 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
+                            borderColor: Colors.purple.shade700,
                             label: 'تنظیم مناسبت‌ها و مشاهده تقویم کامل',
                             onTap: () async {
                               await Navigator.of(context).push(
@@ -322,6 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
+                            borderColor: Colors.purple.shade700,
                             label: 'تنظیمات یادآوری',
                             onTap: () async {
                               await Navigator.of(context).push(
@@ -363,6 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
+                            borderColor: Colors.purple.shade700,
                             label: 'تنظیمات نمودار',
                             onTap: () {
                               Navigator.of(context).push(
@@ -433,6 +438,7 @@ class _NavButton extends StatelessWidget {
   final VoidCallback onTap;
   final Color? backgroundColor;
   final Color? foregroundColor;
+  final Color? borderColor;
   final bool showArrow;
   final double? fontSize;
   final FontWeight? fontWeight;
@@ -444,6 +450,7 @@ class _NavButton extends StatelessWidget {
     required this.onTap,
     this.backgroundColor,
     this.foregroundColor,
+    this.borderColor,
     this.showArrow = false,
     this.fontSize,
     this.fontWeight,
@@ -459,7 +466,13 @@ class _NavButton extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        child: Padding(
+        child: Container(
+          decoration: borderColor != null
+              ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: borderColor!, width: 2),
+                )
+              : null,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
