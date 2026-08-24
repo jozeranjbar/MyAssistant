@@ -293,37 +293,85 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   _SectionHeader(title: 'یادآوری'),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _NavButton(
-                      icon: Icons.notifications,
-                      label: _activeReminderCount == 0
-                          ? 'یادآوری ثبت نشده است'
-                          : '$_activeReminderCount یادآوری فعال — تنظیمات یادآوری',
-                      backgroundColor: Colors.green.shade50,
-                      foregroundColor: Colors.green.shade900,
-                      onTap: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const ReminderScreen()),
-                        );
-                        await _loadEverything();
-                      },
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.green.shade100),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _NavButton(
+                            emoji: '🔔',
+                            emoji2: '💊',
+                            label: _activeReminderCount == 0
+                                ? 'یادآوری ثبت نشده است'
+                                : '$_activeReminderCount یادآوری فعال',
+                            backgroundColor: Colors.green.shade50,
+                            foregroundColor: Colors.green.shade900,
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ReminderScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          _NavButton(
+                            icon: Icons.settings,
+                            label: 'تنظیمات یادآوری',
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ReminderScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   _SectionHeader(title: 'نمودار ساز'),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _NavButton(
-                      icon: Icons.bar_chart,
-                      label: 'ساخت نمودار',
-                      backgroundColor: Colors.green.shade50,
-                      foregroundColor: Colors.green.shade900,
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
-                        );
-                      },
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.green.shade100),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _NavButton(
+                            emoji: '📊',
+                            label: 'ساخت نمودار',
+                            backgroundColor: Colors.green.shade50,
+                            foregroundColor: Colors.green.shade900,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          _NavButton(
+                            icon: Icons.settings,
+                            label: 'تنظیمات نمودار',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -378,7 +426,9 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _NavButton extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? emoji;
+  final String? emoji2;
   final String label;
   final VoidCallback onTap;
   final Color? backgroundColor;
@@ -387,7 +437,9 @@ class _NavButton extends StatelessWidget {
   final double? fontSize;
   final FontWeight? fontWeight;
   const _NavButton({
-    required this.icon,
+    this.icon,
+    this.emoji,
+    this.emoji2,
     required this.label,
     required this.onTap,
     this.backgroundColor,
@@ -411,7 +463,12 @@ class _NavButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              Icon(icon, color: fg),
+              if (emoji != null) Text(emoji!, style: const TextStyle(fontSize: 22)),
+              if (emoji2 != null) ...[
+                const SizedBox(width: 4),
+                Text(emoji2!, style: const TextStyle(fontSize: 22)),
+              ],
+              if (emoji == null && icon != null) Icon(icon, color: fg),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -461,7 +518,7 @@ class _TodayCalendarCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.calendar_today, size: 18, color: Colors.blue.shade900),
+                  Text('📅', style: const TextStyle(fontSize: 20)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(dateStr,
