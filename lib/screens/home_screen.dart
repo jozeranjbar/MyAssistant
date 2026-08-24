@@ -233,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       onTap: () => _openTenDayForecast(loc),
                                       backgroundColor: Colors.blue.shade50,
                                       foregroundColor: Colors.blue.shade900,
-                                      borderColor: Colors.blue.shade900,
+                                      borderColor: const Color(0xFFC5DCEC),
                                       showArrow: false,
                                       fontSize: 17,
                                       fontWeight: FontWeight.bold,
@@ -243,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
-                            borderColor: Colors.purple.shade700,
+                            borderColor: const Color(0xFFC5DCEC),
                             label: 'تنظیمات آب و هوا',
                             onTap: _openWeatherSettings,
                           ),
@@ -279,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
-                            borderColor: Colors.purple.shade700,
+                            borderColor: const Color(0xFFC5DCEC),
                             label: 'تنظیم مناسبت‌ها و مشاهده تقویم کامل',
                             onTap: () async {
                               await Navigator.of(context).push(
@@ -325,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
-                            borderColor: Colors.purple.shade700,
+                            borderColor: const Color(0xFFC5DCEC),
                             label: 'تنظیمات یادآوری',
                             onTap: () async {
                               await Navigator.of(context).push(
@@ -367,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
-                            borderColor: Colors.purple.shade700,
+                            borderColor: const Color(0xFFC5DCEC),
                             label: 'تنظیمات نمودار',
                             onTap: () {
                               Navigator.of(context).push(
@@ -470,13 +470,7 @@ class _NavButton extends StatelessWidget {
           decoration: borderColor != null
               ? BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: borderColor!.withOpacity(0.35),
-                      blurRadius: 10,
-                      spreadRadius: 1.5,
-                    ),
-                  ],
+                  border: Border.all(color: borderColor!, width: 3),
                 )
               : null,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
