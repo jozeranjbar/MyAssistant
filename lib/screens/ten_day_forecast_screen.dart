@@ -31,6 +31,10 @@ class TenDayForecastScreen extends StatelessWidget {
         backgroundColor: Colors.lightBlue.shade100,
         elevation: 0,
         automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_forward_ios, color: Colors.brown.shade400, size: 20),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
         centerTitle: true,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
