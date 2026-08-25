@@ -383,7 +383,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Material(
-                      color: Colors.green.shade800,
+                      color: Colors.lightGreen.shade600,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
@@ -399,10 +399,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icon(Icons.info_outline, color: Colors.white),
                               SizedBox(width: 12),
                               Expanded(
-                                child: Text('اطلاعات برنامه و تنظیمات کلی',
+                                child: Text('اطلاعات برنامه',
                                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                               ),
-                              Icon(Icons.chevron_left, color: Colors.white),
                             ],
                           ),
                         ),
