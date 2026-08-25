@@ -32,7 +32,13 @@ class _AboutScreenState extends State<AboutScreen> {
         foregroundColor: Colors.black87,
         elevation: 0,
       ),
-      body: Column(
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          if ((details.primaryVelocity ?? 0).abs() > 200) {
+            Navigator.of(context).maybePop();
+          }
+        },
+        child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -60,6 +66,7 @@ class _AboutScreenState extends State<AboutScreen> {
             child: _tab == 0 ? _GeneralInfoTab(onOpenUrl: _openUrl) : const _UserGuideTab(),
           ),
         ],
+        ),
       ),
     );
   }
