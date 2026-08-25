@@ -57,7 +57,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('تقویم کامل 🗓️')),
-      body: Column(
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          if ((details.primaryVelocity ?? 0).abs() > 200) {
+            Navigator.of(context).maybePop();
+          }
+        },
+        child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
@@ -87,6 +93,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 : _EventsListView(eventsService: _eventsService),
           ),
         ],
+        ),
       ),
     );
   }
