@@ -148,7 +148,13 @@ class _ReminderScreenState extends State<ReminderScreen> {
         onPressed: () => _addOrEditReminder(),
         child: const Icon(Icons.add_alarm),
       ),
-      body: _reminders.isEmpty
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          if ((details.primaryVelocity ?? 0).abs() > 200) {
+            Navigator.of(context).maybePop();
+          }
+        },
+        child: _reminders.isEmpty
           ? const Center(child: Text('یادآوری ثبت نشده است.'))
           : ListView.builder(
               itemCount: _reminders.length,
@@ -170,6 +176,7 @@ class _ReminderScreenState extends State<ReminderScreen> {
                 );
               },
             ),
+      ),
     );
   }
 }
