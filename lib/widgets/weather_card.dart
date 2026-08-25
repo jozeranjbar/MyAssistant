@@ -109,8 +109,11 @@ class WeatherCard extends StatelessWidget {
               runSpacing: 10,
               children: [
                 _StatChip(icon: Icons.thermostat, color: Colors.red, label: 'احساس دما', value: '${data!.feelsLike.round()}°'),
+                Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
                 _StatChip(icon: Icons.water_drop, color: Colors.blue, label: 'رطوبت', value: '${data!.humidity}%'),
+                Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
                 _StatChip(icon: Icons.grain, color: Colors.blueGrey, label: 'بارندگی', value: '${data!.precipitation.toStringAsFixed(1)} mm'),
+                Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
                 _StatChip(icon: Icons.air, color: Colors.blue, label: 'باد', value: '${data!.windSpeed.round()} km/h'),
                 Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
                 _StatChip(icon: Icons.visibility, color: Colors.teal, label: 'دید افقی', value: '${data!.visibility.toStringAsFixed(1)} km'),
