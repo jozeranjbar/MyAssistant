@@ -157,7 +157,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _openTenDayForecast(WeatherLocation loc) async {
     final data = _weatherByLocation[loc.id];
-    if (data == null) return;
+    if (data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('هنوز اطلاعاتی برای این لوکیشن ذخیره نشده است. لطفاً یک بار با اینترنت وصل شوید.')),
+      );
+      return;
+    }
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => TenDayForecastScreen(location: loc, data: data)),
     );
@@ -252,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
 
                   _SectionHeader(title: 'تقویم'),
                   Padding(
@@ -294,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
 
                   _SectionHeader(title: 'یادآوری'),
                   Padding(
@@ -341,7 +346,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
 
                   _SectionHeader(title: 'نمودار ساز'),
                   Padding(
@@ -383,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 4),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Material(
@@ -426,7 +431,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
       child: Text(title,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
     );
