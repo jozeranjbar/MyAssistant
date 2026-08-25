@@ -66,23 +66,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
         child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _ModeButton(
-                    label: 'تقویم سال',
-                    selected: _mode == 'year',
-                    onTap: () => setState(() => _mode = 'year'),
-                  ),
+                _ModeButton(
+                  label: 'تقویم سال',
+                  selected: _mode == 'year',
+                  onTap: () => setState(() => _mode = 'year'),
                 ),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: _ModeButton(
-                    label: 'مناسبت‌ها',
-                    selected: _mode == 'events',
-                    onTap: () => setState(() => _mode = 'events'),
-                  ),
+                _ModeButton(
+                  label: 'مناسبت‌ها',
+                  selected: _mode == 'events',
+                  onTap: () => setState(() => _mode = 'events'),
                 ),
               ],
             ),
@@ -114,13 +111,14 @@ class _ModeButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 16),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: selected ? Colors.white : Colors.purple,
               fontWeight: FontWeight.bold,
+              fontSize: 13,
             ),
           ),
         ),
@@ -182,16 +180,19 @@ class _MonthBlock extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF7B1FA2), Color(0xFFE91E8C)]),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Text(
-              '${firstOfMonth.formatter.mN} ${_toPersianDigits(year.toString())}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFF7B1FA2), Color(0xFFE91E8C)]),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Text(
+                '${firstOfMonth.formatter.mN} ${_toPersianDigits(year.toString())}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -289,8 +290,17 @@ class _MonthBlock extends StatelessWidget {
       barrierDismissible: true,
       builder: (dialogContext) {
         return Dialog(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Colors.deepPurple.shade50, Colors.pink.shade50],
+              ),
+            ),
+            padding: const EdgeInsets.all(18),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -299,26 +309,28 @@ class _MonthBlock extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text('${weekdays[jDate.weekDay - 1]}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 19, color: Colors.deepPurple.shade700)),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: Icon(Icons.close, color: Colors.deepPurple.shade400),
                       onPressed: () => Navigator.of(dialogContext).pop(),
                     ),
                   ],
                 ),
                 Text(
                   'شمسی: ${_toPersianDigits(jDate.day.toString())} ${jDate.formatter.mN} ${_toPersianDigits(jDate.year.toString())}',
-                  style: const TextStyle(fontSize: 14),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.blue.shade800),
                 ),
-                const SizedBox(height: 4),
-                Text('میلادی: ${DateFormat('d MMMM y').format(gDate)}', style: const TextStyle(fontSize: 14)),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
+                Text('میلادی: ${DateFormat('d MMMM y').format(gDate)}',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.teal.shade700)),
+                const SizedBox(height: 6),
                 Text(
                   'قمری: ${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]} ${_toPersianDigits(hijri.hYear.toString())}',
-                  style: const TextStyle(fontSize: 14),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.orange.shade800),
                 ),
-                const Divider(height: 24),
+                Divider(height: 26, color: Colors.deepPurple.shade100),
                 if (holidayInfo.isHoliday) ...[
                   ...holidayInfo.titles.map((t) => Padding(
                         padding: const EdgeInsets.only(bottom: 4),
@@ -326,7 +338,9 @@ class _MonthBlock extends StatelessWidget {
                           children: [
                             const Icon(Icons.circle, size: 8, color: Colors.red),
                             const SizedBox(width: 6),
-                            Expanded(child: Text(t, style: const TextStyle(color: Colors.red))),
+                            Expanded(
+                                child: Text(t,
+                                    style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold))),
                           ],
                         ),
                       )),
@@ -350,7 +364,11 @@ class _MonthBlock extends StatelessWidget {
                                 size: e.isPublic ? 8 : 14,
                                 color: e.isPublic ? Colors.grey : Colors.purple),
                             const SizedBox(width: 6),
-                            Expanded(child: Text(e.title)),
+                            Expanded(
+                                child: Text(e.title,
+                                    style: TextStyle(
+                                        color: e.isPublic ? Colors.black87 : Colors.purple.shade700,
+                                        fontWeight: FontWeight.w600))),
                           ],
                         ),
                       )),
