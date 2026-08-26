@@ -59,3 +59,4 @@ flutter:
   assets:
     - assets/events.json
     - assets/images/iran_map.svg
+    - assets/images/app_banner.jpg
