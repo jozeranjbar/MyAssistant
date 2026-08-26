@@ -202,6 +202,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.green.shade100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.18),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,6 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       backgroundColor: Colors.blue.shade50,
                                       foregroundColor: Colors.blue.shade900,
                                       borderColor: const Color(0xFFE3F4FC),
+                                      elevated: true,
                                       showArrow: false,
                                       fontSize: 17,
                                       fontWeight: FontWeight.bold,
@@ -268,6 +277,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.green.shade100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.18),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,6 +327,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.green.shade100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.18),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,6 +382,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.green.shade100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.18),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,6 +426,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Material(
                       color: Colors.lightGreen.shade600,
+                      elevation: 4,
+                      shadowColor: Colors.black45,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
@@ -417,6 +452,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
+                  SizedBox(height: 16 + MediaQuery.of(context).padding.bottom),
                 ],
               ),
             ),
