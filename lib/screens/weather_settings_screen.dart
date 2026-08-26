@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../models/weather_location.dart';
 import '../services/location_storage_service.dart';
 import '../data/iran_locations.dart';
@@ -271,27 +272,47 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                 const Text('انتخاب از استان‌ها و شهرهای ایران',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.black87)),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<IranProvince>(
-                  decoration: _pillDecoration('استان'),
-                  value: _selectedProvince,
-                  items: iranProvinces.map((p) => DropdownMenuItem(value: p, child: Text(p.name))).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedProvince = value;
-                      _selectedCity = null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 10),
-                DropdownButtonFormField<IranCity>(
-                  decoration: _pillDecoration('شهر'),
-                  value: _selectedCity,
-                  items: (_selectedProvince?.cities ?? [])
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
-                      .toList(),
-                  onChanged: _selectedProvince == null
-                      ? null
-                      : (value) => setState(() => _selectedCity = value),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Positioned(
+                      child: Opacity(
+                        opacity: 0.12,
+                        child: SvgPicture.asset(
+                          'assets/images/iran_map.svg',
+                          height: 170,
+                          colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                        ),
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        DropdownButtonFormField<IranProvince>(
+                          decoration: _pillDecoration('استان'),
+                          value: _selectedProvince,
+                          items: iranProvinces.map((p) => DropdownMenuItem(value: p, child: Text(p.name))).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedProvince = value;
+                              _selectedCity = null;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<IranCity>(
+                          decoration: _pillDecoration('شهر'),
+                          value: _selectedCity,
+                          items: (_selectedProvince?.cities ?? [])
+                              .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
+                              .toList(),
+                          onChanged: _selectedProvince == null
+                              ? null
+                              : (value) => setState(() => _selectedCity = value),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 14),
                 _GradientButton(
