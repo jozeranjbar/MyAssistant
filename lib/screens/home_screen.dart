@@ -173,15 +173,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text(
-          'MyAssistant',
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            fontStyle: FontStyle.italic,
-            letterSpacing: 0.5,
-            color: Color(0xFF6366F1),
-          ),
+        toolbarHeight: 64,
+        title: Image.asset(
+          'assets/images/app_banner.jpg',
+          height: 56,
+          fit: BoxFit.contain,
         ),
       ),
       body: _loading
