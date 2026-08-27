@@ -101,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
               await WidgetService.markPrompted();
               if (dialogContext.mounted) Navigator.pop(dialogContext);
             },
-            child: const Text("نه'),
+            child: const Text('نه'),
           ),
           ElevatedButton(
             onPressed: () async {
