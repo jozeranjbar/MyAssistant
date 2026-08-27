@@ -113,7 +113,7 @@ class WeatherCard extends StatelessWidget {
                 _StatChip(icon: Icons.grain, color: Colors.blueGrey, label: 'بارندگی', value: '${data!.precipitation.toStringAsFixed(1)} mm'),
                 _StatChip(icon: Icons.air, color: Colors.blue, label: 'باد', value: '${data!.windSpeed.round()} km/h'),
                 _StatChip(icon: Icons.visibility, color: Colors.teal, label: 'دید افقی', value: '${data!.visibility.toStringAsFixed(1)} km'),
-                _StatChip(icon: Icons.wb_sunny, color: Colors.orange, label: 'شاخص UV', value: '${data!.uvIndex.round()}'),
+                _StatChip(icon: Icons.wb_sunny, color: Colors.orange, label: 'شاخصUV', value: '${data!.uvIndex.round()}'),
               ],
             ),
             if (error != null) ...[
