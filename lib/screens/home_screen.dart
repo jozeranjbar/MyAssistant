@@ -189,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   // بخش «آب و هوا»: عنوان بیرون از مستطیل + کارت(های) آب‌وهوا + نوار «وضعیت ده روز آینده»
                   // + نوار «تنظیمات آب و هوا»، همگی داخل یک مستطیل واحد
-                  _SectionHeader(title: 'آب و هوا'),
+                  _SectionHeader(title: 'آب و هوا', topPadding: 0),
                   Padding(
                     padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
                     child: Container(
@@ -458,12 +458,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _SectionHeader extends StatelessWidget {
   final String title;
-  const _SectionHeader({required this.title});
+  final double topPadding;
+  const _SectionHeader({required this.title, this.topPadding = 6});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
+      padding: EdgeInsets.fromLTRB(16, topPadding, 16, 4),
       child: Text(title,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
     );
