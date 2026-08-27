@@ -271,32 +271,51 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                 const Text('افزودن با طول و عرض جغرافیایی',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.black87)),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: _nameController,
-                  textAlign: TextAlign.right,
-                  decoration: _pillDecoration('نام دلخواه'),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _latController,
-                        textAlign: TextAlign.right,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                        decoration: _pillDecoration('عرض جغرافیایی (Lat)'),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        controller: _lngController,
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextField(
+                        controller: _nameController,
                         textAlign: TextAlign.right,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                        decoration: _pillDecoration('طول جغرافیایی (Lng)'),
+                        decoration: _pillDecoration('نام دلخواه'),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _latController,
+                              textAlign: TextAlign.right,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                              decoration: _pillDecoration('عرض‌ جغرافیائی(Lat-N)'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextField(
+                              controller: _lngController,
+                              textAlign: TextAlign.right,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                              decoration: _pillDecoration('طول‌ جغرافیائی(Lng-E)'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 14),
                 _GradientButton(
@@ -309,27 +328,46 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                 const Text('انتخاب از استان‌ها و شهرهای ایران',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.black87)),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<IranProvince>(
-                  decoration: _pillDecoration('استان'),
-                  value: _selectedProvince,
-                  items: iranProvinces.map((p) => DropdownMenuItem(value: p, child: Text(p.name))).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedProvince = value;
-                      _selectedCity = null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 10),
-                DropdownButtonFormField<IranCity>(
-                  decoration: _pillDecoration('شهر'),
-                  value: _selectedCity,
-                  items: (_selectedProvince?.cities ?? [])
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
-                      .toList(),
-                  onChanged: _selectedProvince == null
-                      ? null
-                      : (value) => setState(() => _selectedCity = value),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      DropdownButtonFormField<IranProvince>(
+                        decoration: _pillDecoration('استان'),
+                        value: _selectedProvince,
+                        items: iranProvinces.map((p) => DropdownMenuItem(value: p, child: Text(p.name))).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedProvince = value;
+                            _selectedCity = null;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      DropdownButtonFormField<IranCity>(
+                        decoration: _pillDecoration('شهر'),
+                        value: _selectedCity,
+                        items: (_selectedProvince?.cities ?? [])
+                            .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
+                            .toList(),
+                        onChanged: _selectedProvince == null
+                            ? null
+                            : (value) => setState(() => _selectedCity = value),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 14),
                 _GradientButton(
