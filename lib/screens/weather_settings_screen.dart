@@ -119,6 +119,43 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
     await _load();
   }
 
+  Future<void> _confirmRemove(String id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('حذف مکان'),
+        content: const Text('آیا از حذف این مکان مطمئنید؟'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('انصراف')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('حذف', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _removeLocation(id);
+    }
+  }
+
+  Future<void> _confirmMoveToTop(String id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('تبدیل به مکان اصلی'),
+        content: const Text('آیا می‌خواهید این مکان را به مکان اصلی تبدیل کنید؟'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('انصراف')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('بله')),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _moveToTop(id);
+    }
+  }
+
   void _showMessage(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
@@ -166,7 +203,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               children: [
-                Text('لوکیشن‌های شما (${_locations.length}/${LocationStorageService.maxLocations})',
+                Text('مکان‌های منتخب من (${_locations.length}/${LocationStorageService.maxLocations})',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
                 const SizedBox(height: 10),
                 if (_locations.isEmpty)
@@ -197,15 +234,15 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                           child: Row(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.redAccent),
+                                icon: const Icon(Icons.delete, color: Colors.redAccent, size: 26),
                                 tooltip: 'حذف',
-                                onPressed: () => _removeLocation(loc.id),
+                                onPressed: () => _confirmRemove(loc.id),
                               ),
                               if (index != 0)
                                 IconButton(
-                                  icon: const Icon(Icons.arrow_upward, color: Colors.black45),
+                                  icon: const Icon(Icons.arrow_upward, color: Colors.black54, size: 26),
                                   tooltip: 'انتقال به ابتدای لیست',
-                                  onPressed: () => _moveToTop(loc.id),
+                                  onPressed: () => _confirmMoveToTop(loc.id),
                                 ),
                               Expanded(
                                 child: Column(
@@ -216,7 +253,8 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                                     const SizedBox(height: 4),
                                     Text(
                                       '${loc.province != null ? '${loc.province} - ' : ''}${loc.latitude.toStringAsFixed(3)}, ${loc.longitude.toStringAsFixed(3)}',
-                                      style: const TextStyle(color: Colors.black54, fontSize: 13),
+                                      style: const TextStyle(
+                                          color: Colors.black87, fontSize: 15, fontWeight: FontWeight.bold),
                                     ),
                                   ],
                                 ),
