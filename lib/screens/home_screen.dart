@@ -94,14 +94,14 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('افزودن ویجت'),
-        content: const Text('آیا می‌خواهید ویجت آب‌وهوا و ساعت را به صفحه اصلی گوشی اضافه کنید؟'),
+        content: const Text('آیا می‌خواهید ویجت را به صفحه گوشی اضافه کنید؟'),
         actions: [
           TextButton(
             onPressed: () async {
               await WidgetService.markPrompted();
               if (dialogContext.mounted) Navigator.pop(dialogContext);
             },
-            child: const Text('نه، متشکرم'),
+            child: const Text("نه'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
               await WidgetService.requestPinWidget();
               if (dialogContext.mounted) Navigator.pop(dialogContext);
             },
-            child: const Text('بله، اضافه کن'),
+            child: const Text('بله'),
           ),
         ],
       ),
@@ -122,9 +122,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     for (final loc in _locations) {
       if (!hasInternet) {
-        setState(() {
-          _errorByLocation[loc.id] = 'اینترنت در دسترس نیست';
-        });
         continue;
       }
       try {
@@ -170,14 +167,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bannerHeight = screenWidth / (900 / 171); // نسبت ابعاد اصلی عکس بنر
+
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 64,
-        title: Image.asset(
+        toolbarHeight: bannerHeight,
+        titleSpacing: 0,
+        flexibleSpace: Image.asset(
           'assets/images/app_banner.jpg',
-          height: 56,
-          fit: BoxFit.contain,
+          width: screenWidth,
+          fit: BoxFit.fill,
         ),
       ),
       body: _loading
