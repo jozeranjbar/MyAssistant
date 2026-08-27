@@ -61,9 +61,9 @@ class WeatherCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(location.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(location.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 Text('بروزرسانی: ${_formattedUpdateTime()}',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
               ],
             ),
             const SizedBox(height: 6),
