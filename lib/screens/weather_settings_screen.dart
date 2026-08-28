@@ -300,7 +300,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                               controller: _latController,
                               textAlign: TextAlign.right,
                               keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                              decoration: _pillDecoration('عرض‌ جغرافیائی(Lat-N)'),
+                              decoration: _pillDecoration('عرض‌ جغرافیائی(S یا Lat-N)'),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -309,19 +309,19 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                               controller: _lngController,
                               textAlign: TextAlign.right,
                               keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                              decoration: _pillDecoration('طول‌ جغرافیائی(Lng-E)'),
+                              decoration: _pillDecoration('طول‌ جغرافیائی(W یا Lng-E)'),
                             ),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 14),
+                      _GradientButton(
+                        label: 'افزودن لوکیشن',
+                        icon: Icons.add,
+                        onTap: _reachedLimit ? null : _addManualLocation,
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 14),
-                _GradientButton(
-                  label: 'افزودن لوکیشن',
-                  icon: Icons.add,
-                  onTap: _reachedLimit ? null : _addManualLocation,
                 ),
                 const SizedBox(height: 26),
 
@@ -366,14 +366,14 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                             ? null
                             : (value) => setState(() => _selectedCity = value),
                       ),
+                      const SizedBox(height: 14),
+                      _GradientButton(
+                        label: 'افزودن شهر',
+                        icon: Icons.add,
+                        onTap: _reachedLimit ? null : _addCityLocation,
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 14),
-                _GradientButton(
-                  label: 'افزودن شهر',
-                  icon: Icons.add,
-                  onTap: _reachedLimit ? null : _addCityLocation,
                 ),
                 if (_reachedLimit)
                   const Padding(
