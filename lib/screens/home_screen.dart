@@ -168,16 +168,21 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final bannerHeight = screenWidth / (900 / 171); // نسبت ابعاد اصلی عکس بنر
+    final bannerHeight = screenWidth / (900 / 171) * 0.68; // ارتفاع کاهش‌یافته بنر
 
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: bannerHeight,
         titleSpacing: 0,
-        flexibleSpace: Image.asset(
-          'assets/images/app_banner.jpg',
-          width: screenWidth,
-          fit: BoxFit.fill,
+        flexibleSpace: ClipRect(
+          child: OverflowBox(
+            maxHeight: screenWidth / (900 / 171),
+            child: Image.asset(
+              'assets/images/app_banner.jpg',
+              width: screenWidth,
+              fit: BoxFit.fill,
+            ),
+          ),
         ),
       ),
       body: _loading
