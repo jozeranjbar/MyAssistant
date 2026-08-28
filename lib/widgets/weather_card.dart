@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shamsi_date/shamsi_date.dart';
 import '../models/weather_location.dart';
 import '../models/weather_data.dart';
 
@@ -30,7 +31,10 @@ class WeatherCard extends StatelessWidget {
   String _formattedUpdateTime() {
     if (data == null) return '--';
     final d = data!.updatedAt;
-    return _toPersianDigits('${DateFormat('yyyy/MM/dd').format(d)} - ${DateFormat('HH:mm').format(d)}');
+    final j = Jalali.fromDateTime(d);
+    final jStr =
+        '${_toPersianDigits(j.year.toString())}/${_toPersianDigits(j.month.toString().padLeft(2, '0'))}/${_toPersianDigits(j.day.toString().padLeft(2, '0'))}';
+    return '$jStr - ${_toPersianDigits(DateFormat('HH:mm').format(d))}';
   }
 
   @override
