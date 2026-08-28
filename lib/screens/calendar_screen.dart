@@ -3,6 +3,7 @@ import 'package:shamsi_date/shamsi_date.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import '../services/events_service.dart';
+import '../services/custom_holiday_storage_service.dart';
 import '../data/iranian_holidays.dart';
 
 String _toPersianDigits(String input) {
@@ -23,7 +24,7 @@ class _HolidayInfo {
   const _HolidayInfo(this.isHoliday, this.titles, this.hasLunar);
 }
 
-_HolidayInfo _checkHoliday(Jalali jDate, HijriCalendar hijri) {
+_HolidayInfo _checkHoliday(Jalali jDate, HijriCalendar hijri, List<CustomHoliday> customHolidays) {
   final titles = <String>[];
   var hasLunar = false;
 
@@ -35,6 +36,14 @@ _HolidayInfo _checkHoliday(Jalali jDate, HijriCalendar hijri) {
   }
   for (final h in lunarHolidays) {
     if (h.month == hijri.hMonth && h.day == hijri.hDay) {
+      titles.add(h.title);
+      hasLunar = true;
+    }
+  }
+  for (final h in customHolidays) {
+    if (h.type == CustomHolidayType.solar && h.month == jDate.month && h.day == jDate.day) {
+      titles.add(h.title);
+    } else if (h.type == CustomHolidayType.lunar && h.month == hijri.hMonth && h.day == hijri.hDay) {
       titles.add(h.title);
       hasLunar = true;
     }
@@ -52,11 +61,156 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   String _mode = 'year'; // 'year' یا 'events'
   final _eventsService = EventsService();
+  final _customHolidayService = CustomHolidayStorageService();
+  List<CustomHoliday> _customHolidays = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomHolidays();
+  }
+
+  Future<void> _loadCustomHolidays() async {
+    final items = await _customHolidayService.loadCustomHolidays();
+    if (mounted) setState(() => _customHolidays = items);
+  }
+
+  Future<void> _openManageHolidaysDialog() async {
+    final titleController = TextEditingController();
+    final monthController = TextEditingController();
+    final dayController = TextEditingController();
+    CustomHolidayType selectedType = CustomHolidayType.solar;
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              title: const Text('بروزرسانی مناسبت‌ها'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_customHolidays.isNotEmpty) ...[
+                      const Text('مناسبت‌های سفارشی فعلی:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      ..._customHolidays.map((h) => ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(h.title),
+                            subtitle: Text(
+                                '${h.type == CustomHolidayType.solar ? 'شمسی' : 'قمری'} - ${_toPersianDigits(h.day.toString())} ${h.type == CustomHolidayType.solar ? '' : hijriMonthNamesFa[h.month - 1]}'),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () async {
+                                await _customHolidayService.removeCustomHoliday(h.id);
+                                await _loadCustomHolidays();
+                                setModalState(() {});
+                              },
+                            ),
+                          )),
+                      const Divider(height: 20),
+                    ],
+                    const Text('افزودن مناسبت جدید:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RadioListTile<CustomHolidayType>(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('شمسی'),
+                            value: CustomHolidayType.solar,
+                            groupValue: selectedType,
+                            onChanged: (v) => setModalState(() => selectedType = v!),
+                          ),
+                        ),
+                        Expanded(
+                          child: RadioListTile<CustomHolidayType>(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('قمری'),
+                            value: CustomHolidayType.lunar,
+                            groupValue: selectedType,
+                            onChanged: (v) => setModalState(() => selectedType = v!),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: monthController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(labelText: 'ماه (۱ تا ۱۲)'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: dayController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(labelText: 'روز'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(labelText: 'عنوان مناسبت'),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('بستن')),
+                ElevatedButton(
+                  onPressed: () async {
+                    final month = int.tryParse(monthController.text.trim());
+                    final day = int.tryParse(dayController.text.trim());
+                    final title = titleController.text.trim();
+                    if (month == null || day == null || title.isEmpty || month < 1 || month > 12 || day < 1) {
+                      return;
+                    }
+                    await _customHolidayService.addCustomHoliday(CustomHoliday(
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      type: selectedType,
+                      month: month,
+                      day: day,
+                      title: title,
+                    ));
+                    await _loadCustomHolidays();
+                    titleController.clear();
+                    monthController.clear();
+                    dayController.clear();
+                    setModalState(() {});
+                  },
+                  child: const Text('افزودن'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('تقویم کامل 🗓️')),
+      appBar: AppBar(
+        title: const Text('تقویم کامل 🗓️'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.event_repeat),
+            tooltip: 'بروزرسانی مناسبت‌ها',
+            onPressed: _openManageHolidaysDialog,
+          ),
+        ],
+      ),
       body: GestureDetector(
         onHorizontalDragEnd: (details) {
           if ((details.primaryVelocity ?? 0).abs() > 200) {
@@ -86,7 +240,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           Expanded(
             child: _mode == 'year'
-                ? const _YearCalendarView()
+                ? _YearCalendarView(customHolidays: _customHolidays)
                 : _EventsListView(eventsService: _eventsService),
           ),
         ],
@@ -130,33 +284,45 @@ class _ModeButton extends StatelessWidget {
 /// ------------------ نمای تقویم سال (۱۲ ماه) ------------------
 
 class _YearCalendarView extends StatelessWidget {
-  const _YearCalendarView();
+  final List<CustomHoliday> customHolidays;
+  const _YearCalendarView({required this.customHolidays});
 
   @override
   Widget build(BuildContext context) {
     final today = Jalali.now();
     final months = List.generate(12, (i) => i + 1);
+    final screenWidth = MediaQuery.of(context).size.width;
 
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 6,
-            children: [
-              Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
-              const Text('تاریخ سبز رنگ، تاریخ امروز است و', style: TextStyle(fontSize: 12)),
-              Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
-              const Text('تاریخ‌های قرمز، تعطیلات رسمی هستند. برای دیدن جزئیات، روی هر روز بزنید.',
-                  style: TextStyle(fontSize: 12)),
-            ],
-          ),
+    return InteractiveViewer(
+      constrained: false,
+      minScale: 0.8,
+      maxScale: 3.0,
+      boundaryMargin: const EdgeInsets.symmetric(vertical: 200),
+      child: SizedBox(
+        width: screenWidth,
+        child: Column(
+          children: [
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 6,
+                children: [
+                  Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                  const Text('تاریخ سبز رنگ، تاریخ امروز است و', style: TextStyle(fontSize: 12)),
+                  Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
+                  const Text('تاریخ‌های قرمز، تعطیلات رسمی هستند. برای دیدن جزئیات، روی هر روز بزنید. برای بزرگ‌نمایی، با دو انگشت پینچ کنید.',
+                      style: TextStyle(fontSize: 12)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...months.map((m) => _MonthBlock(year: today.year, month: m, today: today, customHolidays: customHolidays)),
+            const SizedBox(height: 24),
+          ],
         ),
-        const SizedBox(height: 8),
-        ...months.map((m) => _MonthBlock(year: today.year, month: m, today: today)),
-      ],
+      ),
     );
   }
 }
@@ -165,7 +331,8 @@ class _MonthBlock extends StatelessWidget {
   final int year;
   final int month;
   final Jalali today;
-  const _MonthBlock({required this.year, required this.month, required this.today});
+  final List<CustomHoliday> customHolidays;
+  const _MonthBlock({required this.year, required this.month, required this.today, required this.customHolidays});
 
   static const _weekdayHeaders = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج']; // شنبه تا جمعه
 
@@ -217,7 +384,7 @@ class _MonthBlock extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              childAspectRatio: 1.9,
+              childAspectRatio: 1.6,
               mainAxisSpacing: 1,
               crossAxisSpacing: 1,
             ),
@@ -228,7 +395,7 @@ class _MonthBlock extends StatelessWidget {
               final jDate = Jalali(year, month, day);
               final gDate = jDate.toDateTime();
               final hijri = HijriCalendar.fromDate(gDate);
-              final holidayInfo = _checkHoliday(jDate, hijri);
+              final holidayInfo = _checkHoliday(jDate, hijri, customHolidays);
               final isToday = jDate.year == today.year && jDate.month == today.month && jDate.day == today.day;
 
               final bg = isToday
@@ -253,13 +420,13 @@ class _MonthBlock extends StatelessWidget {
                     children: [
                       Text(
                         '${holidayInfo.isHoliday ? '•' : ''}${_toPersianDigits(day.toString())}',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 8, color: fg),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: fg),
                       ),
                       Text(DateFormat('MMM d').format(gDate),
-                          style: TextStyle(fontSize: 5, color: fg.withOpacity(0.8))),
+                          style: TextStyle(fontSize: 7, color: fg.withOpacity(0.8))),
                       Text(
                         '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]}',
-                        style: TextStyle(fontSize: 5, color: fg.withOpacity(0.8)),
+                        style: TextStyle(fontSize: 7, color: fg.withOpacity(0.8)),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
