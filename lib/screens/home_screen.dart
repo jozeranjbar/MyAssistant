@@ -260,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             icon: Icons.settings,
                             borderColor: const Color(0xFFF6EDFA),
                             elevated: true,
-                            label: 'تنظیمات آب و هوا',
+                            label: 'افزودن مکان ، حذف ، انتقال به بالا',
                             onTap: _openWeatherSettings,
                           ),
                         ],
