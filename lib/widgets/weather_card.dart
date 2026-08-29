@@ -4,6 +4,9 @@ import 'package:shamsi_date/shamsi_date.dart';
 import '../models/weather_location.dart';
 import '../models/weather_data.dart';
 
+// رنگ قهوه‌ای برای نام شهرها
+const _kBrownCity = Color(0xFF6D4C29);
+
 String _toPersianDigits(String input) {
   const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
   const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
@@ -65,7 +68,8 @@ class WeatherCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(location.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(location.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: _kBrownCity)),
                 Text('بروزرسانی: ${_formattedUpdateTime()}',
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
               ],
