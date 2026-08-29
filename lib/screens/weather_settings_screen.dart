@@ -21,7 +21,15 @@ const _kCardTopGradient = LinearGradient(
     Color(0xFF4C93C6),
   ],
 );
-const _kFieldFill = Color(0xFFEFF8F3);
+
+// رنگ‌های تیتر آبی
+const _kHeaderBlue = Color(0xFF1565C0);
+
+// رنگ‌های برجسته‌ی سبز برای فیلدها و کارت‌ها
+const _kGreenFieldFill = Color(0xFFDFF6E3); // سبز کمرنگ
+const _kGreenTextStrong = Color(0xFF1B5E20); // سبز پررنگ
+const _kGreenBorder = Color(0xFF66BB6A);
+const _kGreenShadowColor = Color(0xFF2E7D32);
 
 class WeatherSettingsScreen extends StatefulWidget {
   const WeatherSettingsScreen({super.key});
@@ -163,13 +171,37 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
   InputDecoration _pillDecoration(String label) {
     return InputDecoration(
       labelText: label,
+      labelStyle: const TextStyle(color: _kGreenTextStrong, fontWeight: FontWeight.w600),
       filled: true,
-      fillColor: _kFieldFill,
+      fillColor: _kGreenFieldFill,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(28),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: _kGreenBorder.withOpacity(0.5), width: 1.2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(28),
+        borderSide: BorderSide(color: _kGreenBorder.withOpacity(0.5), width: 1.2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(28),
+        borderSide: const BorderSide(color: _kGreenTextStrong, width: 1.6),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+    );
+  }
+
+  BoxDecoration _greenCardDecoration() {
+    return BoxDecoration(
+      color: _kGreenFieldFill,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: _kGreenBorder.withOpacity(0.4), width: 1.2),
+      boxShadow: [
+        BoxShadow(
+          color: _kGreenShadowColor.withOpacity(0.28),
+          blurRadius: 14,
+          offset: const Offset(0, 6),
+        ),
+      ],
     );
   }
 
@@ -204,7 +236,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               children: [
                 Text('مکان‌های منتخب من (${_locations.length}/${LocationStorageService.maxLocations})',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: _kHeaderBlue)),
                 const SizedBox(height: 10),
                 if (_locations.isEmpty)
                   const Text('هنوز لوکیشنی اضافه نشده است.', style: TextStyle(color: Colors.black54)),
@@ -215,12 +247,13 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                     margin: const EdgeInsets.only(bottom: 14),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(18),
-                      color: Colors.white,
+                      color: _kGreenFieldFill,
+                      border: Border.all(color: _kGreenBorder.withOpacity(0.45), width: 1.2),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                          color: _kGreenShadowColor.withOpacity(0.28),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
@@ -240,7 +273,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                               ),
                               if (index != 0)
                                 IconButton(
-                                  icon: const Icon(Icons.arrow_upward, color: Colors.black54, size: 26),
+                                  icon: const Icon(Icons.arrow_upward, color: _kGreenTextStrong, size: 26),
                                   tooltip: 'انتقال به ابتدای لیست',
                                   onPressed: () => _confirmMoveToTop(loc.id),
                                 ),
@@ -249,12 +282,13 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(loc.name,
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold, fontSize: 16, color: _kGreenTextStrong)),
                                     const SizedBox(height: 4),
                                     Text(
                                       '${loc.province != null ? '${loc.province} - ' : ''}${loc.latitude.toStringAsFixed(3)}, ${loc.longitude.toStringAsFixed(3)}',
                                       style: const TextStyle(
-                                          color: Colors.black87, fontSize: 15, fontWeight: FontWeight.bold),
+                                          color: _kGreenTextStrong, fontSize: 15, fontWeight: FontWeight.bold),
                                     ),
                                   ],
                                 ),
@@ -269,27 +303,18 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                 const SizedBox(height: 12),
 
                 const Text('افزودن با طول و عرض جغرافیایی',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.black87)),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: _kHeaderBlue)),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
+                  decoration: _greenCardDecoration(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       TextField(
                         controller: _nameController,
                         textAlign: TextAlign.right,
+                        style: const TextStyle(color: _kGreenTextStrong, fontWeight: FontWeight.bold),
                         decoration: _pillDecoration('نام دلخواه'),
                       ),
                       const SizedBox(height: 10),
@@ -299,6 +324,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                             child: TextField(
                               controller: _latController,
                               textAlign: TextAlign.right,
+                              style: const TextStyle(color: _kGreenTextStrong, fontWeight: FontWeight.bold),
                               keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
                               decoration: _pillDecoration('عرض‌ جغرافیائی(مثلا 32.546)'),
                             ),
@@ -308,6 +334,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                             child: TextField(
                               controller: _lngController,
                               textAlign: TextAlign.right,
+                              style: const TextStyle(color: _kGreenTextStrong, fontWeight: FontWeight.bold),
                               keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
                               decoration: _pillDecoration('طول‌ جغرافیائی(مثلا 53.621)'),
                             ),
@@ -326,26 +353,17 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                 const SizedBox(height: 26),
 
                 const Text('انتخاب از استان‌ها و شهرهای ایران',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.black87)),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: _kHeaderBlue)),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
+                  decoration: _greenCardDecoration(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       DropdownButtonFormField<IranProvince>(
                         decoration: _pillDecoration('استان'),
+                        style: const TextStyle(color: _kGreenTextStrong, fontWeight: FontWeight.bold),
                         value: _selectedProvince,
                         items: iranProvinces.map((p) => DropdownMenuItem(value: p, child: Text(p.name))).toList(),
                         onChanged: (value) {
@@ -358,6 +376,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                       const SizedBox(height: 10),
                       DropdownButtonFormField<IranCity>(
                         decoration: _pillDecoration('شهر'),
+                        style: const TextStyle(color: _kGreenTextStrong, fontWeight: FontWeight.bold),
                         value: _selectedCity,
                         items: (_selectedProvince?.cities ?? [])
                             .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
