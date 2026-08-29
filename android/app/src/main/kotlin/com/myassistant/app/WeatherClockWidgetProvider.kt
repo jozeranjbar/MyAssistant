@@ -83,7 +83,7 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
             views.setTextViewText(R.id.widget_weather_emoji, widgetData.getString("weather_emoji", "🌡️"))
             views.setTextViewText(R.id.widget_date_line1, widgetData.getString("date_line1", "—"))
             views.setTextViewText(R.id.widget_date_line2, widgetData.getString("date_line2", "—"))
-            views.setTextViewText(R.id.widget_reminder, widgetData.getString("reminder_text", "امروز یادآوری ندارید"))
+            views.setTextViewText(R.id.widget_reminder, widgetData.getString("reminder_text", "یادآوری ندارید"))
             views.setTextViewText(R.id.widget_clock, currentTimeText())
 
             views.setOnClickPendingIntent(R.id.widget_root, buildLaunchAppIntent(context, appWidgetId))
