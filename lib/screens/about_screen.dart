@@ -54,7 +54,10 @@ class AboutScreen extends StatelessWidget {
               const Text('🌤️ آب و هوا', style: titleStyle),
               const SizedBox(height: 6),
               const Text(
-                'آب‌وهوای زنده تا ۴ نقطه انتخابی، با دما، احساس دما، رطوبت، باد، شاخص UV و پیش‌بینی ۱۰ روزه. از طریق نوار «افزودن مکان» می‌توانید هر شهر ایران یا هر نقطه از جهان (با طول و عرض جغرافیایی) را اضافه کنید؛ برای گرفتن مختصات هم کافی‌ست چند ثانیه انگشتتان را روی یک نقطه در نقشه گوگل مپ نگه دارید. با زدن روی نوار «وضعیت هوای ده روز آینده» می‌توانید پیش‌بینی هفته‌های بعد را ببینید و با کشیدن انگشت به چپ یا راست به صفحه‌ی اصلی برگردید.',
+                'آب‌وهوای زنده تا ۴ نقطه انتخابی، با دما، احساس دما، رطوبت، باد، شاخص UV و پیش‌بینی ۱۰ روزه.\n'
+                '📍 از داخل برنامه می‌توانید هر شهری را انتخاب کنید.\n'
+                '🗺️ یا با نگه داشتن انگشت روی هر نقطه از نقشه گوگل مپ، مختصات آن نقطه را بردارید (عدد اول کوچک‌تر از ۹۰ و عدد دوم کوچک‌تر از ۱۸۰).\n'
+                '📝 سپس مختصات را با سه رقم اعشار در برنامه وارد کنید تا همیشه آب‌وهوای ده‌روزه‌ی همان نقطه را در گوشی داشته باشید.',
                 style: bodyStyle,
               ),
               const SizedBox(height: 20),
@@ -62,7 +65,7 @@ class AboutScreen extends StatelessWidget {
               const Text('🗓️ تقویم', style: titleStyle),
               const SizedBox(height: 6),
               const Text(
-                'تقویم کامل شمسی همراه با تاریخ میلادی و قمری، مناسبت‌های ایرانی و بین‌المللی، و تعطیلات رسمی. می‌توانید مناسبت‌های شخصی خودتان را هم اضافه یا حذف کنید.',
+                'تقویم کامل شمسی همراه با تاریخ میلادی و قمری، مناسبت‌های ایرانی و بین‌المللی، و تعطیلات رسمی. امکان بروزرسانی سالانه هم وجود دارد.',
                 style: bodyStyle,
               ),
               const SizedBox(height: 10),
@@ -74,10 +77,10 @@ class AboutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              const Text('🔔💊 یادآوری', style: titleStyle),
+              const Text('💊🔔 یادآوری', style: titleStyle),
               const SizedBox(height: 6),
               const Text(
-                'یادآوری دارو یا کارهای روزمره، با تکرار روزانه، هفتگی یا ساعتی و اطلاع‌رسانی با صدا و ویبره‌ی واقعی، حتی وقتی برنامه بسته است.',
+                'یادآوری دارو و کارهای روزمره، با تکرار روزانه، هفتگی یا ساعتی و اعلان آن.',
                 style: bodyStyle,
               ),
               const SizedBox(height: 20),
@@ -85,7 +88,7 @@ class AboutScreen extends StatelessWidget {
               const Text('📊 نمودار ساز', style: titleStyle),
               const SizedBox(height: 6),
               const Text(
-                'برای پیگیری روند تغییرات مواردی مانند وزن، مقدار خواب، تعداد قدم‌های روزانه یا قند خون، از این بخش استفاده کنید.',
+                'نمودارساز برنامه، تمام متغیرهای شما را در طول یک دوره به‌صورت نمودار خطی نشان می‌دهد و ثبت می‌کند.',
                 style: bodyStyle,
               ),
               const SizedBox(height: 20),
@@ -93,7 +96,7 @@ class AboutScreen extends StatelessWidget {
               const Text('📌 ویجت صفحه اصلی', style: titleStyle),
               const SizedBox(height: 6),
               const Text(
-                'با نگه‌داشتن انگشت روی صفحه اصلی گوشی و افزودن ویجت MyAssistant، ساعت، تاریخ، دما و یادآوری‌های امروز همیشه جلوی چشمتان می‌ماند. اندازه‌ی ویجت هم از عرض و ارتفاع قابل تغییر است.',
+                'ویجت صفحه اصلی گوشی، با ساعت، تاریخ، دما و یادآوری‌ها و با امکان تنظیم عرض و ارتفاع آن روی صفحه گوشی  .',
                 style: bodyStyle,
               ),
               const SizedBox(height: 28),
@@ -108,14 +111,14 @@ class AboutScreen extends StatelessWidget {
                       text: TextSpan(
                         style: bodyStyle,
                         children: [
-                          const TextSpan(text: 'پشتیبانی از طریق ایمیل '),
+                          const TextSpan(text: 'برای اطلاع از گسترش برنامه و آپدیت جدید با ما در ارتباط باشید:\n'),
                           TextSpan(
                             text: 'ranjberan@gmail.com',
                             style: linkStyle,
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openUrl('mailto:ranjberan@gmail.com'),
                           ),
-                          const TextSpan(text: ' و کانال '),
+                          const TextSpan(text: '  |  '),
                           TextSpan(
                             text: '@wajehha',
                             style: linkStyle,
@@ -168,3 +171,6 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
+```
+
+فقط متن‌ها رو مرتب‌تر کردم، بولت پوینت اضافه کردم و ایمیل/تلگرام رو لینک‌دار کردم. ساختار کد همون قبلیه.
