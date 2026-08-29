@@ -3,7 +3,6 @@ import 'package:shamsi_date/shamsi_date.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import '../services/events_service.dart';
-import '../services/custom_holiday_storage_service.dart';
 import '../data/iranian_holidays.dart';
 
 String _toPersianDigits(String input) {
@@ -24,7 +23,7 @@ class _HolidayInfo {
   const _HolidayInfo(this.isHoliday, this.titles, this.hasLunar);
 }
 
-_HolidayInfo _checkHoliday(Jalali jDate, HijriCalendar hijri, List<CustomHoliday> customHolidays) {
+_HolidayInfo _checkHoliday(Jalali jDate, HijriCalendar hijri) {
   final titles = <String>[];
   var hasLunar = false;
 
@@ -40,145 +39,7 @@ _HolidayInfo _checkHoliday(Jalali jDate, HijriCalendar hijri, List<CustomHoliday
       hasLunar = true;
     }
   }
-  for (final h in customHolidays) {
-    if (h.type == CustomHolidayType.solar && h.month == jDate.month && h.day == jDate.day) {
-      titles.add(h.title);
-    } else if (h.type == CustomHolidayType.lunar && h.month == hijri.hMonth && h.day == hijri.hDay) {
-      titles.add(h.title);
-      hasLunar = true;
-    }
-  }
   return _HolidayInfo(titles.isNotEmpty, titles, hasLunar);
-}
-
-/// دیالوگ مدیریت مناسبت‌های سفارشی (افزودن/حذف ماه‌های قمری و مناسبت‌های رسمی
-/// دلخواه). این تابع مستقل است تا هم از صفحه‌ی تقویم و هم از صفحه‌ی «اطلاعات
-/// برنامه» قابل فراخوانی باشد.
-Future<void> showManageHolidaysDialog(BuildContext context) async {
-  final service = CustomHolidayStorageService();
-  var customHolidays = await service.loadCustomHolidays();
-  if (!context.mounted) return;
-
-  final titleController = TextEditingController();
-  final monthController = TextEditingController();
-  final dayController = TextEditingController();
-  CustomHolidayType selectedType = CustomHolidayType.solar;
-
-  await showDialog(
-    context: context,
-    builder: (dialogContext) {
-      return StatefulBuilder(
-        builder: (context, setModalState) {
-          return AlertDialog(
-            title: const Text('بروزرسانی ماه‌های قمری و مناسبت‌های رسمی'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (customHolidays.isNotEmpty) ...[
-                    const Text('مناسبت‌های سفارشی فعلی:', style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 6),
-                    ...customHolidays.map((h) => ListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(h.title),
-                          subtitle: Text(
-                              '${h.type == CustomHolidayType.solar ? 'شمسی' : 'قمری'} - روز ${_toPersianDigits(h.day.toString())} ماه ${_toPersianDigits(h.month.toString())}'),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () async {
-                              await service.removeCustomHoliday(h.id);
-                              customHolidays = await service.loadCustomHolidays();
-                              setModalState(() {});
-                            },
-                          ),
-                        )),
-                    const Divider(height: 20),
-                  ],
-                  const Text('افزودن مناسبت جدید:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: RadioListTile<CustomHolidayType>(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('شمسی'),
-                          value: CustomHolidayType.solar,
-                          groupValue: selectedType,
-                          onChanged: (v) => setModalState(() => selectedType = v!),
-                        ),
-                      ),
-                      Expanded(
-                        child: RadioListTile<CustomHolidayType>(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('قمری'),
-                          value: CustomHolidayType.lunar,
-                          groupValue: selectedType,
-                          onChanged: (v) => setModalState(() => selectedType = v!),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: monthController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'ماه (۱ تا ۱۲)'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          controller: dayController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'روز'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(labelText: 'عنوان مناسبت'),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('بستن')),
-              ElevatedButton(
-                onPressed: () async {
-                  final month = int.tryParse(monthController.text.trim());
-                  final day = int.tryParse(dayController.text.trim());
-                  final title = titleController.text.trim();
-                  if (month == null || day == null || title.isEmpty || month < 1 || month > 12 || day < 1) {
-                    return;
-                  }
-                  await service.addCustomHoliday(CustomHoliday(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    type: selectedType,
-                    month: month,
-                    day: day,
-                    title: title,
-                  ));
-                  customHolidays = await service.loadCustomHolidays();
-                  titleController.clear();
-                  monthController.clear();
-                  dayController.clear();
-                  setModalState(() {});
-                },
-                child: const Text('افزودن'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
 }
 
 /// انتخاب‌گر تاریخ شمسی ساده (سه فهرست کشویی روز/ماه/سال) به‌جای تقویم
@@ -262,35 +123,12 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   String _mode = 'year'; // 'year' یا 'events'
   final _eventsService = EventsService();
-  final _customHolidayService = CustomHolidayStorageService();
-  List<CustomHoliday> _customHolidays = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCustomHolidays();
-  }
-
-  Future<void> _loadCustomHolidays() async {
-    final items = await _customHolidayService.loadCustomHolidays();
-    if (mounted) setState(() => _customHolidays = items);
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('تقویم کامل 🗓️'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.event_repeat),
-            tooltip: 'بروزرسانی مناسبت‌ها',
-            onPressed: () async {
-              await showManageHolidaysDialog(context);
-              await _loadCustomHolidays();
-            },
-          ),
-        ],
       ),
       body: GestureDetector(
         onHorizontalDragEnd: (details) {
@@ -321,7 +159,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
             Expanded(
               child: _mode == 'year'
-                  ? _YearCalendarView(customHolidays: _customHolidays)
+                  ? const _YearCalendarView()
                   : _EventsListView(eventsService: _eventsService),
             ),
           ],
@@ -365,8 +203,7 @@ class _ModeButton extends StatelessWidget {
 /// ------------------ نمای تقویم سال (۱۲ ماه) ------------------
 
 class _YearCalendarView extends StatelessWidget {
-  final List<CustomHoliday> customHolidays;
-  const _YearCalendarView({required this.customHolidays});
+  const _YearCalendarView();
 
   @override
   Widget build(BuildContext context) {
@@ -391,7 +228,7 @@ class _YearCalendarView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        ...months.map((m) => _MonthBlock(year: today.year, month: m, today: today, customHolidays: customHolidays)),
+        ...months.map((m) => _MonthBlock(year: today.year, month: m, today: today)),
       ],
     );
   }
@@ -401,8 +238,7 @@ class _MonthBlock extends StatelessWidget {
   final int year;
   final int month;
   final Jalali today;
-  final List<CustomHoliday> customHolidays;
-  const _MonthBlock({required this.year, required this.month, required this.today, required this.customHolidays});
+  const _MonthBlock({required this.year, required this.month, required this.today});
 
   static const _weekdayHeaders = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج']; // شنبه تا جمعه
 
@@ -465,7 +301,7 @@ class _MonthBlock extends StatelessWidget {
               final jDate = Jalali(year, month, day);
               final gDate = jDate.toDateTime();
               final hijri = HijriCalendar.fromDate(gDate);
-              final holidayInfo = _checkHoliday(jDate, hijri, customHolidays);
+              final holidayInfo = _checkHoliday(jDate, hijri);
               final isToday = jDate.year == today.year && jDate.month == today.month && jDate.day == today.day;
 
               final bg = isToday
