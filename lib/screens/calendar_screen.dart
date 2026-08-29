@@ -58,54 +58,156 @@ Future<Jalali?> showJalaliDatePicker(BuildContext context, {Jalali? initial}) {
           final daysInMonth = Jalali(selectedYear, selectedMonth, 1).monthLength;
           if (selectedDay > daysInMonth) selectedDay = daysInMonth;
 
-          return AlertDialog(
-            backgroundColor: Colors.deepPurple.shade50,
-            title: const Text('انتخاب تاریخ', style: TextStyle(fontWeight: FontWeight.bold)),
-            content: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Expanded(
-                  child: DropdownButton<int>(
-                    isExpanded: true,
-                    value: selectedDay,
-                    items: List.generate(daysInMonth, (i) => i + 1)
-                        .map((d) => DropdownMenuItem(value: d, child: Text(_toPersianDigits(d.toString()))))
-                        .toList(),
-                    onChanged: (v) => setModalState(() => selectedDay = v!),
-                  ),
+          InputDecoration pickerDecoration() => InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
                 ),
-                const SizedBox(width: 6),
-                Expanded(
-                  flex: 2,
-                  child: DropdownButton<int>(
-                    isExpanded: true,
-                    value: selectedMonth,
-                    items: List.generate(12, (i) => i + 1)
-                        .map((m) => DropdownMenuItem(value: m, child: Text(Jalali(selectedYear, m, 1).formatter.mN)))
-                        .toList(),
-                    onChanged: (v) => setModalState(() => selectedMonth = v!),
-                  ),
+              );
+
+          return Dialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFE1D3FF), Color(0xFFFFE0EE), Color(0xFFFFF3D6)],
                 ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: DropdownButton<int>(
-                    isExpanded: true,
-                    value: selectedYear,
-                    items: List.generate(8, (i) => now.year - 1 + i)
-                        .map((y) => DropdownMenuItem(value: y, child: Text(_toPersianDigits(y.toString()))))
-                        .toList(),
-                    onChanged: (v) => setModalState(() => selectedYear = v!),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('انصراف')),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(dialogContext, Jalali(selectedYear, selectedMonth, selectedDay)),
-                child: const Text('تأیید'),
+                boxShadow: [
+                  BoxShadow(color: Colors.deepPurple.withOpacity(0.25), blurRadius: 24, offset: const Offset(0, 10)),
+                ],
               ),
-            ],
+              padding: const EdgeInsets.fromLTRB(22, 26, 22, 22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [Color(0xFF7B5EA7), Color(0xFF4C93C6)]),
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(color: Colors.deepPurple.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 5)),
+                        ],
+                      ),
+                      child: const Text('📅 انتخاب تاریخ',
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text('روز', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple.shade700, fontSize: 15)),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<int>(
+                              isExpanded: true,
+                              decoration: pickerDecoration(),
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                              value: selectedDay,
+                              items: List.generate(daysInMonth, (i) => i + 1)
+                                  .map((d) => DropdownMenuItem(value: d, child: Text(_toPersianDigits(d.toString()))))
+                                  .toList(),
+                              onChanged: (v) => setModalState(() => selectedDay = v!),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          children: [
+                            Text('ماه', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.pink.shade700, fontSize: 15)),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<int>(
+                              isExpanded: true,
+                              decoration: pickerDecoration(),
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.pink),
+                              value: selectedMonth,
+                              items: List.generate(12, (i) => i + 1)
+                                  .map((m) => DropdownMenuItem(value: m, child: Text(Jalali(selectedYear, m, 1).formatter.mN)))
+                                  .toList(),
+                              onChanged: (v) => setModalState(() => selectedMonth = v!),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text('سال', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade800, fontSize: 15)),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<int>(
+                              isExpanded: true,
+                              decoration: pickerDecoration(),
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange.shade800),
+                              value: selectedYear,
+                              items: List.generate(8, (i) => now.year - 1 + i)
+                                  .map((y) => DropdownMenuItem(value: y, child: Text(_toPersianDigits(y.toString()))))
+                                  .toList(),
+                              onChanged: (v) => setModalState(() => selectedYear = v!),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 26),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: const Text('انصراف', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        flex: 2,
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(18),
+                          child: Ink(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [Color(0xFF7B5EA7), Color(0xFF4C93C6)]),
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
+                                BoxShadow(color: Colors.deepPurple.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 5)),
+                              ],
+                            ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(18),
+                              onTap: () => Navigator.pop(dialogContext, Jalali(selectedYear, selectedMonth, selectedDay)),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                child: Text('تأیید ✓',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           );
         },
       );
@@ -213,18 +315,11 @@ class _YearCalendarView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 6,
-            children: [
-              Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
-              const Text('تاریخ سبز رنگ، تاریخ امروز است و', style: TextStyle(fontSize: 12)),
-              Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
-              const Text('تاریخ‌های قرمز، تعطیلات رسمی هستند. برای دیدن جزئیات، روی هر روز بزنید.',
-                  style: TextStyle(fontSize: 12)),
-            ],
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'برای دیدن جزئیات هر روز ، روی آن بزنید',
+            style: TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w600),
           ),
         ),
         const SizedBox(height: 8),
@@ -319,25 +414,27 @@ class _MonthBlock extends StatelessWidget {
                 onTap: () => _showDayDetail(context, jDate, gDate, hijri, holidayInfo),
                 child: Container(
                   decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
-                  padding: const EdgeInsets.symmetric(vertical: 1),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _toPersianDigits(day.toString()),
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: fg),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(DateFormat('MMM d').format(gDate),
-                          style: TextStyle(fontSize: 9, color: fg.withOpacity(0.8)),
-                          overflow: TextOverflow.ellipsis),
-                      Text(
-                        '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]}',
-                        style: TextStyle(fontSize: 9, color: fg.withOpacity(0.8)),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                  padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 1),
+                  alignment: Alignment.center,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _toPersianDigits(day.toString()),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: fg),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(DateFormat('MMM d').format(gDate),
+                            style: TextStyle(fontSize: 10, color: fg.withOpacity(0.8))),
+                        Text(
+                          '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]}',
+                          style: TextStyle(fontSize: 10, color: fg.withOpacity(0.8)),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
