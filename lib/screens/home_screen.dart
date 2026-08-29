@@ -174,24 +174,49 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         toolbarHeight: bannerHeight,
         titleSpacing: 0,
-        flexibleSpace: ClipRect(
-          child: OverflowBox(
-            maxHeight: screenWidth / (900 / 171),
-            child: Image.asset(
-              'assets/images/app_banner.jpg',
-              width: screenWidth,
-              fit: BoxFit.fill,
+        flexibleSpace: Stack(
+          children: [
+            ClipRect(
+              child: OverflowBox(
+                maxHeight: screenWidth / (900 / 171),
+                child: Image.asset(
+                  'assets/images/app_banner.jpg',
+                  width: screenWidth,
+                  fit: BoxFit.fill,
+                ),
+              ),
             ),
-          ),
+            Positioned(
+              left: 6,
+              bottom: 4,
+              child: Material(
+                color: Colors.black26,
+                shape: const CircleBorder(),
+                child: IconButton(
+                  icon: const Icon(Icons.refresh, color: Colors.white, size: 20),
+                  tooltip: 'بروزرسانی',
+                  onPressed: _refreshAllWeather,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _refreshAllWeather,
-              child: ListView(
-                padding: const EdgeInsets.only(bottom: 24),
-                children: [
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                return SizedBox(
+                  width: constraints.maxWidth,
+                  height: constraints.maxHeight,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: constraints.maxWidth,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                   // بخش «آب و هوا»: عنوان بیرون از مستطیل + کارت(های) آب‌وهوا + نوار «وضعیت ده روز آینده»
                   // + نوار «تنظیمات آب و هوا»، همگی داخل یک مستطیل واحد
                   _SectionHeader(title: 'آب و هوا', topPadding: 0),
@@ -453,9 +478,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 16 + MediaQuery.of(context).padding.bottom),
-                ],
-              ),
+                          SizedBox(height: 8 + MediaQuery.of(context).padding.bottom),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
     );
   }
