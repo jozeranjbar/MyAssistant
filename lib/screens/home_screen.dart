@@ -20,6 +20,9 @@ import 'calendar_screen.dart';
 import 'reminder_screen.dart';
 import 'about_screen.dart';
 
+// رنگ قهوه‌ای برای نام شهرها
+const _kBrownCity = Color(0xFF6D4C29);
+
 String _toPersianDigits(String input) {
   const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
   const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
@@ -90,30 +93,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final alreadyPrompted = await WidgetService.hasPromptedBefore();
     if (alreadyPrompted || !mounted) return;
 
-    await showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('افزودن ویجت'),
-        content: const Text('آیا می‌خواهید ویجت را به صفحه گوشی اضافه کنید؟'),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              await WidgetService.markPrompted();
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-            },
-            child: const Text('نه'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await WidgetService.markPrompted();
-              await WidgetService.requestPinWidget();
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-            },
-            child: const Text('بله'),
-          ),
-        ],
-      ),
-    );
+    // دیالوگ سفارشی حذف شد؛ فقط تأییدیه‌ی رسمی خود اندروید نمایش داده می‌شود
+    // تا کاربر دو بار پشت سر هم پیام نبیند.
+    await WidgetService.markPrompted();
+    await WidgetService.requestPinWidget();
   }
 
   Future<void> _refreshAllWeather() async {
@@ -243,15 +226,29 @@ class _HomeScreenState extends State<HomeScreen> {
                                     const SizedBox(height: 8),
                                     _NavButton(
                                       icon: Icons.calendar_view_week,
-                                      label: 'وضعیت هوای ده روز آینده ${loc.name}',
+                                      richLabel: RichText(
+                                        textAlign: TextAlign.right,
+                                        text: TextSpan(
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blue.shade900,
+                                          ),
+                                          children: [
+                                            const TextSpan(text: 'وضعیت هوای ده روز آینده '),
+                                            TextSpan(
+                                              text: loc.name,
+                                              style: const TextStyle(color: _kBrownCity, fontWeight: FontWeight.w900),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                       onTap: () => _openTenDayForecast(loc),
                                       backgroundColor: Colors.blue.shade50,
                                       foregroundColor: Colors.blue.shade900,
                                       borderColor: const Color(0xFFE3F4FC),
                                       elevated: true,
                                       showArrow: false,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
                                     ),
                                   ],
                                 )),
@@ -480,7 +477,8 @@ class _NavButton extends StatelessWidget {
   final IconData? icon;
   final String? emoji;
   final String? emoji2;
-  final String label;
+  final String? label;
+  final Widget? richLabel;
   final VoidCallback onTap;
   final Color? backgroundColor;
   final Color? foregroundColor;
@@ -493,7 +491,8 @@ class _NavButton extends StatelessWidget {
     this.icon,
     this.emoji,
     this.emoji2,
-    required this.label,
+    this.label,
+    this.richLabel,
     required this.onTap,
     this.backgroundColor,
     this.foregroundColor,
@@ -502,7 +501,7 @@ class _NavButton extends StatelessWidget {
     this.fontSize,
     this.fontWeight,
     this.elevated = false,
-  });
+  }) : assert(label != null || richLabel != null, 'either label or richLabel must be provided');
 
   @override
   Widget build(BuildContext context) {
@@ -534,10 +533,11 @@ class _NavButton extends StatelessWidget {
               if (emoji == null && icon != null) Icon(icon, color: fg),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(color: fg, fontSize: fontSize, fontWeight: fontWeight),
-                ),
+                child: richLabel ??
+                    Text(
+                      label!,
+                      style: TextStyle(color: fg, fontSize: fontSize, fontWeight: fontWeight),
+                    ),
               ),
               if (showArrow) Icon(Icons.chevron_left, color: fg),
             ],
