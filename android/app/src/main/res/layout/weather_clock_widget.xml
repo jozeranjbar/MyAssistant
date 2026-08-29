@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  چیدمان سه‌ستونه دقیقاً مطابق عکس نمونه:
-  ستون ساعت (٪33) | ستون تاریخ+یادآوری (٪36) | ستون آب‌وهوا (٪31)
+  چیدمان سه‌ستونه:
+  ستون ساعت (٪26) | ستون تاریخ+یادآوری (٪48) | ستون آب‌وهوا (٪26)
   آی‌دی‌ها عوض نشدن، پس WeatherClockWidgetProvider.kt نیازی به تغییر نداره.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -15,8 +15,8 @@
         android:layout_height="match_parent"
         android:layoutDirection="ltr"
         android:orientation="horizontal"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
         android:paddingTop="8dp"
         android:paddingBottom="8dp">
 
@@ -24,7 +24,7 @@
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="33">
+            android:layout_weight="26">
 
             <TextView
                 android:id="@+id/widget_clock"
@@ -50,11 +50,11 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="36"
+            android:layout_weight="48"
             android:orientation="vertical"
             android:gravity="center_vertical"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp">
+            android:paddingStart="2dp"
+            android:paddingEnd="2dp">
 
             <!-- پیل تاریخ -->
             <LinearLayout
@@ -68,17 +68,10 @@
                 android:paddingTop="6dp"
                 android:paddingBottom="6dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="📅"
-                    android:textSize="20sp" />
-
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
                     android:orientation="vertical"
                     android:gravity="end"
                     android:layoutDirection="rtl">
@@ -124,18 +117,10 @@
                 android:paddingBottom="8dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🔔"
-                    android:textSize="20sp" />
-
-                <TextView
                     android:id="@+id/widget_reminder"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:text="امروز یادآوری ندارید"
+                    android:text="یادآوری ندارید"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
                     android:textStyle="bold"
@@ -157,7 +142,7 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="31"
+            android:layout_weight="26"
             android:orientation="vertical"
             android:gravity="center"
             android:paddingStart="10dp">
