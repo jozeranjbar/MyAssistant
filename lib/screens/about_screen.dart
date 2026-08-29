@@ -96,7 +96,7 @@ class AboutScreen extends StatelessWidget {
               const Text('📌 ویجت صفحه اصلی', style: titleStyle),
               const SizedBox(height: 6),
               const Text(
-                'ویجت صفحه اصلی گوشی، با ساعت، تاریخ، دما و یادآوری‌ها و با امکان تنظیم عرض و ارتفاع آن روی صفحه گوشی  .',
+                'ویجت صفحه اصلی گوشی با ساعت، تاریخ، دما و یادآوری‌ها و قابلیت تنظیم عرض و ارتفاع آن روی گوشی شما.',
                 style: bodyStyle,
               ),
               const SizedBox(height: 28),
@@ -171,6 +171,3 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
-```
-
-فقط متن‌ها رو مرتب‌تر کردم، بولت پوینت اضافه کردم و ایمیل/تلگرام رو لینک‌دار کردم. ساختار کد همون قبلیه.
