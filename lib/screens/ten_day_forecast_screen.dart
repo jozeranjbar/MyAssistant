@@ -36,12 +36,16 @@ class TenDayForecastScreen extends StatelessWidget {
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         centerTitle: true,
-        title: Text(
-          'وضعیت هوای ده روز آینده ${location.name}',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.brown.shade700,
-            fontWeight: FontWeight.bold,
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            'وضعیت هوای ده روز آینده ${location.name}',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.brown.shade700,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
           ),
         ),
       ),
