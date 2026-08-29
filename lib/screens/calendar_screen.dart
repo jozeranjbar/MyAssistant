@@ -290,7 +290,7 @@ class _MonthBlock extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              childAspectRatio: 1.35,
+              childAspectRatio: 1.05,
               mainAxisSpacing: 1,
               crossAxisSpacing: 1,
             ),
@@ -326,13 +326,15 @@ class _MonthBlock extends StatelessWidget {
                     children: [
                       Text(
                         _toPersianDigits(day.toString()),
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: fg),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: fg),
                       ),
+                      const SizedBox(height: 1),
                       Text(DateFormat('MMM d').format(gDate),
-                          style: TextStyle(fontSize: 10, color: fg.withOpacity(0.8))),
+                          style: TextStyle(fontSize: 9, color: fg.withOpacity(0.8)),
+                          overflow: TextOverflow.ellipsis),
                       Text(
                         '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]}',
-                        style: TextStyle(fontSize: 10, color: fg.withOpacity(0.8)),
+                        style: TextStyle(fontSize: 9, color: fg.withOpacity(0.8)),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -520,73 +522,135 @@ class _EventsListViewState extends State<_EventsListView> {
     await showDialog(
       context: context,
       builder: (dialogContext) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         child: Container(
+          width: double.infinity,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
+            borderRadius: BorderRadius.circular(28),
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Colors.pink.shade50, Colors.orange.shade50],
+              colors: [
+                Color(0xFFFDE1EC),
+                Color(0xFFFFE8CC),
+                Color(0xFFE3F3FF),
+              ],
             ),
+            boxShadow: [
+              BoxShadow(color: Colors.purple.withOpacity(0.25), blurRadius: 24, offset: const Offset(0, 10)),
+            ],
           ),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('✨ مناسبت جدید',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.deepPurple.shade700)),
-              const SizedBox(height: 14),
-              Text(
-                'شمسی: ${_toPersianDigits(jPicked.day.toString())} ${jPicked.formatter.mN} ${_toPersianDigits(jPicked.year.toString())}',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.blue.shade800),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [Color(0xFF8E24AA), Color(0xFFEC407A)]),
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(color: Colors.pink.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 5)),
+                    ],
+                  ),
+                  child: const Text('✨ مناسبت جدید ✨',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white)),
+                ),
               ),
-              const SizedBox(height: 6),
-              Text('میلادی: ${DateFormat('d MMMM y').format(gDate)}',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.teal.shade700)),
-              const SizedBox(height: 6),
-              Text(
-                'قمری: ${_toPersianDigits(hPicked.hDay.toString())} ${hijriMonthNamesFa[hPicked.hMonth - 1]} ${_toPersianDigits(hPicked.hYear.toString())}',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.orange.shade800),
+              const SizedBox(height: 22),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.65),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      '📅 شمسی: ${_toPersianDigits(jPicked.day.toString())} ${jPicked.formatter.mN} ${_toPersianDigits(jPicked.year.toString())}',
+                      style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Colors.blue.shade800),
+                    ),
+                    const SizedBox(height: 10),
+                    Text('🌍 میلادی: ${DateFormat('d MMMM y').format(gDate)}',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.teal.shade700)),
+                    const SizedBox(height: 10),
+                    Text(
+                      '🌙 قمری: ${_toPersianDigits(hPicked.hDay.toString())} ${hijriMonthNamesFa[hPicked.hMonth - 1]} ${_toPersianDigits(hPicked.hYear.toString())}',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.orange.shade800),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 22),
               TextField(
                 controller: titleController,
                 autofocus: true,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                textAlign: TextAlign.right,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.deepPurple),
                 decoration: InputDecoration(
-                  hintText: 'عنوان مناسبت',
+                  hintText: 'عنوان مناسبت را بنویسید...',
+                  hintStyle: TextStyle(color: Colors.deepPurple.shade200, fontSize: 17),
                   filled: true,
                   fillColor: Colors.white,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.deepPurple.shade100, width: 1.5),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 22),
               Row(
                 children: [
                   Expanded(
                     child: TextButton(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
                       onPressed: () => Navigator.pop(dialogContext),
-                      child: const Text('انصراف'),
+                      child: const Text('انصراف', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple.shade400,
-                        foregroundColor: Colors.white,
+                    flex: 2,
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(18),
+                      child: Ink(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFF8E24AA), Color(0xFFEC407A)]),
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(color: Colors.pink.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 5)),
+                          ],
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(18),
+                          onTap: () async {
+                            if (titleController.text.trim().isEmpty) return;
+                            await widget.eventsService.addPrivateEvent(jPicked, titleController.text.trim());
+                            if (dialogContext.mounted) Navigator.pop(dialogContext);
+                            // شناسه‌ی موقت برای پیدا کردن مناسبت تازه اضافه‌شده بعد از رفرش لیست
+                            _lastAddedKey = '${jPicked.month}-${jPicked.day}-${titleController.text.trim()}';
+                            await _load();
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Text('افزودن 🎉',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ),
+                        ),
                       ),
-                      onPressed: () async {
-                        if (titleController.text.trim().isEmpty) return;
-                        await widget.eventsService.addPrivateEvent(jPicked, titleController.text.trim());
-                        if (dialogContext.mounted) Navigator.pop(dialogContext);
-                        // شناسه‌ی موقت برای پیدا کردن مناسبت تازه اضافه‌شده بعد از رفرش لیست
-                        _lastAddedKey = '${jPicked.month}-${jPicked.day}-${titleController.text.trim()}';
-                        await _load();
-                      },
-                      child: const Text('افزودن', style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -626,17 +690,51 @@ class _EventsListViewState extends State<_EventsListView> {
                   itemBuilder: (context, index) {
                     final e = _events[index];
                     final isJustAdded = _eventKey(e) == _lastAddedKey;
-                    return ListTile(
+                    return Container(
                       key: _itemKeys[_eventKey(e)],
-                      tileColor: isJustAdded ? Colors.yellow.shade100 : null,
-                      leading: Icon(e.isPublic ? Icons.public : Icons.star,
-                          color: e.isPublic ? Colors.grey : Colors.purple),
-                      title: Text(e.title),
-                      subtitle: Text(
-                          '${_toPersianDigits(e.day.toString())} ${Jalali(1400, e.month, 1).formatter.mN}${e.year != null ? ' ${_toPersianDigits(e.year.toString())}' : ''}'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _deleteEvent(e),
+                      margin: isJustAdded ? const EdgeInsets.symmetric(horizontal: 6, vertical: 3) : EdgeInsets.zero,
+                      decoration: isJustAdded
+                          ? BoxDecoration(
+                              color: Colors.amber.shade100,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: Colors.deepOrange.shade300, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.orange.withOpacity(0.35),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3)),
+                              ],
+                            )
+                          : null,
+                      child: ListTile(
+                        leading: Icon(e.isPublic ? Icons.public : Icons.star,
+                            color: e.isPublic ? Colors.grey : Colors.purple),
+                        title: Text(e.title, style: TextStyle(fontWeight: isJustAdded ? FontWeight.bold : FontWeight.normal)),
+                        subtitle: Text(
+                            '${_toPersianDigits(e.day.toString())} ${Jalali(1400, e.month, 1).formatter.mN}${e.year != null ? ' ${_toPersianDigits(e.year.toString())}' : ''}'),
+                        trailing: isJustAdded
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: Colors.deepOrange,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Text('جدید',
+                                        style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () => _deleteEvent(e),
+                                  ),
+                                ],
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _deleteEvent(e),
+                              ),
                       ),
                     );
                   },
