@@ -28,6 +28,9 @@ const _kHeaderBlue = Color(0xFF1565C0);
 // رنگ‌های برجسته‌ی سبز برای فیلدها و کارت‌ها
 const _kGreenFieldFill = Color(0xFFDFF6E3); // سبز کمرنگ
 const _kGreenTextStrong = Color(0xFF1B5E20); // سبز پررنگ
+
+// رنگ قهوه‌ای برای نام شهرها
+const _kBrownCity = Color(0xFF6D4C29);
 const _kGreenBorder = Color(0xFF66BB6A);
 const _kGreenShadowColor = Color(0xFF2E7D32);
 
@@ -283,7 +286,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                                   children: [
                                     Text(loc.name,
                                         style: const TextStyle(
-                                            fontWeight: FontWeight.bold, fontSize: 16, color: _kGreenTextStrong)),
+                                            fontWeight: FontWeight.bold, fontSize: 16, color: _kBrownCity)),
                                     const SizedBox(height: 4),
                                     Text(
                                       '${loc.province != null ? '${loc.province} - ' : ''}${loc.latitude.toStringAsFixed(3)}, ${loc.longitude.toStringAsFixed(3)}',
@@ -376,10 +379,12 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                       const SizedBox(height: 10),
                       DropdownButtonFormField<IranCity>(
                         decoration: _pillDecoration('شهر'),
-                        style: const TextStyle(color: _kGreenTextStrong, fontWeight: FontWeight.bold),
+                        style: const TextStyle(color: _kBrownCity, fontWeight: FontWeight.bold),
                         value: _selectedCity,
                         items: (_selectedProvince?.cities ?? [])
-                            .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
+                            .map((c) => DropdownMenuItem(
+                                value: c,
+                                child: Text(c.name, style: const TextStyle(color: _kBrownCity, fontWeight: FontWeight.bold))))
                             .toList(),
                         onChanged: _selectedProvince == null
                             ? null
