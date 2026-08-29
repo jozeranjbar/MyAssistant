@@ -19,16 +19,6 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
     companion object {
         private const val ACTION_TICK = "com.myassistant.app.WIDGET_TICK"
 
-        private fun toPersianDigits(input: String): String {
-            val western = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
-            val persian = charArrayOf('۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹')
-            var result = input
-            for (i in western.indices) {
-                result = result.replace(western[i], persian[i])
-            }
-            return result
-        }
-
         fun updateAllWidgets(context: Context) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val ids = appWidgetManager.getAppWidgetIds(ComponentName(context, WeatherClockWidgetProvider::class.java))
@@ -79,12 +69,13 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
 
             views.setTextViewText(R.id.widget_city, widgetData.getString("city_name", "—"))
             views.setTextViewText(R.id.widget_temp, widgetData.getString("temperature", "--"))
-            views.setTextViewText(R.id.widget_weather_desc, widgetData.getString("weather_desc", ""))
-            views.setTextViewText(R.id.widget_weather_emoji, widgetData.getString("weather_emoji", "🌡️"))
-            views.setTextViewText(R.id.widget_date_line1, widgetData.getString("date_line1", "—"))
-            views.setTextViewText(R.id.widget_date_line2, widgetData.getString("date_line2", "—"))
-            views.setTextViewText(R.id.widget_reminder, widgetData.getString("reminder_text", "یادآوری ندارید"))
+            views.setTextViewText(R.id.widget_weather_emoji, widgetData.getString("weather_emoji", "🌤️"))
             views.setTextViewText(R.id.widget_clock, currentTimeText())
+            views.setTextViewText(R.id.widget_reminder, widgetData.getString("reminder_text", "0 یادآوری"))
+            views.setTextViewText(R.id.widget_weekday, widgetData.getString("weekday_text", "—"))
+            views.setTextViewText(R.id.widget_date_shamsi, widgetData.getString("date_shamsi", "—"))
+            views.setTextViewText(R.id.widget_date_hijri, widgetData.getString("date_hijri", "—"))
+            views.setTextViewText(R.id.widget_date_gregorian, widgetData.getString("date_gregorian", "—"))
 
             views.setOnClickPendingIntent(R.id.widget_root, buildLaunchAppIntent(context, appWidgetId))
 
@@ -121,8 +112,9 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
     }
 
     private fun currentTimeText(): String {
+        // اعداد انگلیسی، بدون تبدیل به فارسی
         val formatter = SimpleDateFormat("HH:mm", Locale.US)
-        return toPersianDigits(formatter.format(Calendar.getInstance().time))
+        return formatter.format(Calendar.getInstance().time)
     }
 
     override fun onEnabled(context: Context) {
