@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'calendar_screen.dart' show showManageHolidaysDialog;
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -65,15 +64,8 @@ class AboutScreen extends StatelessWidget {
               const Text('🗓️ تقویم', style: titleStyle),
               const SizedBox(height: 6),
               const Text(
-                'تقویم کامل شمسی همراه با تاریخ میلادی و قمری، مناسبت‌های ایرانی و بین‌المللی، و تعطیلات رسمی. امکان بروزرسانی سالانه هم وجود دارد.',
+                'تقویم کامل شمسی همراه با تاریخ میلادی و قمری، مناسبت‌های ایرانی و بین‌المللی، و تعطیلات رسمی.',
                 style: bodyStyle,
-              ),
-              const SizedBox(height: 10),
-              _ActionButton(
-                icon: Icons.event_repeat,
-                label: 'بروزرسانی ماه‌های قمری و مناسبت‌های رسمی',
-                color: Colors.deepPurple,
-                onTap: () => showManageHolidaysDialog(context),
               ),
               const SizedBox(height: 20),
 
@@ -130,39 +122,6 @@ class AboutScreen extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final MaterialColor color;
-  final VoidCallback onTap;
-  const _ActionButton({required this.icon, required this.label, required this.color, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: color.shade50,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Icon(icon, color: color.shade700),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(label,
-                    style: TextStyle(color: color.shade700, fontWeight: FontWeight.bold, fontSize: 14)),
               ),
             ],
           ),
