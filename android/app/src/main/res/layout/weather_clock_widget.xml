@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  چیدمان دو‌ردیفه، بدون مستطیل/جداکننده، با کمترین فاصله از کناره‌ها:
-  ردیف ۱ (راست به چپ): نام شهر، دما، آیکون پوشش ابرها (روز/شب)، ساعت، تعداد یادآوری
-  ردیف ۲ (راست به چپ): روز هفته، روز و ماه شمسی، روز و ماه قمری، روز و ماه میلادی
-  رنگ سه بخش «آب‌وهوا»، «ساعت» و «یادآوری» از هم متفاوت است.
+  چیدمان سه‌ستونه‌ی ثابت (مستقل از جهت زبان سیستم):
+  ستون ۱ (راست‌ترین، همیشه چسبیده به لبه‌ی راست): شهر+دما+آیکون ابر / روز هفته+تاریخ شمسی
+  ستون ۲ (همیشه وسط‌چینِ کل ویجت، در هر عرضی): ساعت / تاریخ قمری
+  ستون ۳ (چپ‌ترین، همیشه چسبیده به لبه‌ی چپ): یادآوری / تاریخ میلادی
+  اندازه‌ی فونت‌ها به‌صورت پویا و متناسب با عرض واقعی ویجت، توسط
+  WeatherClockWidgetProvider.kt تنظیم می‌شود (اعداد پایه در این فایل صرفاً
+  مقدار اولیه/پیش‌فرض هستند).
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
@@ -14,128 +17,185 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layoutDirection="rtl"
+        android:layoutDirection="ltr"
         android:orientation="vertical"
         android:gravity="center_vertical"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:paddingTop="6dp"
-        android:paddingBottom="6dp">
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
 
-        <!-- ردیف ۱: شهر / دما / پوشش ابر / ساعت / یادآوری -->
+        <!-- ردیف ۱: یادآوری (چپ) | ساعت (وسط) | شهر+دما+ابر (راست) -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layoutDirection="rtl"
+            android:layoutDirection="ltr"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- بخش آب‌وهوا: شهر + دما + آیکون -->
-            <TextView
-                android:id="@+id/widget_city"
-                android:layout_width="wrap_content"
+            <!-- ستون ۳ - یادآوری - چسبیده به چپ -->
+            <FrameLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="—"
-                android:textColor="#8ED8FF"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:maxLines="1" />
+                android:layout_weight="36"
+                android:gravity="left|center_vertical">
 
-            <TextView
-                android:id="@+id/widget_temp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="--°"
-                android:textColor="#8ED8FF"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:maxLines="1" />
+                <TextView
+                    android:id="@+id/widget_reminder"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 یادآوری"
+                    android:textColor="#FFD54F"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:maxLines="1" />
+            </FrameLayout>
 
-            <TextView
-                android:id="@+id/widget_weather_emoji"
-                android:layout_width="wrap_content"
+            <!-- ستون ۲ - ساعت - همیشه وسط‌چین -->
+            <FrameLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:text="🌤️"
-                android:textSize="24sp" />
+                android:layout_weight="28"
+                android:gravity="center">
 
-            <!-- بخش ساعت -->
-            <TextView
-                android:id="@+id/widget_clock"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:text="--:--"
-                android:textColor="#FFFFFF"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:includeFontPadding="false"
-                android:maxLines="1" />
+                <TextView
+                    android:id="@+id/widget_clock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--:--"
+                    android:textColor="#FFFFFF"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:includeFontPadding="false"
+                    android:maxLines="1" />
+            </FrameLayout>
 
-            <!-- بخش یادآوری -->
-            <TextView
-                android:id="@+id/widget_reminder"
-                android:layout_width="wrap_content"
+            <!-- ستون ۱ - شهر/دما/ابر - چسبیده به راست -->
+            <FrameLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:text="0 یادآوری"
-                android:textColor="#FFD54F"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:maxLines="1" />
+                android:layout_weight="36"
+                android:gravity="right|center_vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layoutDirection="rtl"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/widget_city"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textColor="#8ED8FF"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:maxLines="1" />
+
+                    <TextView
+                        android:id="@+id/widget_temp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="--°"
+                        android:textColor="#8ED8FF"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:maxLines="1" />
+
+                    <TextView
+                        android:id="@+id/widget_weather_emoji"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="🌤️"
+                        android:textSize="24sp" />
+                </LinearLayout>
+            </FrameLayout>
         </LinearLayout>
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="5dp"></FrameLayout>
+            android:layout_height="3dp"></FrameLayout>
 
-        <!-- ردیف ۲: روز هفته / تاریخ شمسی / تاریخ قمری / تاریخ میلادی -->
+        <!-- ردیف ۲: میلادی (چپ) | قمری (وسط) | هفته+شمسی (راست) -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layoutDirection="rtl"
+            android:layoutDirection="ltr"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/widget_weekday"
-                android:layout_width="wrap_content"
+            <!-- ستون ۳ - تاریخ میلادی - چسبیده به چپ -->
+            <FrameLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="—"
-                android:textColor="#EDE6FA"
-                android:textSize="14sp"
-                android:maxLines="1" />
+                android:layout_weight="36"
+                android:gravity="left|center_vertical">
 
-            <TextView
-                android:id="@+id/widget_date_shamsi"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="—"
-                android:textColor="#EDE6FA"
-                android:textSize="14sp"
-                android:maxLines="1" />
+                <TextView
+                    android:id="@+id/widget_date_gregorian"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="—"
+                    android:textColor="#000000"
+                    android:textSize="14sp"
+                    android:maxLines="1" />
+            </FrameLayout>
 
-            <TextView
-                android:id="@+id/widget_date_hijri"
-                android:layout_width="wrap_content"
+            <!-- ستون ۲ - تاریخ قمری - همیشه وسط‌چین -->
+            <FrameLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="—"
-                android:textColor="#EDE6FA"
-                android:textSize="14sp"
-                android:maxLines="1" />
+                android:layout_weight="28"
+                android:gravity="center">
 
-            <TextView
-                android:id="@+id/widget_date_gregorian"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/widget_date_hijri"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="—"
+                    android:textColor="#000000"
+                    android:textSize="14sp"
+                    android:maxLines="1" />
+            </FrameLayout>
+
+            <!-- ستون ۱ - روز هفته + تاریخ شمسی - چسبیده به راست -->
+            <FrameLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="—"
-                android:textColor="#EDE6FA"
-                android:textSize="14sp"
-                android:maxLines="1" />
+                android:layout_weight="36"
+                android:gravity="right|center_vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layoutDirection="rtl"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/widget_weekday"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textColor="#000000"
+                        android:textSize="14sp"
+                        android:maxLines="1" />
+
+                    <TextView
+                        android:id="@+id/widget_date_shamsi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="—"
+                        android:textColor="#000000"
+                        android:textSize="14sp"
+                        android:maxLines="1" />
+                </LinearLayout>
+            </FrameLayout>
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>
