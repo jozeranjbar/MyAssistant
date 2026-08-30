@@ -74,10 +74,6 @@ class LocationStorageService {
     await saveLocations(locations);
   }
 
-  Future<void> reorder(List<WeatherLocation> newOrder) async {
-    await saveLocations(newOrder);
-  }
-
   // --- کش موقت اطلاعات آب‌وهوا برای هر لوکیشن (برای نمایش سریع/آفلاین) ---
 
   Future<void> cacheWeather(String locationId, WeatherData data) async {
