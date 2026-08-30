@@ -8,6 +8,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Bundle
+import android.util.TypedValue
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 import java.text.SimpleDateFormat
@@ -16,8 +18,28 @@ import java.util.Locale
 
 class WeatherClockWidgetProvider : AppWidgetProvider() {
 
+    /** اندازه‌ی پایه‌ی هر فیلد (بر حسب sp) که در عرض مرجع BASE_WIDTH_DP طراحی شده. */
+    private data class SizeSpec(val id: Int, val baseSp: Float)
+
     companion object {
         private const val ACTION_TICK = "com.myassistant.app.WIDGET_TICK"
+
+        // عرض مرجعی که فونت‌های پایه بر اساس آن طراحی شده‌اند
+        private const val BASE_WIDTH_DP = 320f
+        private const val MIN_SCALE = 0.6f
+        private const val MAX_SCALE = 1.9f
+
+        private val sizeSpecs = listOf(
+            SizeSpec(R.id.widget_city, 16f),
+            SizeSpec(R.id.widget_temp, 22f),
+            SizeSpec(R.id.widget_weather_emoji, 24f),
+            SizeSpec(R.id.widget_clock, 28f),
+            SizeSpec(R.id.widget_reminder, 15f),
+            SizeSpec(R.id.widget_weekday, 14f),
+            SizeSpec(R.id.widget_date_shamsi, 14f),
+            SizeSpec(R.id.widget_date_hijri, 14f),
+            SizeSpec(R.id.widget_date_gregorian, 14f),
+        )
 
         fun updateAllWidgets(context: Context) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -61,28 +83,61 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+    /** ساخت RemoteViews با متن‌های فعلی (بدون تنظیم اندازه‌ی فونت). */
+    private fun buildBaseViews(context: Context): RemoteViews {
         val widgetData = HomeWidgetPlugin.getData(context)
+        val views = RemoteViews(context.packageName, R.layout.weather_clock_widget)
 
-        for (appWidgetId in appWidgetIds) {
-            val views = RemoteViews(context.packageName, R.layout.weather_clock_widget)
+        views.setTextViewText(R.id.widget_city, widgetData.getString("city_name", "—"))
+        views.setTextViewText(R.id.widget_temp, widgetData.getString("temperature", "--"))
+        views.setTextViewText(R.id.widget_weather_emoji, widgetData.getString("weather_emoji", "🌤️"))
+        views.setTextViewText(R.id.widget_clock, currentTimeText())
+        views.setTextViewText(R.id.widget_reminder, widgetData.getString("reminder_text", "0 یادآوری"))
+        views.setTextViewText(R.id.widget_weekday, widgetData.getString("weekday_text", "—"))
+        views.setTextViewText(R.id.widget_date_shamsi, widgetData.getString("date_shamsi", "—"))
+        views.setTextViewText(R.id.widget_date_hijri, widgetData.getString("date_hijri", "—"))
+        views.setTextViewText(R.id.widget_date_gregorian, widgetData.getString("date_gregorian", "—"))
 
-            views.setTextViewText(R.id.widget_city, widgetData.getString("city_name", "—"))
-            views.setTextViewText(R.id.widget_temp, widgetData.getString("temperature", "--"))
-            views.setTextViewText(R.id.widget_weather_emoji, widgetData.getString("weather_emoji", "🌤️"))
-            views.setTextViewText(R.id.widget_clock, currentTimeText())
-            views.setTextViewText(R.id.widget_reminder, widgetData.getString("reminder_text", "0 یادآوری"))
-            views.setTextViewText(R.id.widget_weekday, widgetData.getString("weekday_text", "—"))
-            views.setTextViewText(R.id.widget_date_shamsi, widgetData.getString("date_shamsi", "—"))
-            views.setTextViewText(R.id.widget_date_hijri, widgetData.getString("date_hijri", "—"))
-            views.setTextViewText(R.id.widget_date_gregorian, widgetData.getString("date_gregorian", "—"))
+        return views
+    }
 
-            views.setOnClickPendingIntent(R.id.widget_root, buildLaunchAppIntent(context, appWidgetId))
+    /** تنظیم اندازه‌ی فونت‌ها متناسب با عرض واقعی ویجت روی گوشیِ کاربر. */
+    private fun applyScaledSizes(views: RemoteViews, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+        val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+        val minWidthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, BASE_WIDTH_DP.toInt())
+        var scale = minWidthDp / BASE_WIDTH_DP
+        if (scale < MIN_SCALE) scale = MIN_SCALE
+        if (scale > MAX_SCALE) scale = MAX_SCALE
 
-            appWidgetManager.updateAppWidget(appWidgetId, views)
+        for (spec in sizeSpecs) {
+            views.setTextViewTextSize(spec.id, TypedValue.COMPLEX_UNIT_SP, spec.baseSp * scale)
         }
+    }
 
+    private fun updateOneWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+        val views = buildBaseViews(context)
+        applyScaledSizes(views, appWidgetManager, appWidgetId)
+        views.setOnClickPendingIntent(R.id.widget_root, buildLaunchAppIntent(context, appWidgetId))
+        appWidgetManager.updateAppWidget(appWidgetId, views)
+    }
+
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        for (appWidgetId in appWidgetIds) {
+            updateOneWidget(context, appWidgetManager, appWidgetId)
+        }
         schedulePeriodicTick(context)
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: Bundle,
+    ) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        // وقتی کاربر اندازه‌ی ویجت را تغییر می‌دهد، فونت‌ها دوباره متناسب با
+        // عرض جدید محاسبه می‌شوند.
+        updateOneWidget(context, appWidgetManager, appWidgetId)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
