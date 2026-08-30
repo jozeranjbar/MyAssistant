@@ -24,10 +24,11 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
     companion object {
         private const val ACTION_TICK = "com.myassistant.app.WIDGET_TICK"
 
-        // عرض مرجعی که فونت‌های پایه بر اساس آن طراحی شده‌اند
+        // عرض و ارتفاع مرجعی که فونت‌های پایه بر اساس آن‌ها طراحی شده‌اند
         private const val BASE_WIDTH_DP = 320f
+        private const val BASE_HEIGHT_DP = 60f
         private const val MIN_SCALE = 0.6f
-        private const val MAX_SCALE = 1.9f
+        private const val MAX_SCALE = 1.35f
 
         private val sizeSpecs = listOf(
             SizeSpec(R.id.widget_city, 16f),
@@ -101,11 +102,17 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         return views
     }
 
-    /** تنظیم اندازه‌ی فونت‌ها متناسب با عرض واقعی ویجت روی گوشیِ کاربر. */
+    /** تنظیم اندازه‌ی فونت‌ها متناسب با عرض و ارتفاع واقعی ویجت روی گوشیِ کاربر. */
     private fun applyScaledSizes(views: RemoteViews, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
         val minWidthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, BASE_WIDTH_DP.toInt())
-        var scale = minWidthDp / BASE_WIDTH_DP
+        val minHeightDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, BASE_HEIGHT_DP.toInt())
+
+        val widthScale = minWidthDp / BASE_WIDTH_DP
+        val heightScale = minHeightDp / BASE_HEIGHT_DP
+        // هر کدام از عرض/ارتفاع که رشد کمتری داشته، مقیاس نهایی را تعیین می‌کند
+        // تا فونت هیچ‌وقت از فضای واقعی موجود بزرگ‌تر نشود و به‌هم نریزد.
+        var scale = if (widthScale < heightScale) widthScale else heightScale
         if (scale < MIN_SCALE) scale = MIN_SCALE
         if (scale > MAX_SCALE) scale = MAX_SCALE
 
