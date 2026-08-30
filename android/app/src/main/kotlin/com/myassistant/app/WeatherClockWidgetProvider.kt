@@ -27,19 +27,23 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         // عرض و ارتفاع مرجعی که فونت‌های پایه بر اساس آن‌ها طراحی شده‌اند
         private const val BASE_WIDTH_DP = 320f
         private const val BASE_HEIGHT_DP = 60f
-        private const val MIN_SCALE = 0.6f
-        private const val MAX_SCALE = 1.35f
+        private const val MIN_SCALE = 0.55f
+        // فونت هرگز از اندازه‌ی پایه بزرگ‌تر نمی‌شود؛ فقط برای ویجت‌های کوچک
+        // کوچک‌تر می‌شود. این کار از هم‌پوشانی/بریده‌شدن متن‌ها در گوشی‌ها و
+        // لانچرهای مختلف (که گاهی اندازه‌ی واقعی ویجت را نادرست گزارش می‌کنند)
+        // جلوگیری می‌کند.
+        private const val MAX_SCALE = 1.0f
 
         private val sizeSpecs = listOf(
-            SizeSpec(R.id.widget_city, 16f),
-            SizeSpec(R.id.widget_temp, 22f),
-            SizeSpec(R.id.widget_weather_emoji, 24f),
-            SizeSpec(R.id.widget_clock, 28f),
-            SizeSpec(R.id.widget_reminder, 15f),
-            SizeSpec(R.id.widget_weekday, 14f),
-            SizeSpec(R.id.widget_date_shamsi, 14f),
-            SizeSpec(R.id.widget_date_hijri, 14f),
-            SizeSpec(R.id.widget_date_gregorian, 14f),
+            SizeSpec(R.id.widget_city, 13f),
+            SizeSpec(R.id.widget_temp, 18f),
+            SizeSpec(R.id.widget_weather_emoji, 20f),
+            SizeSpec(R.id.widget_clock, 22f),
+            SizeSpec(R.id.widget_reminder, 12f),
+            SizeSpec(R.id.widget_weekday, 11f),
+            SizeSpec(R.id.widget_date_shamsi, 11f),
+            SizeSpec(R.id.widget_date_hijri, 11f),
+            SizeSpec(R.id.widget_date_gregorian, 11f),
         )
 
         fun updateAllWidgets(context: Context) {
