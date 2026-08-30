@@ -58,16 +58,11 @@ class WidgetService {
       final dateHijri = '${hijri.hDay} ${hijriMonthNamesFa[hijri.hMonth - 1]}';
       final dateGregorian = '${gDate.day} ${gregorianMonthNamesFa[gDate.month - 1]}';
 
-      // تعداد یادآوری‌های فعال امروز
+      // تعداد یادآوری‌های فعال (هر دو دسته‌ی دارو و روزمره)
+      final activeCount = reminders.where((r) => r.isActive).length;
+      final reminderText = '$activeCount یادآوری';
+
       final now = DateTime.now();
-      final todayReminders = reminders.where((r) {
-        if (!r.isActive) return false;
-        final isToday = r.dateTime.year == now.year && r.dateTime.month == now.month && r.dateTime.day == now.day;
-        return (isToday || r.repeatDaily) && r.dateTime.isAfter(now.subtract(const Duration(minutes: 1)));
-      }).toList();
-
-      final reminderText = '${todayReminders.length} یادآوری';
-
       final hour = now.hour;
       final isDay = hour >= 6 && hour < 18;
 
