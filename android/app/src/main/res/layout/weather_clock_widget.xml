@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  چیدمان دو‌ردیفه، بدون مستطیل/جداکننده:
+  چیدمان دو‌ردیفه، بدون مستطیل/جداکننده، با کمترین فاصله از کناره‌ها:
   ردیف ۱ (راست به چپ): نام شهر، دما، آیکون پوشش ابرها (روز/شب)، ساعت، تعداد یادآوری
   ردیف ۲ (راست به چپ): روز هفته، روز و ماه شمسی، روز و ماه قمری، روز و ماه میلادی
+  رنگ سه بخش «آب‌وهوا»، «ساعت» و «یادآوری» از هم متفاوت است.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
@@ -11,15 +12,15 @@
     android:background="@drawable/widget_background">
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layoutDirection="rtl"
         android:orientation="vertical"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp">
+        android:gravity="center_vertical"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
 
         <!-- ردیف ۱: شهر / دما / پوشش ابر / ساعت / یادآوری -->
         <LinearLayout
@@ -29,13 +30,14 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
+            <!-- بخش آب‌وهوا: شهر + دما + آیکون -->
             <TextView
                 android:id="@+id/widget_city"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="—"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
+                android:textColor="#8ED8FF"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:maxLines="1" />
 
@@ -43,10 +45,10 @@
                 android:id="@+id/widget_temp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="8dp"
                 android:text="--°"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
+                android:textColor="#8ED8FF"
+                android:textSize="22sp"
                 android:textStyle="bold"
                 android:maxLines="1" />
 
@@ -54,37 +56,39 @@
                 android:id="@+id/widget_weather_emoji"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
+                android:layout_marginStart="4dp"
                 android:text="🌤️"
-                android:textSize="22sp" />
+                android:textSize="24sp" />
 
+            <!-- بخش ساعت -->
             <TextView
                 android:id="@+id/widget_clock"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
+                android:layout_marginStart="12dp"
                 android:text="--:--"
                 android:textColor="#FFFFFF"
-                android:textSize="26sp"
+                android:textSize="28sp"
                 android:textStyle="bold"
                 android:includeFontPadding="false"
                 android:maxLines="1" />
 
+            <!-- بخش یادآوری -->
             <TextView
                 android:id="@+id/widget_reminder"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
+                android:layout_marginStart="12dp"
                 android:text="0 یادآوری"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
+                android:textColor="#FFD54F"
+                android:textSize="15sp"
                 android:textStyle="bold"
                 android:maxLines="1" />
         </LinearLayout>
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="6dp"></FrameLayout>
+            android:layout_height="5dp"></FrameLayout>
 
         <!-- ردیف ۲: روز هفته / تاریخ شمسی / تاریخ قمری / تاریخ میلادی -->
         <LinearLayout
@@ -100,37 +104,37 @@
                 android:layout_height="wrap_content"
                 android:text="—"
                 android:textColor="#EDE6FA"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:maxLines="1" />
 
             <TextView
                 android:id="@+id/widget_date_shamsi"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="8dp"
                 android:text="—"
                 android:textColor="#EDE6FA"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:maxLines="1" />
 
             <TextView
                 android:id="@+id/widget_date_hijri"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="8dp"
                 android:text="—"
                 android:textColor="#EDE6FA"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:maxLines="1" />
 
             <TextView
                 android:id="@+id/widget_date_gregorian"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="8dp"
                 android:text="—"
                 android:textColor="#EDE6FA"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:maxLines="1" />
         </LinearLayout>
     </LinearLayout>
