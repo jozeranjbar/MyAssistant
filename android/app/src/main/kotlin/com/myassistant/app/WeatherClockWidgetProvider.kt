@@ -55,8 +55,7 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
             }
         }
 
-        private fun schedulePeriodicTick(context: Context) {
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        private fun buildTickPendingIntent(context: Context): PendingIntent {
             val intent = Intent(context, WeatherClockWidgetProvider::class.java).apply {
                 action = ACTION_TICK
             }
@@ -65,26 +64,34 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
             } else {
                 PendingIntent.FLAG_UPDATE_CURRENT
             }
-            val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, flags)
-            val triggerAt = Calendar.getInstance().apply {
+            return PendingIntent.getBroadcast(context, 0, intent, flags)
+        }
+
+        /**
+         * به‌جای یک آلارم تکرارشونده‌ی غیردقیق (که سیستم برای صرفه‌جویی باتری
+         * با تأخیر اجرا می‌کند)، هر بار یک آلارم دقیق فقط برای لحظه‌ی شروع
+         * دقیقه‌ی بعد تنظیم می‌شود؛ در هر تیک دوباره برای دقیقه‌ی بعدی
+         * زمان‌بندی می‌شود.
+         */
+        private fun scheduleNextTick(context: Context) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val pendingIntent = buildTickPendingIntent(context)
+            val nextMinute = Calendar.getInstance().apply {
                 add(Calendar.MINUTE, 1)
                 set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
             }.timeInMillis
-            alarmManager.setRepeating(AlarmManager.RTC, triggerAt, 60_000L, pendingIntent)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextMinute, pendingIntent)
+            } else {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextMinute, pendingIntent)
+            }
         }
 
         private fun cancelPeriodicTick(context: Context) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val intent = Intent(context, WeatherClockWidgetProvider::class.java).apply {
-                action = ACTION_TICK
-            }
-            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            } else {
-                PendingIntent.FLAG_UPDATE_CURRENT
-            }
-            val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, flags)
-            alarmManager.cancel(pendingIntent)
+            alarmManager.cancel(buildTickPendingIntent(context))
         }
     }
 
@@ -136,7 +143,7 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             updateOneWidget(context, appWidgetManager, appWidgetId)
         }
-        schedulePeriodicTick(context)
+        scheduleNextTick(context)
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -162,6 +169,8 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
                 views.setOnClickPendingIntent(R.id.widget_root, buildLaunchAppIntent(context, appWidgetId))
                 appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
             }
+            // زمان‌بندی تیک دقیق بعدی
+            scheduleNextTick(context)
         }
     }
 
@@ -184,7 +193,7 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onEnabled(context: Context) {
-        schedulePeriodicTick(context)
+        scheduleNextTick(context)
     }
 
     override fun onDisabled(context: Context) {
