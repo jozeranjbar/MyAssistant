@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/reminder.dart';
 import '../services/reminder_storage_service.dart';
@@ -57,12 +58,12 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
     r.isActive = value;
     if (value) r.lastFiredAt = DateTime.now();
     await _storage.updateReminder(r);
-    if (value) {
-      await _notifications.scheduleReminder(r);
-    } else {
-      await _notifications.cancelReminder(r.id);
-    }
     await _load();
+    if (value) {
+      unawaited(_notifications.scheduleReminder(r));
+    } else {
+      unawaited(_notifications.cancelReminder(r.id));
+    }
   }
 
   Future<void> _quickDelete(Reminder r) async {
@@ -105,12 +106,14 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
     } else {
       await _storage.updateReminder(saved);
     }
-    if (saved.isActive) {
-      await _notifications.scheduleReminder(saved);
-    } else {
-      await _notifications.cancelReminder(saved.id);
-    }
+    // لیست را همین الان به‌روزرسانی کن؛ زمان‌بندی اعلان ممکن است روی برخی
+    // گوشی‌ها (به‌خصوص بار اول) چند ثانیه طول بکشد و نباید صفحه را معطل کند.
     await _load();
+    if (saved.isActive) {
+      unawaited(_notifications.scheduleReminder(saved));
+    } else {
+      unawaited(_notifications.cancelReminder(saved.id));
+    }
   }
 
   @override
@@ -120,12 +123,15 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🔔 تنظیمات یادآوری'),
+        title: const Text(
+          '🔔 تنظیمات یادآوری',
+          style: TextStyle(color: Colors.purple, fontWeight: FontWeight.bold),
+        ),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          indicatorColor: const Color(0xFF1B5E20),
+          labelColor: const Color(0xFF1B5E20),
+          unselectedLabelColor: const Color(0xFF1B5E20).withOpacity(0.55),
           tabs: const [
             Tab(text: '💊 یادآوری داروها'),
             Tab(text: '📝 یادآوری‌های روزمره'),
@@ -445,7 +451,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
               _StyledTextField(
                 controller: _nameController,
                 hint: _isMed ? 'مثلاً کلسیم ۱۰۰۰' : 'مثلاً آب دادن به گل‌ها',
-                fillColor: const Color(0xFF4F6EF7),
+                fillColor: const Color(0xFF4CAF50),
               ),
               const SizedBox(height: 14),
 
