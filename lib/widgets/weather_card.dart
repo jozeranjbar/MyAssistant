@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:shamsi_date/shamsi_date.dart';
 import '../models/weather_location.dart';
 import '../models/weather_data.dart';
-
-// رنگ قهوه‌ای برای نام شهرها
-const _kBrownCity = Color(0xFF6D4C29);
 
 String _toPersianDigits(String input) {
   const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -34,10 +30,7 @@ class WeatherCard extends StatelessWidget {
   String _formattedUpdateTime() {
     if (data == null) return '--';
     final d = data!.updatedAt;
-    final j = Jalali.fromDateTime(d);
-    final jStr =
-        '${_toPersianDigits(j.year.toString())}/${_toPersianDigits(j.month.toString().padLeft(2, '0'))}/${_toPersianDigits(j.day.toString().padLeft(2, '0'))}';
-    return '$jStr - ${_toPersianDigits(DateFormat('HH:mm').format(d))}';
+    return _toPersianDigits('${DateFormat('yyyy/MM/dd').format(d)} - ${DateFormat('HH:mm').format(d)}');
   }
 
   @override
@@ -68,10 +61,9 @@ class WeatherCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(location.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: _kBrownCity)),
+                Text(location.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 Text('بروزرسانی: ${_formattedUpdateTime()}',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
               ],
             ),
             const SizedBox(height: 6),
@@ -117,11 +109,19 @@ class WeatherCard extends StatelessWidget {
               runSpacing: 10,
               children: [
                 _StatChip(icon: Icons.thermostat, color: Colors.red, label: 'احساس دما', value: '${data!.feelsLike.round()}°'),
+                if (data!.todayForecast != null)
+                  _StatChip(
+                      icon: Icons.umbrella,
+                      color: Colors.indigo,
+                      label: 'احتمال بارش',
+                      value: '${data!.todayForecast!.precipitationProbability}%'),
                 _StatChip(icon: Icons.water_drop, color: Colors.blue, label: 'رطوبت', value: '${data!.humidity}%'),
                 _StatChip(icon: Icons.grain, color: Colors.blueGrey, label: 'بارندگی', value: '${data!.precipitation.toStringAsFixed(1)} mm'),
                 _StatChip(icon: Icons.air, color: Colors.blue, label: 'باد', value: '${data!.windSpeed.round()} km/h'),
+                Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
                 _StatChip(icon: Icons.visibility, color: Colors.teal, label: 'دید افقی', value: '${data!.visibility.toStringAsFixed(1)} km'),
-                _StatChip(icon: Icons.wb_sunny, color: Colors.orange, label: 'شاخصUV', value: '${data!.uvIndex.round()}'),
+                Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
+                _StatChip(icon: Icons.wb_sunny, color: Colors.orange, label: 'شاخص UV', value: '${data!.uvIndex.round()}'),
               ],
             ),
             if (error != null) ...[
@@ -154,10 +154,10 @@ class _StatChip extends StatelessWidget {
         Icon(icon, size: 28, color: color),
         const SizedBox(width: 4),
         if (label.isNotEmpty) ...[
-          Text(label, style: TextStyle(fontSize: 20, color: Colors.green.shade900)),
+          Text(label, style: TextStyle(fontSize: 20, color: Colors.grey.shade700)),
           const SizedBox(width: 4),
         ],
-        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.brown.shade700)),
+        Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
       ],
     );
   }
