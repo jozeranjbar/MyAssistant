@@ -121,7 +121,7 @@ class WeatherCard extends StatelessWidget {
                 Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
                 _StatChip(icon: Icons.visibility, color: Colors.teal, label: 'دید افقی', value: '${data!.visibility.toStringAsFixed(1)} km'),
                 Text('|', style: TextStyle(fontSize: 22, color: Colors.grey.shade400)),
-                _StatChip(icon: Icons.wb_sunny, color: Colors.orange, label: 'شاخص UV', value: '${data!.uvIndex.round()}'),
+                _StatChip(icon: Icons.wb_sunny, color: Colors.orange, label: 'شاخصUV', value: '${data!.uvIndex.round()}'),
               ],
             ),
             if (error != null) ...[
