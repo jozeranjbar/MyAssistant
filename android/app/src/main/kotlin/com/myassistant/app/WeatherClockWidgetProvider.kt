@@ -108,30 +108,30 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         val widgetData = HomeWidgetPlugin.getData(context)
         val sb = SpannableStringBuilder()
 
-        // ساعت - مهم‌ترین و بزرگ‌ترین
-        sb.appendSegment(currentTimeText(), Color.parseColor("#FFFFFF"), 1.6f, bold = true)
+        // ساعت - زرد طلایی، بزرگ‌ترین فونت
+        sb.appendSegment(currentTimeText(), Color.parseColor("#FFD700"), 1.8f, bold = true)
 
-        // شهر + دما + وضعیت هوا
+        // شهر + دما + وضعیت هوا - آبی غلیظ
         val city = widgetData.getString("city_name", "—") ?: "—"
         val temp = widgetData.getString("temperature", "--") ?: "--"
         val emoji = widgetData.getString("weather_emoji", "🌤️") ?: "🌤️"
-        sb.appendSegment("$city $temp $emoji", Color.parseColor("#8ED8FF"), 1.3f, bold = true)
+        sb.appendSegment("$city $temp $emoji", Color.parseColor("#0D47A1"), 1.3f, bold = true)
 
-        // یادآوری
+        // یادآوری - قرمز
         sb.appendSegment(
             widgetData.getString("reminder_text", "0 یادآوری") ?: "0 یادآوری",
-            Color.parseColor("#FFD54F"),
+            Color.parseColor("#FF0000"),
             0.9f,
             bold = true,
         )
 
-        // روز هفته + تاریخ شمسی
-        sb.appendSegment(widgetData.getString("weekday_text", "—") ?: "—", Color.parseColor("#EDE6FA"), 0.8f)
-        sb.appendSegment(widgetData.getString("date_shamsi", "—") ?: "—", Color.parseColor("#EDE6FA"), 0.8f)
-
-        // تاریخ قمری و میلادی
-        sb.appendSegment(widgetData.getString("date_hijri", "—") ?: "—", Color.parseColor("#EDE6FA"), 0.8f)
-        sb.appendSegment(widgetData.getString("date_gregorian", "—") ?: "—", Color.parseColor("#EDE6FA"), 0.8f)
+        // روز هفته + تاریخ‌ها (شمسی/قمری/میلادی) - سیاه.
+        // فقط بعد از روز هفته یک نقطه می‌آید؛ بین خودِ تاریخ‌ها نقطه‌ای نیست.
+        val weekday = widgetData.getString("weekday_text", "—") ?: "—"
+        val shamsi = widgetData.getString("date_shamsi", "—") ?: "—"
+        val hijri = widgetData.getString("date_hijri", "—") ?: "—"
+        val gregorian = widgetData.getString("date_gregorian", "—") ?: "—"
+        sb.appendSegment("$weekday . $shamsi $hijri $gregorian", Color.parseColor("#000000"), 0.8f)
 
         return sb
     }
