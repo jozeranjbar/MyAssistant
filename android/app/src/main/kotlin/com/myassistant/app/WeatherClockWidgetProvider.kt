@@ -7,8 +7,15 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
 import android.util.TypedValue
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
@@ -18,33 +25,21 @@ import java.util.Locale
 
 class WeatherClockWidgetProvider : AppWidgetProvider() {
 
-    /** اندازه‌ی پایه‌ی هر فیلد (بر حسب sp) که در عرض مرجع BASE_WIDTH_DP طراحی شده. */
-    private data class SizeSpec(val id: Int, val baseSp: Float)
-
     companion object {
         private const val ACTION_TICK = "com.myassistant.app.WIDGET_TICK"
 
-        // عرض و ارتفاع مرجعی که فونت‌های پایه بر اساس آن‌ها طراحی شده‌اند
-        private const val BASE_WIDTH_DP = 320f
-        private const val BASE_HEIGHT_DP = 60f
+        // عرض/ارتفاع مرجعی که فونتِ پایه (۱۴sp) بر اساس آن طراحی شده؛
+        // متناظر با اندازه‌ی پیش‌فرضِ ویجت یعنی ۳ ستون × ۱ ردیف.
+        private const val BASE_WIDTH_DP = 180f
+        private const val BASE_HEIGHT_DP = 40f
         private const val MIN_SCALE = 0.55f
-        // فونت هرگز از اندازه‌ی پایه بزرگ‌تر نمی‌شود؛ فقط برای ویجت‌های کوچک
-        // کوچک‌تر می‌شود. این کار از هم‌پوشانی/بریده‌شدن متن‌ها در گوشی‌ها و
-        // لانچرهای مختلف (که گاهی اندازه‌ی واقعی ویجت را نادرست گزارش می‌کنند)
-        // جلوگیری می‌کند.
+        // فونت هرگز از اندازه‌ی پایه بزرگ‌تر نمی‌شود؛ وقتی ویجت بزرگ‌تر
+        // می‌شود، جای اضافه صرفِ نمایشِ سطرهای بیشتر (تا ۳ سطر) می‌شود،
+        // نه بزرگ‌شدنِ بی‌رویه‌ی فونت.
         private const val MAX_SCALE = 1.0f
 
-        private val sizeSpecs = listOf(
-            SizeSpec(R.id.widget_city, 13f),
-            SizeSpec(R.id.widget_temp, 18f),
-            SizeSpec(R.id.widget_weather_emoji, 20f),
-            SizeSpec(R.id.widget_clock, 22f),
-            SizeSpec(R.id.widget_reminder, 12f),
-            SizeSpec(R.id.widget_weekday, 11f),
-            SizeSpec(R.id.widget_date_shamsi, 11f),
-            SizeSpec(R.id.widget_date_hijri, 11f),
-            SizeSpec(R.id.widget_date_gregorian, 11f),
-        )
+        private const val BASE_TEXT_SP = 14f
+        private const val SEPARATOR = "   •   "
 
         fun updateAllWidgets(context: Context) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -67,12 +62,6 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
             return PendingIntent.getBroadcast(context, 0, intent, flags)
         }
 
-        /**
-         * به‌جای یک آلارم تکرارشونده‌ی غیردقیق (که سیستم برای صرفه‌جویی باتری
-         * با تأخیر اجرا می‌کند)، هر بار یک آلارم دقیق فقط برای لحظه‌ی شروع
-         * دقیقه‌ی بعد تنظیم می‌شود؛ در هر تیک دوباره برای دقیقه‌ی بعدی
-         * زمان‌بندی می‌شود.
-         */
         private fun scheduleNextTick(context: Context) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val pendingIntent = buildTickPendingIntent(context)
@@ -95,46 +84,82 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    /** ساخت RemoteViews با متن‌های فعلی (بدون تنظیم اندازه‌ی فونت). */
-    private fun buildBaseViews(context: Context): RemoteViews {
+    /** یک بخش رنگی/با اندازه‌ی نسبیِ خودش را به متن ترکیبی اضافه می‌کند. */
+    private fun SpannableStringBuilder.appendSegment(
+        text: String,
+        color: Int,
+        relativeSize: Float,
+        bold: Boolean = false,
+    ) {
+        if (text.isBlank()) return
+        if (isNotEmpty()) append(SEPARATOR)
+        val start = length
+        append(text)
+        val end = length
+        setSpan(ForegroundColorSpan(color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        setSpan(RelativeSizeSpan(relativeSize), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        if (bold) {
+            setSpan(StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+    }
+
+    /** ساخت متنِ پیوسته‌ی ترکیبی از همه‌ی فیلدها، به ترتیب اولویت. */
+    private fun buildContent(context: Context): CharSequence {
         val widgetData = HomeWidgetPlugin.getData(context)
+        val sb = SpannableStringBuilder()
+
+        // ساعت - مهم‌ترین و بزرگ‌ترین
+        sb.appendSegment(currentTimeText(), Color.parseColor("#FFFFFF"), 1.6f, bold = true)
+
+        // شهر + دما + وضعیت هوا
+        val city = widgetData.getString("city_name", "—") ?: "—"
+        val temp = widgetData.getString("temperature", "--") ?: "--"
+        val emoji = widgetData.getString("weather_emoji", "🌤️") ?: "🌤️"
+        sb.appendSegment("$city $temp $emoji", Color.parseColor("#8ED8FF"), 1.3f, bold = true)
+
+        // یادآوری
+        sb.appendSegment(
+            widgetData.getString("reminder_text", "0 یادآوری") ?: "0 یادآوری",
+            Color.parseColor("#FFD54F"),
+            0.9f,
+            bold = true,
+        )
+
+        // روز هفته + تاریخ شمسی
+        sb.appendSegment(widgetData.getString("weekday_text", "—") ?: "—", Color.parseColor("#EDE6FA"), 0.8f)
+        sb.appendSegment(widgetData.getString("date_shamsi", "—") ?: "—", Color.parseColor("#EDE6FA"), 0.8f)
+
+        // تاریخ قمری و میلادی
+        sb.appendSegment(widgetData.getString("date_hijri", "—") ?: "—", Color.parseColor("#EDE6FA"), 0.8f)
+        sb.appendSegment(widgetData.getString("date_gregorian", "—") ?: "—", Color.parseColor("#EDE6FA"), 0.8f)
+
+        return sb
+    }
+
+    private fun buildBaseViews(context: Context): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.weather_clock_widget)
-
-        views.setTextViewText(R.id.widget_city, widgetData.getString("city_name", "—"))
-        views.setTextViewText(R.id.widget_temp, widgetData.getString("temperature", "--"))
-        views.setTextViewText(R.id.widget_weather_emoji, widgetData.getString("weather_emoji", "🌤️"))
-        views.setTextViewText(R.id.widget_clock, currentTimeText())
-        views.setTextViewText(R.id.widget_reminder, widgetData.getString("reminder_text", "0 یادآوری"))
-        views.setTextViewText(R.id.widget_weekday, widgetData.getString("weekday_text", "—"))
-        views.setTextViewText(R.id.widget_date_shamsi, widgetData.getString("date_shamsi", "—"))
-        views.setTextViewText(R.id.widget_date_hijri, widgetData.getString("date_hijri", "—"))
-        views.setTextViewText(R.id.widget_date_gregorian, widgetData.getString("date_gregorian", "—"))
-
+        views.setTextViewText(R.id.widget_content, buildContent(context))
         return views
     }
 
-    /** تنظیم اندازه‌ی فونت‌ها متناسب با عرض و ارتفاع واقعی ویجت روی گوشیِ کاربر. */
-    private fun applyScaledSizes(views: RemoteViews, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+    /** تنظیم اندازه‌ی پایه‌ی فونت متناسب با عرض و ارتفاع واقعیِ ویجت. */
+    private fun applyScaledSize(views: RemoteViews, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
         val minWidthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, BASE_WIDTH_DP.toInt())
         val minHeightDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, BASE_HEIGHT_DP.toInt())
 
         val widthScale = minWidthDp / BASE_WIDTH_DP
         val heightScale = minHeightDp / BASE_HEIGHT_DP
-        // هر کدام از عرض/ارتفاع که رشد کمتری داشته، مقیاس نهایی را تعیین می‌کند
-        // تا فونت هیچ‌وقت از فضای واقعی موجود بزرگ‌تر نشود و به‌هم نریزد.
         var scale = if (widthScale < heightScale) widthScale else heightScale
         if (scale < MIN_SCALE) scale = MIN_SCALE
         if (scale > MAX_SCALE) scale = MAX_SCALE
 
-        for (spec in sizeSpecs) {
-            views.setTextViewTextSize(spec.id, TypedValue.COMPLEX_UNIT_SP, spec.baseSp * scale)
-        }
+        views.setTextViewTextSize(R.id.widget_content, TypedValue.COMPLEX_UNIT_SP, BASE_TEXT_SP * scale)
     }
 
     private fun updateOneWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         val views = buildBaseViews(context)
-        applyScaledSizes(views, appWidgetManager, appWidgetId)
+        applyScaledSize(views, appWidgetManager, appWidgetId)
         views.setOnClickPendingIntent(R.id.widget_root, buildLaunchAppIntent(context, appWidgetId))
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
@@ -153,8 +178,6 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         newOptions: Bundle,
     ) {
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-        // وقتی کاربر اندازه‌ی ویجت را تغییر می‌دهد، فونت‌ها دوباره متناسب با
-        // عرض جدید محاسبه می‌شوند.
         updateOneWidget(context, appWidgetManager, appWidgetId)
     }
 
@@ -164,12 +187,8 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val ids = appWidgetManager.getAppWidgetIds(ComponentName(context, WeatherClockWidgetProvider::class.java))
             for (appWidgetId in ids) {
-                val views = RemoteViews(context.packageName, R.layout.weather_clock_widget)
-                views.setTextViewText(R.id.widget_clock, currentTimeText())
-                views.setOnClickPendingIntent(R.id.widget_root, buildLaunchAppIntent(context, appWidgetId))
-                appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
+                updateOneWidget(context, appWidgetManager, appWidgetId)
             }
-            // زمان‌بندی تیک دقیق بعدی
             scheduleNextTick(context)
         }
     }
@@ -187,7 +206,6 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
     }
 
     private fun currentTimeText(): String {
-        // اعداد انگلیسی، بدون تبدیل به فارسی
         val formatter = SimpleDateFormat("HH:mm", Locale.US)
         return formatter.format(Calendar.getInstance().time)
     }
