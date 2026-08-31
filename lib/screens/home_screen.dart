@@ -8,6 +8,7 @@ import '../models/reminder.dart';
 import '../services/weather_service.dart';
 import '../services/location_storage_service.dart';
 import '../services/reminder_storage_service.dart';
+import '../services/chart_storage_service.dart';
 import '../services/notification_service.dart';
 import '../services/events_service.dart';
 import '../services/widget_service.dart';
@@ -44,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _weatherService = WeatherService();
   final _locationStorage = LocationStorageService();
   final _reminderStorage = ReminderStorageService();
+  final _chartStorage = ChartStorageService();
   final _eventsService = EventsService();
 
   List<WeatherLocation> _locations = [];
@@ -52,6 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _loading = true;
   int _activeReminderCount = 0;
   List<CalendarEvent> _todayEvents = [];
+  List<String> _chartVariables = [];
+  List<String> _chartPeople = [];
   final Jalali _today = Jalali.now();
 
   @override
@@ -68,10 +72,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     final reminders = await _reminderStorage.loadReminders();
     final todayEvents = await _eventsService.getEventsForJalali(_today);
+    final chartData = await _chartStorage.load();
     setState(() {
       _locations = locations;
       _activeReminderCount = reminders.where((r) => r.isActive).length;
       _todayEvents = todayEvents;
+      _chartVariables = chartData.variables;
+      _chartPeople = chartData.individuals;
       _loading = false;
     });
     await _refreshAllWeather();
@@ -392,27 +399,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _NavButton(
-                            emoji: '📊',
-                            label: 'نمودار وزن، مقدار خواب، تعداد قدم‌های روزانه، قند خون ...',
-                            backgroundColor: Colors.green.shade50,
-                            foregroundColor: Colors.green.shade900,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
-                              );
-                            },
+                          _ChartSummaryBox(
+                            variables: _chartVariables,
+                            people: _chartPeople,
                           ),
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
                             borderColor: const Color(0xFFF6EDFA),
                             elevated: true,
-                            label: 'تنظیمات نمودار',
-                            onTap: () {
-                              Navigator.of(context).push(
+                            label: 'صفحه نمودار',
+                            onTap: () async {
+                              await Navigator.of(context).push(
                                 MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
                               );
+                              await _loadEverything();
                             },
                           ),
                         ],
@@ -469,6 +470,51 @@ class _SectionHeader extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(16, topPadding, 16, 4),
       child: Text(title,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
+    );
+  }
+}
+
+/// نمایشِ غیرقابل‌کلیکِ خلاصه‌ی «نمودار ساز»: ردیف اول نام متغیرها (نمودارها)
+/// و ردیف دوم نام افراد اضافه‌شده. برخلاف [_NavButton]، این ویجت لینک نیست.
+class _ChartSummaryBox extends StatelessWidget {
+  final List<String> variables;
+  final List<String> people;
+
+  const _ChartSummaryBox({required this.variables, required this.people});
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = Colors.green.shade900;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('📊', style: TextStyle(fontSize: 22)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  variables.isEmpty ? 'هنوز متغیری اضافه نشده' : variables.join('، '),
+                  style: TextStyle(color: fg, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  people.isEmpty ? 'هنوز فردی اضافه نشده' : people.join('، '),
+                  style: TextStyle(color: fg.withOpacity(0.75)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
