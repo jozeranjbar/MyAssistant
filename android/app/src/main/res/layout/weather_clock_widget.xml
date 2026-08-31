@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  چیدمان سه‌ستونه دقیقاً مطابق عکس نمونه:
+  چیدمان سه‌ستونه:
   ستون ساعت (٪33) | ستون تاریخ+یادآوری (٪36) | ستون آب‌وهوا (٪31)
-  آی‌دی‌ها عوض نشدن، پس WeatherClockWidgetProvider.kt نیازی به تغییر نداره.
+  همه‌ی متن‌های قابل‌تغییر (شهر، روز هفته، تاریخ‌ها، یادآوری) تک‌خطی و
+  با ellipsize محدود شده‌اند و عرضشان با layout_weight (نه wrap_content)
+  تعیین می‌شود تا در هیچ گوشی/لانچری، با هر طول متنی، چیدمان به‌هم نریزد.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background">
@@ -32,9 +35,11 @@
                 android:layout_gravity="center"
                 android:text="--:--"
                 android:textColor="#FFFFFF"
-                android:textSize="30sp"
+                android:textSize="22sp"
                 android:textStyle="bold"
-                android:includeFontPadding="false" />
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="end" />
         </FrameLayout>
 
         <!-- خط جداکننده -->
@@ -55,7 +60,7 @@
             android:paddingStart="8dp"
             android:paddingEnd="8dp">
 
-            <!-- پیل تاریخ -->
+            <!-- پیل تاریخ (روز هفته + شمسی + قمری + میلادی) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -71,7 +76,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="📅"
-                    android:textSize="16sp" />
+                    android:textSize="14sp" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -83,26 +88,52 @@
                     android:layoutDirection="rtl">
 
                     <TextView
-                        android:id="@+id/widget_date_line1"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/widget_weekday"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="—"
                         android:textColor="#FFFFFF"
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:gravity="end"
-                        android:maxLines="1" />
+                        android:maxLines="1"
+                        android:ellipsize="end" />
 
                     <TextView
-                        android:id="@+id/widget_date_line2"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/widget_date_shamsi"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="1dp"
                         android:text="—"
                         android:textColor="#EDE6FA"
-                        android:textSize="9sp"
+                        android:textSize="11sp"
                         android:gravity="end"
-                        android:maxLines="1" />
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+
+                    <TextView
+                        android:id="@+id/widget_date_hijri"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:text="—"
+                        android:textColor="#EDE6FA"
+                        android:textSize="11sp"
+                        android:gravity="end"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+
+                    <TextView
+                        android:id="@+id/widget_date_gregorian"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:text="—"
+                        android:textColor="#EDE6FA"
+                        android:textSize="11sp"
+                        android:gravity="end"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -134,13 +165,14 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    android:text="امروز یادآوری ندارید"
+                    android:text="0 یادآوری"
                     android:textColor="#FFFFFF"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:textStyle="bold"
                     android:gravity="end"
                     android:layoutDirection="rtl"
-                    android:maxLines="1" />
+                    android:maxLines="1"
+                    android:ellipsize="end" />
             </LinearLayout>
         </LinearLayout>
 
@@ -176,7 +208,7 @@
                     android:layout_weight="1"
                     android:text="—"
                     android:textColor="#2A0845"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
                     android:textStyle="bold"
                     android:maxLines="1"
                     android:ellipsize="end"
@@ -191,11 +223,11 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center">
 
                 <TextView
                     android:id="@+id/widget_temp"
@@ -203,26 +235,20 @@
                     android:layout_height="wrap_content"
                     android:text="--°"
                     android:textColor="#2A0845"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
 
                 <TextView
                     android:id="@+id/widget_weather_emoji"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="🌡️"
-                    android:textSize="22sp" />
+                    android:text="🌤️"
+                    android:textSize="20sp"
+                    android:maxLines="1" />
             </LinearLayout>
-
-            <TextView
-                android:id="@+id/widget_weather_desc"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="—"
-                android:textColor="#4A3378"
-                android:textSize="10sp" />
         </LinearLayout>
 
     </LinearLayout>
