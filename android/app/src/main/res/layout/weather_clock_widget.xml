@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    ویجت ساعت، تاریخ/یادآوری و آب‌وهوا
-    اصلاحات:
-    - نام شهر با عرض انعطاف‌پذیر نمایش داده می‌شود تا نام‌های طولانی
-      باعث به‌هم‌ریختگی چیدمان نشوند.
-    - نام شهر حداکثر در یک خط نمایش داده می‌شود و در صورت طولانی بودن
-      با ... کوتاه می‌شود.
-    - رنگ نام شهر زرد طلایی است.
+  چیدمان سه‌ستونه دقیقاً مطابق عکس نمونه:
+  ستون ساعت (٪33) | ستون تاریخ+یادآوری (٪36) | ستون آب‌وهوا (٪31)
+  آی‌دی‌ها عوض نشدن، پس WeatherClockWidgetProvider.kt نیازی به تغییر نداره.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -95,8 +91,7 @@
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:gravity="end"
-                        android:maxLines="1"
-                        android:ellipsize="end" />
+                        android:maxLines="1" />
 
                     <TextView
                         android:id="@+id/widget_date_line2"
@@ -107,8 +102,7 @@
                         android:textColor="#EDE6FA"
                         android:textSize="9sp"
                         android:gravity="end"
-                        android:maxLines="1"
-                        android:ellipsize="end" />
+                        android:maxLines="1" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -146,8 +140,7 @@
                     android:textStyle="bold"
                     android:gravity="end"
                     android:layoutDirection="rtl"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
+                    android:maxLines="1" />
             </LinearLayout>
         </LinearLayout>
 
@@ -166,12 +159,9 @@
             android:layout_weight="31"
             android:orientation="vertical"
             android:gravity="center"
-            android:paddingStart="10dp"
-            android:paddingEnd="4dp">
+            android:paddingStart="10dp">
 
-            <!-- شهر + پین
-                 عرض والد match_parent است و TextView شهر وزن می‌گیرد؛
-                 بنابراین نام‌های طولانی وارد ستون‌های دیگر نمی‌شوند. -->
+            <!-- شهر + پین -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -185,13 +175,12 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="—"
-                    android:textColor="#D4AF37"
+                    android:textColor="#2A0845"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:gravity="center"
                     android:maxLines="1"
                     android:ellipsize="end"
-                    android:includeFontPadding="false" />
+                    android:gravity="end" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -233,9 +222,7 @@
                 android:layout_marginTop="2dp"
                 android:text="—"
                 android:textColor="#4A3378"
-                android:textSize="10sp"
-                android:maxLines="1"
-                android:ellipsize="end" />
+                android:textSize="10sp" />
         </LinearLayout>
 
     </LinearLayout>
