@@ -1004,7 +1004,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                                         style: const TextStyle(fontSize: 15, color: Color(0xFF4B3A2E), fontWeight: FontWeight.bold),
                                       ),
                                     ),
-                                    const Icon(Icons.arrow_drop_down, color: Color(0xFF8A6D4A)),
+                                    const Icon(Icons.arrow_drop_down, color: Color(0xFF8A6D4A), size: 72),
                                   ],
                                 ),
                               ),
@@ -1012,16 +1012,28 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Material(
-                          color: const Color(0xFFC8E6C9),
-                          borderRadius: BorderRadius.circular(10),
-                          child: InkWell(
+                        Expanded(
+                          child: Material(
+                            color: const Color(0xFFC8E6C9),
                             borderRadius: BorderRadius.circular(10),
-                            onTap: _showPeopleSheet,
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                              child: Text('افراد 👥',
-                                  style: TextStyle(color: Color(0xFF2E5C31), fontWeight: FontWeight.bold, fontSize: 13)),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: _showPeopleSheet,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                child: Row(
+                                  children: [
+                                    const Expanded(
+                                      child: Text(
+                                        'افراد 👥',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(color: Color(0xFF2E5C31), fontWeight: FontWeight.bold, fontSize: 13),
+                                      ),
+                                    ),
+                                    const Icon(Icons.arrow_drop_down, color: Color(0xFF2E5C31), size: 72),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),
