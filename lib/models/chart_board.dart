@@ -18,7 +18,11 @@ const List<int> chartColorPalette = [
   0xFF607D8B,
 ];
 
-/// متغیر پیش‌فرضی که هنگام «حذف همه اطلاعات» به‌صورت خالی باقی می‌ماند.
+/// متغیرهای پیش‌فرض به همین ترتیب: وزن، مقدار خواب، پیاده‌روی، قند خون.
+/// «وزن» همیشه اولین و پیش‌فرضِ انتخاب‌شده است.
+const List<String> kDefaultChartVariables = ['وزن', 'مقدار خواب', 'پیاده‌روی', 'قند خون'];
+
+/// برای سازگاری با کدهای قبلی: اولین و اصلی‌ترین متغیر پیش‌فرض.
 const String kDefaultChartVariable = 'وزن';
 
 /// حداکثر تعداد افرادی که می‌توان به نمودار اضافه کرد.
@@ -118,11 +122,12 @@ class ChartBoardData {
         variables = variables ?? [kDefaultChartVariable],
         dataByVariable = dataByVariable ?? {kDefaultChartVariable: []};
 
-  /// وضعیت شروع (بدون هیچ فردی، فقط یک متغیر پیش‌فرض «وزن» خالی).
+  /// وضعیت شروع (بدون هیچ فردی؛ متغیرهای پیش‌فرض: وزن، مقدار خواب،
+  /// پیاده‌روی، قند خون — با «وزن» به‌عنوان متغیر انتخاب‌شده).
   factory ChartBoardData.initial() => ChartBoardData(
-        variables: [kDefaultChartVariable],
-        currentVariable: kDefaultChartVariable,
-        dataByVariable: {kDefaultChartVariable: []},
+        variables: List<String>.from(kDefaultChartVariables),
+        currentVariable: kDefaultChartVariables.first,
+        dataByVariable: {for (final v in kDefaultChartVariables) v: <ChartRow>[]},
       );
 
   List<ChartRow> get currentRows =>
@@ -182,16 +187,16 @@ class ChartBoardData {
     return true;
   }
 
-  /// بازنشانی کامل: همه‌ی افراد/متغیرها حذف می‌شوند، فقط متغیر پیش‌فرض «وزن»
-  /// به‌صورت خالی باقی می‌ماند (دقیقاً مطابق رفتار دکمه‌ی «حذف همه اطلاعات»).
+  /// بازنشانی کامل: همه‌ی افراد/متغیرها حذف می‌شوند و فقط متغیرهای پیش‌فرض
+  /// (وزن، مقدار خواب، پیاده‌روی، قند خون) به‌صورت خالی باقی می‌مانند.
   void clearAll() {
     individuals = [];
     visibility = [];
     colorIndices = [];
     nextColorIndex = 0;
-    variables = [kDefaultChartVariable];
-    dataByVariable = {kDefaultChartVariable: []};
-    currentVariable = kDefaultChartVariable;
+    variables = List<String>.from(kDefaultChartVariables);
+    dataByVariable = {for (final v in kDefaultChartVariables) v: <ChartRow>[]};
+    currentVariable = kDefaultChartVariables.first;
   }
 
   Map<String, dynamic> toJson() => {
@@ -245,8 +250,10 @@ class ChartBoardData {
         dataByVariable[key.toString()] = rows;
       });
     }
-    if (variables.isEmpty) variables = [kDefaultChartVariable];
-    dataByVariable.putIfAbsent(variables.first, () => []);
+    if (variables.isEmpty) variables = List<String>.from(kDefaultChartVariables);
+    for (final v in variables) {
+      dataByVariable.putIfAbsent(v, () => []);
+    }
 
     final currentVariableRaw = json['currentVariable'];
     final currentVariable =
