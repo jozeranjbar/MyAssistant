@@ -33,7 +33,10 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
   bool _preparingExport = false;
 
   final GlobalKey _exportKey = GlobalKey();
+  final GlobalKey _variableFieldKey = GlobalKey();
+  final GlobalKey _peopleFieldKey = GlobalKey();
   final Map<String, TextEditingController> _valueControllers = {};
+  OverlayEntry? _dropdownOverlay;
 
   @override
   void initState() {
@@ -43,6 +46,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
 
   @override
   void dispose() {
+    _closeDropdown();
     _resetValueControllers();
     super.dispose();
   }
@@ -72,6 +76,64 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
       final initial = personIndex < row.values.length ? row.values[personIndex] : '';
       return TextEditingController(text: initial);
     });
+  }
+
+  void _closeDropdown() {
+    _dropdownOverlay?.remove();
+    _dropdownOverlay = null;
+  }
+
+  /// یک منوی کشویی دقیقاً زیرِ همان فیلدی که لمس شده باز می‌کند (نه به‌صورت
+  /// شیت از پایین صفحه). با زدن هرجای بیرون از منو بسته می‌شود؛ محتوای داخلش
+  /// (با کمک setSheetState) بدون بسته‌شدنِ منو زنده بروزرسانی می‌شود.
+  void _openAnchoredDropdown({
+    required GlobalKey anchorKey,
+    required Widget Function(BuildContext context, StateSetter setSheetState, VoidCallback close) builder,
+  }) {
+    _closeDropdown();
+    final renderBox = anchorKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final size = renderBox.size;
+    final offset = renderBox.localToGlobal(Offset.zero);
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    late OverlayEntry entry;
+    void close() {
+      entry.remove();
+      if (identical(_dropdownOverlay, entry)) _dropdownOverlay = null;
+    }
+
+    entry = OverlayEntry(
+      builder: (overlayContext) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: close,
+                child: const SizedBox.shrink(),
+              ),
+            ),
+            Positioned(
+              left: offset.dx,
+              top: offset.dy + size.height + 4,
+              width: size.width,
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+                elevation: 6,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: (screenHeight - offset.dy - size.height - 24).clamp(120.0, 420.0)),
+                  child: StatefulBuilder(builder: (ctx, setSheetState) => builder(ctx, setSheetState, close)),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    _dropdownOverlay = entry;
+    Overlay.of(context).insert(entry);
   }
 
   // ---------------------------------------------------------------------
@@ -138,71 +200,62 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     );
   }
 
-  Widget _sheetHandle() => Center(
-        child: Container(
-          width: 42,
-          height: 4,
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.circular(4)),
-        ),
-      );
-
   // ---------------------------------------------------------------------
   // مدیریت متغیرها
   // ---------------------------------------------------------------------
 
-  Future<void> _showVariableSheet() async {
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => Container(
+  void _showVariableSheet() {
+    _openAnchoredDropdown(
+      anchorKey: _variableFieldKey,
+      builder: (dropdownCtx, setSheetState, close) => Container(
         decoration: const BoxDecoration(
           color: Color(0xFFFFF5F7),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: BorderRadius.all(Radius.circular(14)),
         ),
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _sheetHandle(),
-            const Text('متغیرها', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 10),
-            for (final v in _data.variables)
-              ListTile(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                tileColor: v == _data.currentVariable ? const Color(0xFFFFEEF2) : Colors.white,
-                title: Text(v, textAlign: TextAlign.right),
-                trailing: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.red),
-                  tooltip: 'حذف متغیر',
-                  onPressed: () async {
-                    Navigator.pop(sheetCtx);
-                    final ok = await _confirm('آیا مطمئن هستید که می‌خواهید متغیر «$v» حذف شود؟');
-                    if (ok == true) {
-                      setState(() => _data.removeVariable(v));
-                      await _persist();
-                    }
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('متغیرها', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 10),
+              for (final v in _data.variables)
+                ListTile(
+                  dense: true,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  tileColor: v == _data.currentVariable ? const Color(0xFFFFEEF2) : Colors.white,
+                  title: Text(v, textAlign: TextAlign.right),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.red),
+                    tooltip: 'حذف متغیر',
+                    onPressed: () async {
+                      close();
+                      final ok = await _confirm('آیا مطمئن هستید که می‌خواهید متغیر «$v» حذف شود؟');
+                      if (ok == true) {
+                        setState(() => _data.removeVariable(v));
+                        await _persist();
+                      }
+                    },
+                  ),
+                  onTap: () {
+                    setState(() => _data.currentVariable = v);
+                    unawaited(_persist());
+                    close();
                   },
                 ),
-                onTap: () {
-                  setState(() => _data.currentVariable = v);
-                  unawaited(_persist());
-                  Navigator.pop(sheetCtx);
+              const SizedBox(height: 6),
+              ElevatedButton.icon(
+                onPressed: () {
+                  close();
+                  _addVariableDialog();
                 },
+                icon: const Icon(Icons.add),
+                label: const Text('افزودن متغیر'),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7CB342), foregroundColor: Colors.white),
               ),
-            const SizedBox(height: 6),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(sheetCtx);
-                _addVariableDialog();
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('افزودن متغیر'),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7CB342), foregroundColor: Colors.white),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -244,12 +297,10 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     return null;
   }
 
-  Future<void> _showPeopleSheet() async {
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => StatefulBuilder(builder: (ctx, setSheetState) {
+  void _showPeopleSheet() {
+    _openAnchoredDropdown(
+      anchorKey: _peopleFieldKey,
+      builder: (dropdownCtx, setSheetState, close) {
         Future<void> refresh() async {
           setSheetState(() {});
           setState(() {});
@@ -259,95 +310,96 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
         return Container(
           decoration: const BoxDecoration(
             color: Color(0xFFFFFAF0),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.all(Radius.circular(14)),
           ),
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _sheetHandle(),
-              const Text('افراد', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF6B4D2E))),
-              const SizedBox(height: 10),
-              for (int i = 0; i < _data.individuals.length; i++)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFF5E5C8)),
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Color(0xFF2C6B9E), size: 20),
-                        tooltip: 'ویرایش',
-                        onPressed: () async {
-                          final name = await _promptName(title: 'ویرایش نام فرد', initial: _data.individuals[i]);
-                          if (name == null) return;
-                          final err = _validatePersonName(name, editingIndex: i);
-                          if (err != null) {
-                            _showSnack(err);
-                            return;
-                          }
-                          _data.renamePerson(i, name);
-                          await refresh();
-                        },
-                      ),
-                      Expanded(
-                        child: Text(
-                          _data.individuals[i],
-                          textAlign: TextAlign.right,
-                          style: TextStyle(color: Color(_data.colorOf(i)), fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Color(0xFFD94D45)),
-                        tooltip: 'حذف',
-                        onPressed: () async {
-                          final ok = await _confirm(
-                              'آیا مطمئن هستید که می‌خواهید «${_data.individuals[i]}» حذف شود؟ تمام تاریخ‌ها و مقادیر ثبت‌شده برای این فرد نیز حذف خواهند شد.');
-                          if (ok == true) {
-                            _resetValueControllers();
-                            _data.removePerson(i);
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text('افراد', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF6B4D2E))),
+                const SizedBox(height: 10),
+                for (int i = 0; i < _data.individuals.length; i++)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFF5E5C8)),
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Color(0xFF2C6B9E), size: 20),
+                          tooltip: 'ویرایش',
+                          onPressed: () async {
+                            final name = await _promptName(title: 'ویرایش نام فرد', initial: _data.individuals[i]);
+                            if (name == null) return;
+                            final err = _validatePersonName(name, editingIndex: i);
+                            if (err != null) {
+                              _showSnack(err);
+                              return;
+                            }
+                            _data.renamePerson(i, name);
                             await refresh();
-                          }
-                        },
-                      ),
-                    ],
+                          },
+                        ),
+                        Expanded(
+                          child: Text(
+                            _data.individuals[i],
+                            textAlign: TextAlign.right,
+                            style: TextStyle(color: Color(_data.colorOf(i)), fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Color(0xFFD94D45)),
+                          tooltip: 'حذف',
+                          onPressed: () async {
+                            final ok = await _confirm(
+                                'آیا مطمئن هستید که می‌خواهید «${_data.individuals[i]}» حذف شود؟ تمام تاریخ‌ها و مقادیر ثبت‌شده برای این فرد نیز حذف خواهند شد.');
+                            if (ok == true) {
+                              _resetValueControllers();
+                              _data.removePerson(i);
+                              await refresh();
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                   ),
+                if (_data.individuals.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text('هنوز فردی اضافه نشده', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+                  ),
+                const SizedBox(height: 6),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    if (_data.individuals.length >= kMaxChartPeople) {
+                      _showSnack('حداکثر ۵ نفر می‌توانند اضافه شوند.');
+                      return;
+                    }
+                    final name = await _promptName(title: 'نام فرد را بنویسید');
+                    if (name == null) return;
+                    final err = _validatePersonName(name);
+                    if (err != null) {
+                      _showSnack(err);
+                      return;
+                    }
+                    _data.addPerson(name);
+                    await refresh();
+                  },
+                  icon: const Icon(Icons.person_add),
+                  label: const Text('افزودن (حداکثر ۵ نام)'),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7CB342), foregroundColor: Colors.white),
                 ),
-              if (_data.individuals.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Text('هنوز فردی اضافه نشده', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
-                ),
-              const SizedBox(height: 6),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  if (_data.individuals.length >= kMaxChartPeople) {
-                    _showSnack('حداکثر ۵ نفر می‌توانند اضافه شوند.');
-                    return;
-                  }
-                  final name = await _promptName(title: 'نام فرد را بنویسید');
-                  if (name == null) return;
-                  final err = _validatePersonName(name);
-                  if (err != null) {
-                    _showSnack(err);
-                    return;
-                  }
-                  _data.addPerson(name);
-                  await refresh();
-                },
-                icon: const Icon(Icons.person_add),
-                label: const Text('افزودن (حداکثر ۵ نام)'),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7CB342), foregroundColor: Colors.white),
-              ),
-            ],
+              ],
+            ),
           ),
         );
-      }),
+      },
     );
   }
 
@@ -452,21 +504,28 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
             width: dateColWidth,
             child: InkWell(
               onTap: () => _editRowDate(rowIndex),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Flexible(
-                    child: Text(row.date,
-                        style: const TextStyle(color: Color(0xFF8B4513), fontSize: 15), overflow: TextOverflow.ellipsis),
-                  ),
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    icon: const Icon(Icons.close, size: 16, color: Color(0xFFD94D45)),
-                    tooltip: 'حذف تاریخ',
-                    onPressed: () => _deleteRow(rowIndex),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        row.date,
+                        textAlign: TextAlign.right,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: const TextStyle(color: Color(0xFF8B4513), fontSize: 15),
+                      ),
+                    ),
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: const Icon(Icons.close, size: 16, color: Color(0xFFD94D45)),
+                      tooltip: 'حذف تاریخ',
+                      onPressed: () => _deleteRow(rowIndex),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -503,7 +562,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
   Widget _buildTable() {
     final rows = _data.currentRows;
     final people = _data.individuals;
-    const dateColWidth = 118.0;
+    const dateColWidth = 150.0;
     const colWidth = 92.0;
     final totalWidth = dateColWidth + people.length * colWidth;
 
@@ -988,6 +1047,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                       children: [
                         Expanded(
                           child: Material(
+                            key: _variableFieldKey,
                             color: const Color(0xFFE8DCC8),
                             borderRadius: BorderRadius.circular(10),
                             child: InkWell(
@@ -1014,6 +1074,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Material(
+                            key: _peopleFieldKey,
                             color: const Color(0xFFC8E6C9),
                             borderRadius: BorderRadius.circular(10),
                             child: InkWell(
