@@ -120,7 +120,7 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         val sb = SpannableStringBuilder()
 
         // ساعت - زرد طلایی، بزرگ‌ترین فونت
-        sb.appendSegment(currentTimeText(), Color.parseColor("#FFD700"), 2.5f, bold = true)
+        sb.appendSegment(currentTimeText(), Color.parseColor("#FFD700"), 2.14f, bold = true)
 
         // شهر + دما + وضعیت هوا - آبی غلیظ
         val city = widgetData.getString("city_name", "—") ?: "—"
