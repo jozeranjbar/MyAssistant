@@ -122,13 +122,27 @@ class ChartBoardData {
         variables = variables ?? [kDefaultChartVariable],
         dataByVariable = dataByVariable ?? {kDefaultChartVariable: []};
 
-  /// وضعیت شروع (بدون هیچ فردی؛ متغیرهای پیش‌فرض: وزن، مقدار خواب،
-  /// پیاده‌روی، قند خون — با «وزن» به‌عنوان متغیر انتخاب‌شده).
-  factory ChartBoardData.initial() => ChartBoardData(
-        variables: List<String>.from(kDefaultChartVariables),
-        currentVariable: kDefaultChartVariables.first,
-        dataByVariable: {for (final v in kDefaultChartVariables) v: <ChartRow>[]},
-      );
+  /// وضعیت شروع: دو نفرِ پیش‌فرض («فرد شماره ۱» و «فرد شماره ۲») با دو
+  /// تاریخ و مقدار وزنِ نمونه، و متغیرهای پیش‌فرض: وزن، مقدار خواب،
+  /// پیاده‌روی، قند خون — با «وزن» به‌عنوان متغیر انتخاب‌شده.
+  factory ChartBoardData.initial() {
+    const defaultIndividuals = ['فرد شماره ۱', 'فرد شماره ۲'];
+    final defaultWeightRows = [
+      ChartRow(date: '۱۴۰۵/۰۳/۰۵', values: ['۵۲ کیلو', '۱۰۳ کیلو']),
+      ChartRow(date: '۱۴۰۵/۰۶/۱۲', values: ['۶۱ کیلو', '۸۸ کیلو']),
+    ];
+    return ChartBoardData(
+      individuals: List<String>.from(defaultIndividuals),
+      visibility: List<bool>.filled(defaultIndividuals.length, true),
+      colorIndices: List<int>.generate(defaultIndividuals.length, (i) => i),
+      nextColorIndex: defaultIndividuals.length,
+      variables: List<String>.from(kDefaultChartVariables),
+      currentVariable: kDefaultChartVariables.first,
+      dataByVariable: {
+        for (final v in kDefaultChartVariables) v: (v == kDefaultChartVariable ? defaultWeightRows : <ChartRow>[]),
+      },
+    );
+  }
 
   List<ChartRow> get currentRows =>
       currentVariable != null ? (dataByVariable[currentVariable!] ?? const []) : const [];
