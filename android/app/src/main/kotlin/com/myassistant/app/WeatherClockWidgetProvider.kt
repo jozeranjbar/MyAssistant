@@ -84,7 +84,7 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    /** یک بخش رنگی/با اندازه‌ی نسبیِ خودش را به متن ترکیبی اضافه می‌کند. */
+    /** یک بخش رنگی/با اندازه‌ی نسبیِ خودش را به متن ترکیبی اضافه می‌کند (با جداکننده‌ی گروه قبل از آن). */
     private fun SpannableStringBuilder.appendSegment(
         text: String,
         color: Int,
@@ -93,6 +93,17 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
     ) {
         if (text.isBlank()) return
         if (isNotEmpty()) append(SEPARATOR)
+        appendRaw(text, color, relativeSize, bold)
+    }
+
+    /** بخشی را بدون جداکننده‌ی گروه (ادامه‌ی همان گروه، با رنگ/اندازه‌ی خودش) اضافه می‌کند. */
+    private fun SpannableStringBuilder.appendRaw(
+        text: String,
+        color: Int,
+        relativeSize: Float,
+        bold: Boolean = false,
+    ) {
+        if (text.isBlank()) return
         val start = length
         append(text)
         val end = length
@@ -125,13 +136,14 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
             bold = true,
         )
 
-        // روز هفته + تاریخ‌ها (شمسی/قمری/میلادی) - سیاه.
+        // روز هفته - سبز غلیظ؛ بقیه‌ی تاریخ (شمسی/قمری/میلادی) - سیاه.
         // فقط بعد از روز هفته یک نقطه می‌آید؛ بین خودِ تاریخ‌ها نقطه‌ای نیست.
         val weekday = widgetData.getString("weekday_text", "—") ?: "—"
         val shamsi = widgetData.getString("date_shamsi", "—") ?: "—"
         val hijri = widgetData.getString("date_hijri", "—") ?: "—"
         val gregorian = widgetData.getString("date_gregorian", "—") ?: "—"
-        sb.appendSegment("$weekday . $shamsi $hijri $gregorian", Color.parseColor("#000000"), 0.8f)
+        sb.appendSegment(weekday, Color.parseColor("#1B5E20"), 0.8f)
+        sb.appendRaw(" . $shamsi $hijri $gregorian", Color.parseColor("#000000"), 0.8f)
 
         return sb
     }
