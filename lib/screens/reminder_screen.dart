@@ -262,7 +262,7 @@ class _ReminderCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: color.withOpacity(0.10),
           borderRadius: BorderRadius.circular(18),
           border: Border(right: BorderSide(color: color, width: 5)),
           boxShadow: [BoxShadow(color: color.withOpacity(0.15), blurRadius: 16, offset: const Offset(0, 4))],
@@ -312,13 +312,20 @@ class _ReminderCard extends StatelessWidget {
               ],
             ),
             const Divider(height: 1),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
-                label: const Text('حذف این یادآوری', style: TextStyle(color: Colors.red, fontSize: 12.5, fontWeight: FontWeight.bold)),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton.icon(
+                  onPressed: onTap,
+                  icon: Icon(Icons.edit_outlined, size: 16, color: color),
+                  label: Text('ویرایش', style: TextStyle(color: color, fontSize: 12.5, fontWeight: FontWeight.bold)),
+                ),
+                TextButton.icon(
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                  label: const Text('حذف این یادآوری', style: TextStyle(color: Colors.red, fontSize: 12.5, fontWeight: FontWeight.bold)),
+                ),
+              ],
             ),
           ],
         ),
