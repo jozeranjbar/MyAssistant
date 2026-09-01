@@ -25,6 +25,11 @@ const _kCardTopGradient = LinearGradient(
 // رنگ‌های تیتر آبی
 const _kHeaderBlue = Color(0xFF1565C0);
 
+// رنگ‌های برجسته‌ی آبی برای دو مستطیل «افزودن لوکیشن» و «افزودن شهر»
+const _kBlueFieldFill = Color(0xFFDCEEFB);
+const _kBlueBorder = Color(0xFF64B5F6);
+const _kBlueShadowColor = Color(0xFF1565C0);
+
 // رنگ‌های برجسته‌ی سبز برای فیلدها و کارت‌ها
 const _kGreenFieldFill = Color(0xFFDFF6E3); // سبز کمرنگ
 const _kGreenTextStrong = Color(0xFF1B5E20); // سبز پررنگ
@@ -33,6 +38,40 @@ const _kGreenTextStrong = Color(0xFF1B5E20); // سبز پررنگ
 const _kBrownCity = Color(0xFF6D4C29);
 const _kGreenBorder = Color(0xFF66BB6A);
 const _kGreenShadowColor = Color(0xFF2E7D32);
+
+/// ارقام فارسی/عربی را به معادل انگلیسی تبدیل می‌کند (برای پردازش داخلی).
+String _normalizeDigitsToAscii(String input) {
+  const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+  const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  var result = input;
+  for (var i = 0; i < 10; i++) {
+    result = result.replaceAll(persian[i], i.toString());
+    result = result.replaceAll(arabic[i], i.toString());
+  }
+  return result;
+}
+
+/// مقدار طول/عرض جغرافیایی را از چند شیوه‌ی نوشتاریِ مختلف می‌خواند، چون
+/// کیبورد عددیِ خیلی از گوشی‌ها کلید «منفی» ندارد: «-92.567»، «منفی92.567»،
+/// «_92.567» یا حرف جهت در انتها («92.567S» یا «92.567W» یعنی منفی).
+double? _parseCoordinate(String raw) {
+  var s = _normalizeDigitsToAscii(raw.trim());
+  if (s.isEmpty) return null;
+
+  var negative = s.contains('منفی') || s.startsWith('-') || s.startsWith('_');
+  s = s.replaceAll('منفی', '').replaceAll('-', '').replaceAll('_', '');
+
+  final dirMatch = RegExp(r'\s*([NSEWnsew])\s*$').firstMatch(s);
+  if (dirMatch != null) {
+    final letter = dirMatch.group(1)!.toUpperCase();
+    if (letter == 'S' || letter == 'W') negative = true;
+    s = s.substring(0, dirMatch.start);
+  }
+
+  final value = double.tryParse(s.trim());
+  if (value == null) return null;
+  return negative ? -value.abs() : value.abs();
+}
 
 class WeatherSettingsScreen extends StatefulWidget {
   const WeatherSettingsScreen({super.key});
@@ -69,8 +108,8 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
 
   Future<void> _addManualLocation() async {
     final name = _nameController.text.trim();
-    final lat = double.tryParse(_latController.text.trim());
-    final lng = double.tryParse(_lngController.text.trim());
+    final lat = _parseCoordinate(_latController.text);
+    final lng = _parseCoordinate(_lngController.text);
 
     if (name.isEmpty || lat == null || lng == null) {
       _showMessage('لطفاً نام و مختصات معتبر وارد کنید.');
@@ -208,6 +247,23 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
     );
   }
 
+  /// برای دو مستطیل برجسته‌ی پایینِ صفحه («افزودن با طول و عرض جغرافیایی» و
+  /// «انتخاب از استان‌ها و شهرهای ایران») که باید زمینه‌ی آبی داشته باشند.
+  BoxDecoration _blueCardDecoration() {
+    return BoxDecoration(
+      color: _kBlueFieldFill,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: _kBlueBorder.withOpacity(0.5), width: 1.2),
+      boxShadow: [
+        BoxShadow(
+          color: _kBlueShadowColor.withOpacity(0.28),
+          blurRadius: 14,
+          offset: const Offset(0, 6),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -310,7 +366,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(14),
-                  decoration: _greenCardDecoration(),
+                  decoration: _blueCardDecoration(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -328,8 +384,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                               controller: _latController,
                               textAlign: TextAlign.right,
                               style: const TextStyle(color: _kGreenTextStrong, fontWeight: FontWeight.bold),
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                              decoration: _pillDecoration('عرض‌ جغرافیائی(مثلا 32.546)'),
+                              decoration: _pillDecoration('عرض جغرافیایی (مثلاً -32.5 یا منفی32.5 یا 32.5S)'),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -338,8 +393,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                               controller: _lngController,
                               textAlign: TextAlign.right,
                               style: const TextStyle(color: _kGreenTextStrong, fontWeight: FontWeight.bold),
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                              decoration: _pillDecoration('طول‌ جغرافیائی(مثلا 53.621)'),
+                              decoration: _pillDecoration('طول جغرافیایی (مثلاً -53.6 یا منفی53.6 یا 53.6W)'),
                             ),
                           ),
                         ],
@@ -360,7 +414,7 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(14),
-                  decoration: _greenCardDecoration(),
+                  decoration: _blueCardDecoration(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
