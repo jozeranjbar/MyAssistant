@@ -1,3 +1,37 @@
+class HourlyForecast {
+  final DateTime dateTime;
+  final double temperature;
+  final int weatherCode;
+  final int precipitationProbability;
+  final int humidity;
+
+  HourlyForecast({
+    required this.dateTime,
+    required this.temperature,
+    required this.weatherCode,
+    this.precipitationProbability = 0,
+    this.humidity = 0,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'dateTime': dateTime.toIso8601String(),
+        'temperature': temperature,
+        'weatherCode': weatherCode,
+        'precipitationProbability': precipitationProbability,
+        'humidity': humidity,
+      };
+
+  factory HourlyForecast.fromJson(Map<String, dynamic> json) => HourlyForecast(
+        dateTime: DateTime.parse(json['dateTime']),
+        temperature: (json['temperature'] as num).toDouble(),
+        weatherCode: json['weatherCode'] as int,
+        precipitationProbability: (json['precipitationProbability'] as num?)?.toInt() ?? 0,
+        humidity: (json['humidity'] as num?)?.toInt() ?? 0,
+      );
+
+  String get iconEmoji => WeatherData.emojiForCode(weatherCode);
+}
+
 class DailyForecast {
   final DateTime date;
   final double minTemp;
@@ -51,6 +85,7 @@ class WeatherData {
   final int weatherCode; // کد وضعیت هوا (Open-Meteo WMO code)
   final DateTime updatedAt; // زمان بروزرسانی
   final List<DailyForecast> forecast; // پیش‌بینی ۱۰ روزه
+  final List<HourlyForecast> hourly; // پیش‌بینی ساعتی
 
   WeatherData({
     required this.temperature,
@@ -63,6 +98,7 @@ class WeatherData {
     required this.weatherCode,
     required this.updatedAt,
     this.forecast = const [],
+    this.hourly = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -76,6 +112,7 @@ class WeatherData {
         'weatherCode': weatherCode,
         'updatedAt': updatedAt.toIso8601String(),
         'forecast': forecast.map((f) => f.toJson()).toList(),
+        'hourly': hourly.map((h) => h.toJson()).toList(),
       };
 
   factory WeatherData.fromJson(Map<String, dynamic> json) => WeatherData(
@@ -91,6 +128,11 @@ class WeatherData {
         forecast: json['forecast'] != null
             ? (json['forecast'] as List).map((f) => DailyForecast.fromJson(f)).toList()
             : const [],
+        // «hourly» فیلدی جدید است؛ کش‌های قدیمی‌ترِ ذخیره‌شده روی گوشی آن را
+        // ندارند، پس نبودش خطا نمی‌دهد و فقط لیست خالی برمی‌گردد.
+        hourly: json['hourly'] != null
+            ? (json['hourly'] as List).map((h) => HourlyForecast.fromJson(h)).toList()
+            : const [],
       );
 
   /// پیش‌بینی «امروز» (اولین آیتم لیست پیش‌بینی، در صورت وجود)
@@ -99,6 +141,16 @@ class WeatherData {
   /// پیش‌بینی ده روز آینده، از «فردا» شروع می‌شود (آیتم اول لیست «امروز» است و کنار گذاشته می‌شود)
   List<DailyForecast> get next10DaysForecast =>
       forecast.length > 1 ? forecast.sublist(1, forecast.length > 11 ? 11 : forecast.length) : const [];
+
+  /// پیش‌بینی ساعتی از «همین الان» تا ۲۴ ساعت آینده
+  List<HourlyForecast> get next24HoursForecast {
+    if (hourly.isEmpty) return const [];
+    final now = DateTime.now();
+    final from = hourly.indexWhere((h) => h.dateTime.isAfter(now));
+    final start = from == -1 ? 0 : (from > 0 ? from - 1 : from);
+    final end = (start + 24).clamp(0, hourly.length);
+    return hourly.sublist(start, end);
+  }
 
   /// توضیح وضعیت هوا بر اساس کد WMO (استفاده‌شده در Open-Meteo)
   String get description => descriptionForCode(weatherCode);
