@@ -239,7 +239,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تقویم کامل 🗓️'),
+        title: const Text('مشاهده تقویم سال و تنظیمات 🗓️'),
       ),
       body: GestureDetector(
         onHorizontalDragEnd: (details) {
