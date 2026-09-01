@@ -106,6 +106,15 @@ class Reminder {
   String get timeLabel =>
       '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
 
+  /// برای نمایش به کاربر: ساعت به‌صورت ۱۲ ساعتی همراه با قبل/بعدازظهر.
+  /// [timeLabel] عمداً به‌صورت ۲۴ ساعتی باقی می‌ماند چون برای مرتب‌سازیِ
+  /// یادآوری‌ها بر اساس ساعت استفاده می‌شود.
+  String get displayTimeLabel {
+    final h12 = hour % 12 == 0 ? 12 : hour % 12;
+    final period = hour < 12 ? 'ق.ظ' : 'ب.ظ';
+    return '${h12.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
+  }
+
   String get repeatLabel => repeatType.label(interval: repeatInterval);
 
   /// نزدیک‌ترین لحظه‌ی وقوع بعدی این یادآوری، نسبت به زمان داده‌شده.
