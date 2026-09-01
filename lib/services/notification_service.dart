@@ -8,6 +8,13 @@ import '../models/reminder.dart';
 /// باشد هم نمایش داده می‌شوند. برای باقی‌ماندن بعد از ری‌استارت گوشی، پرمیشن
 /// RECEIVE_BOOT_COMPLETED در AndroidManifest تعریف شده و هنگام بوت، لیست
 /// یادآوری‌های ذخیره‌شده دوباره زمان‌بندی می‌شوند (به main.dart مراجعه کنید).
+///
+/// نکته درباره‌ی دقت پس‌زمینه: نوع «روزانه» با matchDateTimeComponents به
+/// خودِ سیستم‌عامل سپرده می‌شود و همیشه دقیق است. انواع «یک‌بار»، «هر چند
+/// روز» و «هر چند ساعت» هر بار فقط برای وقوع بعدی زمان‌بندی می‌شوند و با هر
+/// بار باز شدن برنامه یا روشن‌شدن گوشی (rescheduleAll) به جلو هدایت می‌شوند؛
+/// یعنی اگر برنامه برای چند روز اصلاً باز نشود، ممکن است این سه نوع تا باز
+/// شدن بعدی برنامه یک قدم عقب بمانند.
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
@@ -37,32 +44,45 @@ class NotificationService {
     _initialized = true;
   }
 
+  String _channelId(Reminder r) =>
+      r.category == ReminderCategory.medication ? 'reminders_med_channel' : 'reminders_daily_channel';
+
+  String _channelName(Reminder r) =>
+      r.category == ReminderCategory.medication ? 'یادآوری داروها' : 'یادآوری‌های روزمره';
+
+  String _bodyFor(Reminder r) {
+    if (r.category == ReminderCategory.medication) {
+      return r.dose.isNotEmpty ? r.dose : 'زمان مصرف دارو رسید';
+    }
+    return r.note.isNotEmpty ? r.note : 'یادآوری فرا رسید';
+  }
+
   Future<void> scheduleReminder(Reminder reminder) async {
     if (!reminder.isActive) return;
     await init();
 
-    final scheduledDate = tz.TZDateTime.from(reminder.dateTime, tz.local);
+    final scheduledDate = tz.TZDateTime.from(reminder.nextOccurrence(), tz.local);
 
-    const androidDetails = AndroidNotificationDetails(
-      'reminders_channel',
-      'یادآوری‌ها',
+    final androidDetails = AndroidNotificationDetails(
+      _channelId(reminder),
+      _channelName(reminder),
       channelDescription: 'اعلان‌های یادآوری MyAssistant',
       importance: Importance.max,
       priority: Priority.high,
     );
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
-      iOS: DarwinNotificationDetails(),
+      iOS: const DarwinNotificationDetails(),
     );
 
     await _plugin.zonedSchedule(
       reminder.id,
       reminder.title,
-      reminder.note,
+      _bodyFor(reminder),
       scheduledDate,
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: reminder.repeatDaily ? DateTimeComponents.time : null,
+      matchDateTimeComponents: reminder.repeatType == RepeatType.daily ? DateTimeComponents.time : null,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
     );
@@ -77,9 +97,7 @@ class NotificationService {
   Future<void> rescheduleAll(List<Reminder> reminders) async {
     await init();
     for (final r in reminders) {
-      if (r.isActive && r.dateTime.isAfter(DateTime.now())) {
-        await scheduleReminder(r);
-      } else if (r.isActive && r.repeatDaily) {
+      if (r.isActive) {
         await scheduleReminder(r);
       }
     }

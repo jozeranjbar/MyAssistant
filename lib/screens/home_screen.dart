@@ -8,6 +8,7 @@ import '../models/reminder.dart';
 import '../services/weather_service.dart';
 import '../services/location_storage_service.dart';
 import '../services/reminder_storage_service.dart';
+import '../services/chart_storage_service.dart';
 import '../services/notification_service.dart';
 import '../services/events_service.dart';
 import '../services/widget_service.dart';
@@ -15,10 +16,14 @@ import '../data/iranian_holidays.dart';
 import '../widgets/weather_card.dart';
 import 'weather_settings_screen.dart';
 import 'ten_day_forecast_screen.dart';
+import 'hourly_forecast_screen.dart';
 import 'chart_maker_screen.dart';
 import 'calendar_screen.dart';
 import 'reminder_screen.dart';
 import 'about_screen.dart';
+
+// رنگ قهوه‌ای برای نام شهرها
+const _kBrownCity = Color(0xFF6D4C29);
 
 String _toPersianDigits(String input) {
   const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -41,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _weatherService = WeatherService();
   final _locationStorage = LocationStorageService();
   final _reminderStorage = ReminderStorageService();
+  final _chartStorage = ChartStorageService();
   final _eventsService = EventsService();
 
   List<WeatherLocation> _locations = [];
@@ -49,6 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _loading = true;
   int _activeReminderCount = 0;
   List<CalendarEvent> _todayEvents = [];
+  List<String> _chartVariables = [];
+  List<String> _chartPeople = [];
   final Jalali _today = Jalali.now();
 
   @override
@@ -65,10 +73,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     final reminders = await _reminderStorage.loadReminders();
     final todayEvents = await _eventsService.getEventsForJalali(_today);
+    final chartData = await _chartStorage.load();
     setState(() {
       _locations = locations;
       _activeReminderCount = reminders.where((r) => r.isActive).length;
       _todayEvents = todayEvents;
+      _chartVariables = chartData.variables;
+      _chartPeople = chartData.individuals;
       _loading = false;
     });
     await _refreshAllWeather();
@@ -90,30 +101,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final alreadyPrompted = await WidgetService.hasPromptedBefore();
     if (alreadyPrompted || !mounted) return;
 
-    await showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('افزودن ویجت'),
-        content: const Text('آیا می‌خواهید ویجت آب‌وهوا و ساعت را به صفحه اصلی گوشی اضافه کنید؟'),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              await WidgetService.markPrompted();
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-            },
-            child: const Text('نه، متشکرم'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await WidgetService.markPrompted();
-              await WidgetService.requestPinWidget();
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-            },
-            child: const Text('بله، اضافه کن'),
-          ),
-        ],
-      ),
-    );
+    // دیالوگ سفارشی حذف شد؛ فقط تأییدیه‌ی رسمی خود اندروید نمایش داده می‌شود
+    // تا کاربر دو بار پشت سر هم پیام نبیند.
+    await WidgetService.markPrompted();
+    await WidgetService.requestPinWidget();
   }
 
   Future<void> _refreshAllWeather() async {
@@ -122,9 +113,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     for (final loc in _locations) {
       if (!hasInternet) {
-        setState(() {
-          _errorByLocation[loc.id] = 'اینترنت در دسترس نیست';
-        });
         continue;
       }
       try {
@@ -157,16 +145,38 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _openTenDayForecast(WeatherLocation loc) async {
     final data = _weatherByLocation[loc.id];
-    if (data == null) return;
+    if (data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('هنوز اطلاعاتی برای این لوکیشن ذخیره نشده است. لطفاً یک بار با اینترنت وصل شوید.')),
+      );
+      return;
+    }
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => TenDayForecastScreen(location: loc, data: data)),
     );
   }
 
+  Future<void> _openHourlyForecast(WeatherLocation loc) async {
+    final data = _weatherByLocation[loc.id];
+    if (data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('هنوز اطلاعاتی برای این لوکیشن ذخیره نشده است. لطفاً یک بار با اینترنت وصل شوید.')),
+      );
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => HourlyForecastScreen(location: loc, data: data)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bannerHeight = screenWidth / (900 / 171) * 0.68; // ارتفاع کاهش‌یافته بنر
+
     return Scaffold(
       appBar: AppBar(
+<<<<<<< HEAD
         centerTitle: true,
         title: const Text(
           'MyAssistant',
@@ -176,6 +186,18 @@ class _HomeScreenState extends State<HomeScreen> {
             fontStyle: FontStyle.italic,
             letterSpacing: 0.5,
             color: Color(0xFF6366F1),
+=======
+        toolbarHeight: bannerHeight,
+        titleSpacing: 0,
+        flexibleSpace: ClipRect(
+          child: OverflowBox(
+            maxHeight: screenWidth / (900 / 171),
+            child: Image.asset(
+              'assets/images/app_banner.jpg',
+              width: screenWidth,
+              fit: BoxFit.fill,
+            ),
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
           ),
         ),
       ),
@@ -188,7 +210,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   // بخش «آب و هوا»: عنوان بیرون از مستطیل + کارت(های) آب‌وهوا + نوار «وضعیت ده روز آینده»
                   // + نوار «تنظیمات آب و هوا»، همگی داخل یک مستطیل واحد
+<<<<<<< HEAD
                   _SectionHeader(title: 'آب و هوا'),
+=======
+                  _SectionHeader(title: 'آب و هوا', topPadding: 0),
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
                   Padding(
                     padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
                     child: Container(
@@ -197,6 +223,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.green.shade100),
+<<<<<<< HEAD
+=======
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.18),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,11 +266,59 @@ class _HomeScreenState extends State<HomeScreen> {
                                     const SizedBox(height: 8),
                                     _NavButton(
                                       icon: Icons.calendar_view_week,
-                                      label: 'وضعیت هوای ده روز آینده ${loc.name}',
+                                      richLabel: RichText(
+                                        textAlign: TextAlign.right,
+                                        text: TextSpan(
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blue.shade900,
+                                          ),
+                                          children: [
+                                            const TextSpan(text: 'وضعیت هوای ده روز آینده '),
+                                            TextSpan(
+                                              text: loc.name,
+                                              style: const TextStyle(color: _kBrownCity, fontWeight: FontWeight.w900),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                       onTap: () => _openTenDayForecast(loc),
                                       backgroundColor: Colors.blue.shade50,
                                       foregroundColor: Colors.blue.shade900,
+<<<<<<< HEAD
                                       borderColor: const Color(0xFFC5DCEC),
+=======
+                                      borderColor: const Color(0xFFE3F4FC),
+                                      elevated: true,
+                                      showArrow: false,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _NavButton(
+                                      icon: Icons.access_time,
+                                      richLabel: RichText(
+                                        textAlign: TextAlign.right,
+                                        text: TextSpan(
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.indigo.shade900,
+                                          ),
+                                          children: [
+                                            const TextSpan(text: 'وضعیت هوای ساعتی '),
+                                            TextSpan(
+                                              text: loc.name,
+                                              style: const TextStyle(color: _kBrownCity, fontWeight: FontWeight.w900),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      onTap: () => _openHourlyForecast(loc),
+                                      backgroundColor: Colors.indigo.shade50,
+                                      foregroundColor: Colors.indigo.shade900,
+                                      borderColor: const Color(0xFFE6E7FA),
+                                      elevated: true,
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
                                       showArrow: false,
                                       fontSize: 17,
                                       fontWeight: FontWeight.bold,
@@ -243,15 +328,21 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
+<<<<<<< HEAD
                             borderColor: const Color(0xFFC5DCEC),
                             label: 'تنظیمات آب و هوا',
+=======
+                            borderColor: const Color(0xFFF6EDFA),
+                            elevated: true,
+                            label: 'افزودن مکان ، حذف ، انتقال به بالا',
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
                             onTap: _openWeatherSettings,
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
 
                   _SectionHeader(title: 'تقویم'),
                   Padding(
@@ -262,6 +353,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.green.shade100),
+<<<<<<< HEAD
+=======
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.18),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,8 +381,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
+<<<<<<< HEAD
                             borderColor: const Color(0xFFC5DCEC),
                             label: 'تنظیم مناسبت‌ها و مشاهده تقویم کامل',
+=======
+                            borderColor: const Color(0xFFF6EDFA),
+                            elevated: true,
+                            label: 'تنظیمات و مشاهده تقویم سال',
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
                             onTap: () async {
                               await Navigator.of(context).push(
                                 MaterialPageRoute(builder: (_) => const CalendarScreen()),
@@ -292,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
 
                   _SectionHeader(title: 'یادآوری'),
                   Padding(
@@ -303,6 +411,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.green.shade100),
+<<<<<<< HEAD
+=======
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.18),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,7 +444,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
+<<<<<<< HEAD
                             borderColor: const Color(0xFFC5DCEC),
+=======
+                            borderColor: const Color(0xFFF6EDFA),
+                            elevated: true,
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
                             label: 'تنظیمات یادآوری',
                             onTap: () async {
                               await Navigator.of(context).push(
@@ -338,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
 
                   _SectionHeader(title: 'نمودار ساز'),
                   Padding(
@@ -349,10 +473,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.green.shade100),
+<<<<<<< HEAD
+=======
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.18),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+<<<<<<< HEAD
                           _NavButton(
                             emoji: '📊',
                             label: 'نمودار وزن، مقدار خواب، تعداد قدم‌های روزانه، قند خون ...',
@@ -363,27 +499,45 @@ class _HomeScreenState extends State<HomeScreen> {
                                 MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
                               );
                             },
+=======
+                          _ChartSummaryBox(
+                            variables: _chartVariables,
+                            people: _chartPeople,
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
                           ),
                           const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
+<<<<<<< HEAD
                             borderColor: const Color(0xFFC5DCEC),
                             label: 'تنظیمات نمودار',
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
                               );
+=======
+                            borderColor: const Color(0xFFF6EDFA),
+                            elevated: true,
+                            label: 'صفحه نمودار',
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
+                              );
+                              await _loadEverything();
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
                             },
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 4),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Material(
-                      color: Colors.green.shade800,
+                      color: Colors.lightGreen.shade600,
+                      elevation: 4,
+                      shadowColor: Colors.black45,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
@@ -399,16 +553,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icon(Icons.info_outline, color: Colors.white),
                               SizedBox(width: 12),
                               Expanded(
-                                child: Text('اطلاعات برنامه و تنظیمات کلی',
+                                child: Text('اطلاعات برنامه',
                                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                               ),
-                              Icon(Icons.chevron_left, color: Colors.white),
                             ],
                           ),
                         ),
                       ),
                     ),
                   ),
+                  SizedBox(height: 16 + MediaQuery.of(context).padding.bottom),
                 ],
               ),
             ),
@@ -418,14 +572,68 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _SectionHeader extends StatelessWidget {
   final String title;
+<<<<<<< HEAD
   const _SectionHeader({required this.title});
+=======
+  final double topPadding;
+  const _SectionHeader({required this.title, this.topPadding = 6});
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
 
   @override
   Widget build(BuildContext context) {
     return Padding(
+<<<<<<< HEAD
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+=======
+      padding: EdgeInsets.fromLTRB(16, topPadding, 16, 4),
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
       child: Text(title,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
+    );
+  }
+}
+
+/// نمایشِ غیرقابل‌کلیکِ خلاصه‌ی «نمودار ساز»: ردیف اول نام متغیرها (نمودارها)
+/// و ردیف دوم نام افراد اضافه‌شده. برخلاف [_NavButton]، این ویجت لینک نیست.
+class _ChartSummaryBox extends StatelessWidget {
+  final List<String> variables;
+  final List<String> people;
+
+  const _ChartSummaryBox({required this.variables, required this.people});
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = Colors.green.shade900;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('📊', style: TextStyle(fontSize: 22)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'مقادیر وارد شده : ${variables.isEmpty ? 'هنوز متغیری اضافه نشده' : variables.join(' ، ')}',
+                  style: TextStyle(color: fg, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'افراد ثبت شده : ${people.isEmpty ? 'هنوز فردی اضافه نشده' : people.join(' ، ')}',
+                  style: TextStyle(color: fg.withOpacity(0.75)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -434,7 +642,12 @@ class _NavButton extends StatelessWidget {
   final IconData? icon;
   final String? emoji;
   final String? emoji2;
+<<<<<<< HEAD
   final String label;
+=======
+  final String? label;
+  final Widget? richLabel;
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
   final VoidCallback onTap;
   final Color? backgroundColor;
   final Color? foregroundColor;
@@ -442,11 +655,20 @@ class _NavButton extends StatelessWidget {
   final bool showArrow;
   final double? fontSize;
   final FontWeight? fontWeight;
+<<<<<<< HEAD
+=======
+  final bool elevated;
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
   const _NavButton({
     this.icon,
     this.emoji,
     this.emoji2,
+<<<<<<< HEAD
     required this.label,
+=======
+    this.label,
+    this.richLabel,
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
     required this.onTap,
     this.backgroundColor,
     this.foregroundColor,
@@ -454,7 +676,12 @@ class _NavButton extends StatelessWidget {
     this.showArrow = false,
     this.fontSize,
     this.fontWeight,
+<<<<<<< HEAD
   });
+=======
+    this.elevated = false,
+  }) : assert(label != null || richLabel != null, 'either label or richLabel must be provided');
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
 
   @override
   Widget build(BuildContext context) {
@@ -462,6 +689,8 @@ class _NavButton extends StatelessWidget {
     final fg = foregroundColor ?? Colors.purple;
     return Material(
       color: bg,
+      elevation: elevated ? 4 : 0,
+      shadowColor: Colors.black45,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -484,10 +713,18 @@ class _NavButton extends StatelessWidget {
               if (emoji == null && icon != null) Icon(icon, color: fg),
               const SizedBox(width: 12),
               Expanded(
+<<<<<<< HEAD
                 child: Text(
                   label,
                   style: TextStyle(color: fg, fontSize: fontSize, fontWeight: fontWeight),
                 ),
+=======
+                child: richLabel ??
+                    Text(
+                      label!,
+                      style: TextStyle(color: fg, fontSize: fontSize, fontWeight: fontWeight),
+                    ),
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
               ),
               if (showArrow) Icon(Icons.chevron_left, color: fg),
             ],

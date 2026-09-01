@@ -1,7 +1,7 @@
 name: my_assistant
 description: "MyAssistant - آب و هوا، تقویم و یادآوری"
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.24+25
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -28,7 +28,6 @@ dependencies:
   workmanager: ^0.5.2
 
   # تقویم شمسی و میلادی
-  table_calendar: ^3.1.2
   shamsi_date: ^1.1.1
 
   # تقویم قمری (هجری)
@@ -37,14 +36,15 @@ dependencies:
   # فرمت اعداد فارسی
   intl: ^0.19.0
 
-  # آیکون‌ها
-  google_fonts: ^6.2.1
-
   # باز کردن لینک ایمیل و کانال تلگرام
   url_launcher: ^6.3.0
 
   # ویجت صفحه اصلی گوشی
   home_widget: ^0.6.0
+
+  # اشتراک‌گذاری فایل پشتیبان و تصویر نمودار (نمودار ساز)
+  share_plus: ^7.2.2
+  path_provider: ^2.1.3
 
 dev_dependencies:
   flutter_test:
@@ -55,3 +55,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/events.json
+    - assets/images/app_banner.jpg

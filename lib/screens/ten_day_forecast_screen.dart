@@ -28,6 +28,7 @@ class TenDayForecastScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+<<<<<<< HEAD
         automaticallyImplyLeading: false,
         centerTitle: true,
         title: Row(
@@ -48,6 +49,27 @@ class TenDayForecastScreen extends StatelessWidget {
             const SizedBox(width: 4),
             Icon(Icons.arrow_forward_ios, size: 16, color: Colors.brown.shade400),
           ],
+=======
+        backgroundColor: Colors.lightBlue.shade100,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_forward_ios, color: Colors.brown.shade400, size: 20),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        centerTitle: true,
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            'وضعیت هوای ده روز آینده ${location.name}',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.brown.shade700,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+>>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
         ),
       ),
       body: GestureDetector(

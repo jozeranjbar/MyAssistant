@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  اندازه‌ی پیش‌فرض: ۳ ستون × ۱ ردیف (targetCellWidth/Height، اندروید ۸ به بعد).
+  minWidth/minHeight = اندازه‌ی ۱ ستون × ۱ ردیف، یعنی کاربر می‌تواند ویجت را
+  تا همین حداقل کوچک کند.
+  maxResizeHeight = اندازه‌ی ۳ ردیف (سقفِ بزرگ‌شدنِ ارتفاع)، اندروید ۱۲ به بعد.
+  عرض سقفی تعیین نشده، پس تا تمام‌عرضِ صفحه قابل‌بزرگ‌شدن است.
+-->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="250dp"
-    android:minHeight="110dp"
-    android:targetCellWidth="5"
-    android:targetCellHeight="2"
+    android:minWidth="40dp"
+    android:minHeight="40dp"
+    android:targetCellWidth="3"
+    android:targetCellHeight="1"
+    android:maxResizeHeight="180dp"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/weather_clock_widget"
     android:resizeMode="horizontal|vertical"

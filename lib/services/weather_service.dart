@@ -33,6 +33,12 @@ class WeatherService {
         'precipitation_probability_max',
         'relative_humidity_2m_mean',
       ].join(','),
+      'hourly': [
+        'temperature_2m',
+        'weather_code',
+        'precipitation_probability',
+        'relative_humidity_2m',
+      ].join(','),
       // ۱۱ روز درخواست می‌شود: امروز + ۱۰ روز آینده (برای صفحه «وضعیت ده روز آینده»)
       'forecast_days': '11',
       'timezone': 'auto',
@@ -49,6 +55,7 @@ class WeatherService {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final current = data['current'] as Map<String, dynamic>?;
       final daily = data['daily'] as Map<String, dynamic>?;
+      final hourlyJson = data['hourly'] as Map<String, dynamic>?;
 
       if (current == null) {
         throw WeatherException('پاسخ سرور آب‌وهوا نامعتبر بود.');
@@ -87,6 +94,28 @@ class WeatherService {
         // پیش‌بینی روزانه اختیاری است؛ در صورت خطا نادیده گرفته می‌شود
       }
 
+      final hourly = <HourlyForecast>[];
+      try {
+        final times = hourlyJson?['time'] as List?;
+        final temps = hourlyJson?['temperature_2m'] as List?;
+        final codes = hourlyJson?['weather_code'] as List?;
+        final precipProbs = hourlyJson?['precipitation_probability'] as List?;
+        final humidityList = hourlyJson?['relative_humidity_2m'] as List?;
+        if (times != null) {
+          for (var i = 0; i < times.length; i++) {
+            hourly.add(HourlyForecast(
+              dateTime: DateTime.parse(times[i] as String),
+              temperature: (temps?[i] as num?)?.toDouble() ?? 0,
+              weatherCode: (codes?[i] as num?)?.toInt() ?? 0,
+              precipitationProbability: (precipProbs?[i] as num?)?.toInt() ?? 0,
+              humidity: (humidityList?[i] as num?)?.toInt() ?? 0,
+            ));
+          }
+        }
+      } catch (_) {
+        // پیش‌بینی ساعتی اختیاری است؛ در صورت خطا نادیده گرفته می‌شود
+      }
+
       return WeatherData(
         temperature: (current['temperature_2m'] as num).toDouble(),
         feelsLike: (current['apparent_temperature'] as num).toDouble(),
@@ -99,6 +128,7 @@ class WeatherService {
         weatherCode: (current['weather_code'] as num).toInt(),
         updatedAt: DateTime.now(),
         forecast: forecast,
+        hourly: hourly,
       );
     } on WeatherException {
       rethrow;
