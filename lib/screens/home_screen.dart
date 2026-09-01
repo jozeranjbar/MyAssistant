@@ -502,12 +502,12 @@ class _ChartSummaryBox extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  variables.isEmpty ? 'هنوز متغیری اضافه نشده' : variables.join('، '),
+                  'مقادیر وارد شده : ${variables.isEmpty ? 'هنوز متغیری اضافه نشده' : variables.join(' ، ')}',
                   style: TextStyle(color: fg, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  people.isEmpty ? 'هنوز فردی اضافه نشده' : people.join('، '),
+                  'افراد ثبت شده : ${people.isEmpty ? 'هنوز فردی اضافه نشده' : people.join(' ، ')}',
                   style: TextStyle(color: fg.withOpacity(0.75)),
                 ),
               ],
