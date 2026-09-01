@@ -427,7 +427,12 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     final needsInterval = _repeatType == RepeatType.everyXDays || _repeatType == RepeatType.everyXHours;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      // هم ارتفاعِ کیبورد (وقتی باز است) و هم ناحیه‌ی امنِ پایین گوشی (نوار
+      // حرکتی در گوشی‌های جدید) در نظر گرفته می‌شود تا این صفحه هیچ‌وقت
+      // چسبیده به لبه‌ی پایین نباشد.
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 16,
+      ),
       child: Container(
         decoration: const BoxDecoration(
           color: Color(0xFFE3F9EA),
