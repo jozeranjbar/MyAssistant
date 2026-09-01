@@ -616,19 +616,30 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                 ),
                 Container(
                   height: 40,
-                  alignment: Alignment.center,
-                  child: SizedBox(
-                    width: dateColWidth - 16,
-                    height: 30,
-                    child: ElevatedButton(
-                      onPressed: _addDate,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFC8E6C9),
-                        foregroundColor: const Color(0xFF2E5C31),
-                        padding: EdgeInsets.zero,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: dateColWidth,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: SizedBox(
+                            height: 30,
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _addDate,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2E7D32),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                alignment: Alignment.centerRight,
+                              ),
+                              child: const Text('افزودن تاریخ', style: TextStyle(fontSize: 12)),
+                            ),
+                          ),
+                        ),
                       ),
-                      child: const Text('افزودن تاریخ', style: TextStyle(fontSize: 12)),
-                    ),
+                      SizedBox(width: colWidth * people.length),
+                    ],
                   ),
                 ),
               ],
@@ -879,35 +890,39 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     }
     final scale = _scaleForRows(rows);
     final visiblePeople = [for (int i = 0; i < _data.individuals.length; i++) if (_data.visibility[i]) i];
-    const left = 64.0, right = 30.0, spacing = 70.0, top = 76.0, bottom = 64.0, plotH = 320.0;
+    const left = 64.0, right = 30.0, spacing = 70.0, bottom = 64.0, plotH = 320.0;
     final n = rows.length;
     final plotW = n > 1 ? (n - 1) * spacing : 200.0;
     final width = left + plotW + right;
-    final height = top + plotH + bottom;
 
     return Container(
       width: width,
-      height: height,
       color: Colors.white,
-      child: Stack(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      // به‌جای موقعیت‌دهیِ مطلق (Stack/Positioned) با فاصله‌های ثابتِ از پیش
+      // حدس‌زده‌شده، از یک چیدمانِ عمودیِ طبیعی (Column) استفاده می‌شود؛ به
+      // این ترتیب اگر عنوان یا فهرستِ افراد به بیش از یک خط بشکند (مثلاً
+      // نام متغیر طولانی یا تعداد زیاد افراد)، هیچ‌وقت روی نمودار زیرش
+      // نمی‌افتد — هر بخش دقیقاً به‌اندازه‌ی ارتفاع واقعیِ خودش جا می‌گیرد.
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Positioned(
-            top: 14,
-            left: 0,
-            right: 0,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               _data.currentVariable != null ? 'نمایش و عدم نمایش نمودار ${_data.currentVariable} هر فرد' : 'نمودار',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF183A49)),
             ),
           ),
-          Positioned(
-            top: 40,
-            left: 0,
-            right: 0,
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Wrap(
               alignment: WrapAlignment.center,
               spacing: 14,
+              runSpacing: 6,
               children: [
                 for (final i in visiblePeople)
                   Row(mainAxisSize: MainAxisSize.min, children: [
@@ -923,9 +938,8 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
               ],
             ),
           ),
-          Positioned(
-            top: top,
-            left: 0,
+          const SizedBox(height: 14),
+          SizedBox(
             width: width,
             height: plotH,
             child: CustomPaint(
@@ -940,9 +954,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
               ),
             ),
           ),
-          Positioned(
-            top: top + plotH + 10,
-            left: 0,
+          SizedBox(
             width: width,
             height: bottom,
             child: Stack(
@@ -950,7 +962,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                 for (int idx = 0; idx < rows.length; idx++)
                   Positioned(
                     left: left + idx * (n > 1 ? spacing : 0) - 40,
-                    top: 0,
+                    top: 6,
                     width: 80,
                     child: Transform.rotate(
                       angle: -0.6,
@@ -1088,7 +1100,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                         Expanded(
                           child: Material(
                             key: _peopleFieldKey,
-                            color: const Color(0xFFC8E6C9),
+                            color: const Color(0xFF2E7D32),
                             borderRadius: BorderRadius.circular(10),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(10),
@@ -1101,10 +1113,10 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                                       child: Text(
                                         'افراد 👥',
                                         overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(color: Color(0xFF2E5C31), fontWeight: FontWeight.bold, fontSize: 13),
+                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                                       ),
                                     ),
-                                    const Icon(Icons.arrow_drop_down, color: Color(0xFF2E5C31), size: 72),
+                                    const Icon(Icons.arrow_drop_down, color: Colors.white, size: 72),
                                   ],
                                 ),
                               ),
@@ -1131,7 +1143,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                     // به‌درستی توسط SafeArea گزارش نمی‌شود، پس این فاصله‌ی
                     // اضافه باعث می‌شود دکمه‌ها همیشه با فاصله از لبه‌ی پایین
                     // (به‌اندازه‌ی ارتفاع خودشان) بالاتر بیایند.
-                    SizedBox(height: MediaQuery.of(context).padding.bottom + 28),
+                    SizedBox(height: MediaQuery.of(context).padding.bottom + 48),
                   ],
                 ),
               ),
