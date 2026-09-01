@@ -421,6 +421,20 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
   String _formatJalali(Jalali j) =>
       toFaDigits('${j.year}/${j.month.toString().padLeft(2, '0')}/${j.day.toString().padLeft(2, '0')}');
 
+  /// یک برچسبِ زمانیِ امن برای «نام فایل» (بدون هیچ کاراکتر جداکننده‌ی
+  /// مسیر مثل «/»؛ برخلاف [_formatJalali] که برای نمایش استفاده می‌شود).
+  /// نبودِ این تفکیک باعث می‌شد اسلش‌های داخل تاریخِ نمایشی به‌اشتباه به‌عنوان
+  /// جداکننده‌ی پوشه در مسیر فایل تفسیر شوند و نوشتنِ فایل (و درنتیجه
+  /// اشتراک‌گذاری) با خطا مواجه شود.
+  String _fileTimestamp() {
+    final j = Jalali.now();
+    final now = DateTime.now();
+    final datePart = '${j.year}${j.month.toString().padLeft(2, '0')}${j.day.toString().padLeft(2, '0')}';
+    final timePart =
+        '${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
+    return '$datePart-$timePart';
+  }
+
   Future<void> _addDate() async {
     if (_data.currentVariable == null) {
       _showSnack('ابتدا یک متغیر انتخاب یا اضافه کنید.');
@@ -782,12 +796,12 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
   Future<void> _shareBackupFile(String json) async {
     try {
       final dir = await getTemporaryDirectory();
-      final stamp = _formatJalali(Jalali.now());
-      final file = File('${dir.path}/نمودار-ساز-پشتیبان-$stamp.json');
+      final stamp = _fileTimestamp();
+      final file = File('${dir.path}/chart-backup-$stamp.json');
       await file.writeAsString(json);
       await Share.shareXFiles([XFile(file.path)], text: 'پشتیبان نمودار ساز');
-    } catch (_) {
-      _showSnack('اشتراک‌گذاری فایل ممکن نشد؛ از گزینه «کپی متن» استفاده کنید.');
+    } catch (e) {
+      _showSnack('اشتراک‌گذاری فایل ممکن نشد: $e');
     }
   }
 
@@ -970,13 +984,12 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
       if (byteData == null) throw Exception('no-bytes');
       final bytes = byteData.buffer.asUint8List();
       final dir = await getTemporaryDirectory();
-      final stamp = _formatJalali(Jalali.now());
-      final safeTitle = (_data.currentVariable ?? 'نمودار').replaceAll(RegExp(r'[\\/:*?"<>|]'), '');
-      final file = File('${dir.path}/نمودار-$safeTitle-$stamp.png');
+      final stamp = _fileTimestamp();
+      final file = File('${dir.path}/chart-$stamp.png');
       await file.writeAsBytes(bytes);
-      await Share.shareXFiles([XFile(file.path)], text: 'نمودار $safeTitle');
-    } catch (_) {
-      if (mounted) await _alert('ساخت تصویر نمودار با خطا مواجه شد.');
+      await Share.shareXFiles([XFile(file.path)], text: 'نمودار ${_data.currentVariable ?? ''}');
+    } catch (e) {
+      if (mounted) await _alert('ساخت تصویر نمودار با خطا مواجه شد: $e');
     } finally {
       if (mounted) setState(() => _preparingExport = false);
     }
@@ -1113,6 +1126,12 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildBottomButtons(),
+                    // فاصله‌ی اضافیِ متناسب با ناحیه‌ی امنِ پایین گوشی؛ روی
+                    // بعضی گوشی‌های جدید (نوار حرکتی/گوشه‌های گرد) این ناحیه
+                    // به‌درستی توسط SafeArea گزارش نمی‌شود، پس این فاصله‌ی
+                    // اضافه باعث می‌شود دکمه‌ها همیشه با فاصله از لبه‌ی پایین
+                    // (به‌اندازه‌ی ارتفاع خودشان) بالاتر بیایند.
+                    SizedBox(height: MediaQuery.of(context).padding.bottom + 28),
                   ],
                 ),
               ),
