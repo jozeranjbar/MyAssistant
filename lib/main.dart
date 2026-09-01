@@ -71,15 +71,9 @@ class MyAssistantApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: Colors.lightBlue,
-<<<<<<< HEAD
         scaffoldBackgroundColor: const Color(0xFFC5DCEC),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFFC5DCEC),
-=======
-        scaffoldBackgroundColor: Colors.lightBlue.shade100,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.lightBlue.shade100,
->>>>>>> 175121676c68fb2b22cfa1d383a7e316706316d5
           elevation: 0,
           scrolledUnderElevation: 0,
         ),
