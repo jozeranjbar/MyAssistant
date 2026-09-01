@@ -4,6 +4,7 @@ import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import '../services/events_service.dart';
 import '../data/iranian_holidays.dart';
+import 'date_converter_screen.dart';
 
 String _toPersianDigits(String input) {
   const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -61,7 +62,7 @@ Future<Jalali?> showJalaliDatePicker(BuildContext context, {Jalali? initial}) {
           InputDecoration pickerDecoration() => InputDecoration(
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide.none,
@@ -121,7 +122,7 @@ Future<Jalali?> showJalaliDatePicker(BuildContext context, {Jalali? initial}) {
                             DropdownButtonFormField<int>(
                               isExpanded: true,
                               decoration: pickerDecoration(),
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepPurple, height: 1.4),
                               value: selectedDay,
                               items: List.generate(daysInMonth, (i) => i + 1)
                                   .map((d) => DropdownMenuItem(value: d, child: Text(_toPersianDigits(d.toString()))))
@@ -141,7 +142,7 @@ Future<Jalali?> showJalaliDatePicker(BuildContext context, {Jalali? initial}) {
                             DropdownButtonFormField<int>(
                               isExpanded: true,
                               decoration: pickerDecoration(),
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.pink),
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.pink, height: 1.4),
                               value: selectedMonth,
                               items: List.generate(12, (i) => i + 1)
                                   .map((m) => DropdownMenuItem(value: m, child: Text(Jalali(selectedYear, m, 1).formatter.mN)))
@@ -160,7 +161,7 @@ Future<Jalali?> showJalaliDatePicker(BuildContext context, {Jalali? initial}) {
                             DropdownButtonFormField<int>(
                               isExpanded: true,
                               decoration: pickerDecoration(),
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange.shade800),
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange.shade800, height: 1.4),
                               value: selectedYear,
                               items: List.generate(8, (i) => now.year - 1 + i)
                                   .map((y) => DropdownMenuItem(value: y, child: Text(_toPersianDigits(y.toString()))))
@@ -264,6 +265,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     selected: _mode == 'events',
                     onTap: () => setState(() => _mode = 'events'),
                   ),
+                  const SizedBox(width: 8),
+                  _ModeButton(
+                    label: 'تبدیل تاریخ',
+                    selected: false,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const DateConverterScreen()),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -312,8 +321,33 @@ class _ModeButton extends StatelessWidget {
 
 /// ------------------ نمای تقویم سال (۱۲ ماه) ------------------
 
-class _YearCalendarView extends StatelessWidget {
+class _YearCalendarView extends StatefulWidget {
   const _YearCalendarView();
+
+  @override
+  State<_YearCalendarView> createState() => _YearCalendarViewState();
+}
+
+class _YearCalendarViewState extends State<_YearCalendarView> {
+  final GlobalKey _todayKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    // بعد از رسم اولین فریم، به‌طور خودکار به سراغِ خانه‌ی «امروز» (سبزرنگ)
+    // اسکرول می‌کنیم؛ از آنجا کاربر خودش می‌تواند تقویم را بالا/پایین کند.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _todayKey.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOut,
+          alignment: 0.25,
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -331,7 +365,12 @@ class _YearCalendarView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        ...months.map((m) => _MonthBlock(year: today.year, month: m, today: today)),
+        ...months.map((m) => _MonthBlock(
+              year: today.year,
+              month: m,
+              today: today,
+              todayKey: m == today.month ? _todayKey : null,
+            )),
       ],
     );
   }
@@ -341,7 +380,8 @@ class _MonthBlock extends StatelessWidget {
   final int year;
   final int month;
   final Jalali today;
-  const _MonthBlock({required this.year, required this.month, required this.today});
+  final GlobalKey? todayKey;
+  const _MonthBlock({required this.year, required this.month, required this.today, this.todayKey});
 
   static const _weekdayHeaders = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج']; // شنبه تا جمعه
 
@@ -419,6 +459,7 @@ class _MonthBlock extends StatelessWidget {
                       : Colors.black87;
 
               return GestureDetector(
+                key: isToday ? todayKey : null,
                 onTap: () => _showDayDetail(context, jDate, gDate, hijri, holidayInfo),
                 child: Container(
                   decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
@@ -846,7 +887,7 @@ class _EventsListViewState extends State<_EventsListView> {
                 ),
           Positioned(
             right: 16,
-            bottom: 16,
+            bottom: MediaQuery.of(context).padding.bottom + 24,
             child: FloatingActionButton.extended(
               onPressed: _addEvent,
               icon: const Icon(Icons.add),
