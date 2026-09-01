@@ -14,6 +14,13 @@ String _toPersianDigits(String input) {
   return result;
 }
 
+/// ساعت را به‌صورت ۱۲ ساعتی همراه با قبل/بعدازظهر برمی‌گرداند (نه ۲۴ ساعتی).
+String _formatTime12(int hour, int minute) {
+  final h12 = hour % 12 == 0 ? 12 : hour % 12;
+  final period = hour < 12 ? 'ق.ظ' : 'ب.ظ';
+  return '${h12.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
+}
+
 class ReminderScreen extends StatefulWidget {
   const ReminderScreen({super.key});
 
@@ -277,7 +284,7 @@ class _ReminderCard extends StatelessWidget {
                 SizedBox(
                   width: 62,
                   child: Text(
-                    _toPersianDigits(reminder.timeLabel),
+                    _toPersianDigits(reminder.displayTimeLabel),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                   ),
@@ -522,8 +529,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
                         const Icon(Icons.access_time, color: Color(0xFF9775FA)),
                         const SizedBox(width: 8),
                         Text(
-                          _toPersianDigits(
-                              '${_time.hour.toString().padLeft(2, '0')}:${_time.minute.toString().padLeft(2, '0')}'),
+                          _toPersianDigits(_formatTime12(_time.hour, _time.minute)),
                           style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF9775FA)),
                         ),
