@@ -357,6 +357,8 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
   late final TextEditingController _intervalController;
   late TimeOfDay _time;
   late RepeatType _repeatType;
+  late bool _soundEnabled;
+  late bool _vibrationEnabled;
 
   bool get _isMed => widget.category == ReminderCategory.medication;
   Color get _color => _isMed ? const Color(0xFF1D4ED8) : const Color(0xFF20C997);
@@ -370,6 +372,8 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     _intervalController = TextEditingController(text: e?.repeatInterval?.toString() ?? '');
     _time = TimeOfDay(hour: e?.hour ?? 16, minute: e?.minute ?? 30);
     _repeatType = e?.repeatType ?? RepeatType.daily;
+    _soundEnabled = e?.soundEnabled ?? true;
+    _vibrationEnabled = e?.vibrationEnabled ?? true;
   }
 
   @override
@@ -413,6 +417,8 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
       createdAt: existing?.createdAt,
       lastFiredAt: existing?.lastFiredAt,
       lastFiredDate: existing?.lastFiredDate,
+      soundEnabled: _soundEnabled,
+      vibrationEnabled: _vibrationEnabled,
     );
 
     Navigator.of(context).pop(result);
@@ -524,6 +530,36 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
                       ],
                     ),
                   ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              _FieldLabel(text: 'نحوه‌ی اعلان', color: _color),
+              Container(
+                decoration: BoxDecoration(
+                  color: _color.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      value: _soundEnabled,
+                      onChanged: (v) => setState(() => _soundEnabled = v),
+                      activeColor: _color,
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('پخش صدا', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                      secondary: Icon(Icons.volume_up, color: _color),
+                    ),
+                    Divider(height: 1, color: _color.withOpacity(0.15)),
+                    SwitchListTile(
+                      value: _vibrationEnabled,
+                      onChanged: (v) => setState(() => _vibrationEnabled = v),
+                      activeColor: _color,
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('لرزش (ویبره)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                      secondary: Icon(Icons.vibration, color: _color),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 22),
