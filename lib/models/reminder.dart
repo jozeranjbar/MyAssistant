@@ -81,6 +81,8 @@ class Reminder {
   DateTime? lastFiredAt; // آخرین لحظه‌ی شلیک (برای «هر چند ساعت»)
   String? lastFiredDate; // yyyy-MM-dd، آخرین روزی که شلیک شده (برای انواع مبتنی بر ساعت مشخص)
   DateTime? nextFireAt; // فقط برای «یک‌بار»: لحظه‌ی دقیقی که قرار است شلیک شود
+  bool soundEnabled; // پخش صدا هنگام اعلان
+  bool vibrationEnabled; // لرزش هنگام اعلان
 
   Reminder({
     required this.id,
@@ -97,6 +99,8 @@ class Reminder {
     this.lastFiredAt,
     this.lastFiredDate,
     this.nextFireAt,
+    this.soundEnabled = true,
+    this.vibrationEnabled = true,
   }) : createdAt = createdAt ?? DateTime.now();
 
   String get timeLabel =>
@@ -148,6 +152,8 @@ class Reminder {
         'lastFiredAt': lastFiredAt?.toIso8601String(),
         'lastFiredDate': lastFiredDate,
         'nextFireAt': nextFireAt?.toIso8601String(),
+        'soundEnabled': soundEnabled,
+        'vibrationEnabled': vibrationEnabled,
       };
 
   factory Reminder.fromJson(Map<String, dynamic> json) => Reminder(
@@ -165,5 +171,9 @@ class Reminder {
         lastFiredAt: json['lastFiredAt'] != null ? DateTime.parse(json['lastFiredAt']) : null,
         lastFiredDate: json['lastFiredDate'],
         nextFireAt: json['nextFireAt'] != null ? DateTime.parse(json['nextFireAt']) : null,
+        // فیلدهای جدید؛ یادآوری‌های قدیمی‌ترِ ذخیره‌شده آن‌ها را ندارند، پس
+        // پیش‌فرض هردو «روشن» است (دقیقاً همان رفتاری که قبلاً بدون تنظیم داشتند)
+        soundEnabled: json['soundEnabled'] ?? true,
+        vibrationEnabled: json['vibrationEnabled'] ?? true,
       );
 }
