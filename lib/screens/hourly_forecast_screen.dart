@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import '../models/weather_location.dart';
 import '../models/weather_data.dart';
@@ -15,6 +14,13 @@ String _toPersianDigits(String input) {
 }
 
 const _weekdayNamesFa = ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه', 'یکشنبه'];
+
+/// ساعت را به‌صورت ۱۲ ساعتی همراه با قبل/بعدازظهر برمی‌گرداند (نه ۲۴ ساعتی).
+String _formatTime12(DateTime dt) {
+  final h12 = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+  final period = dt.hour < 12 ? 'ق.ظ' : 'ب.ظ';
+  return '${h12.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} $period';
+}
 
 /// یک گرادیانِ رنگی متناسب با ساعت روز (برای ظاهر رنگی و زیبای هر کارتِ ساعتی)
 LinearGradient _gradientForHour(int hour) {
@@ -124,7 +130,7 @@ class HourlyForecastScreen extends StatelessWidget {
                               SizedBox(
                                 width: 64,
                                 child: Text(
-                                  isNow ? 'اکنون' : _toPersianDigits(DateFormat('HH:mm').format(h.dateTime)),
+                                  isNow ? 'اکنون' : _toPersianDigits(_formatTime12(h.dateTime)),
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white),
                                 ),
                               ),
