@@ -7,10 +7,14 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.graphics.Paint
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
-import android.util.TypedValue
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 import java.text.SimpleDateFormat
@@ -22,38 +26,14 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
     /** سبک ظاهریِ یک متغیر: معمولی، بولد، یا ساعت (بولد + بزرگ‌تر + درخشان). */
     private enum class ItemStyle { REGULAR, BOLD, CLOCK }
 
-    /** یک متغیرِ منفرد که باید پشت سر بقیه‌ی متغیرهای همان گروه چیده شود. */
-    private data class FlowItem(val text: String, val color: Int, val baseSp: Float, val style: ItemStyle)
+    /** یک متغیرِ منفرد که باید پشت سر بقیه‌ی متغیرها در متنِ پیوسته چیده شود. */
+    private data class FlowItem(val text: String, val color: Int, val relativeSize: Float, val style: ItemStyle)
 
     companion object {
         private const val ACTION_TICK = "com.myassistant.app.WIDGET_TICK"
 
-        // عرض و ارتفاع مرجعی که فونت‌های پایه بر اساس آن‌ها طراحی شده‌اند
-        private const val BASE_WIDTH_DP = 320f
-        private const val BASE_HEIGHT_DP = 60f
-        private const val MIN_SCALE = 0.55f
-        // فونت هرگز از اندازه‌ی پایه بزرگ‌تر نمی‌شود؛ فقط برای ویجت‌های کوچک
-        // کوچک‌تر می‌شود. این کار از هم‌پوشانیِ متن‌ها در گوشی‌ها و لانچرهای
-        // مختلف (که گاهی اندازه‌ی واقعی ویجت را نادرست گزارش می‌کنند) جلوگیری
-        // می‌کند؛ فضای اضافیِ ویجت‌های بزرگ‌تر به‌جای بزرگ‌ترشدنِ فونت‌ها،
-        // صرفِ جا دادنِ متغیرهای بیشتر در هر ردیف (پیش از انتقال به ردیف بعد) می‌شود.
-        private const val MAX_SCALE = 1.0f
-
-        // فاصله‌ی افقی بین دو متغیرِ پشت سر هم (باید با layout_marginStart در
-        // widget_flow_item[_bold].xml یکی باشد تا اندازه‌گیریِ عرض دقیق بماند)
-        private const val ITEM_GAP_DP = 8f
-        // پدینگ چپ/راستِ ریشه‌ی ویجت (باید با paddingLeft/paddingRight در
-        // weather_clock_widget.xml یکی باشد)
-        private const val ROOT_PADDING_DP = 4f
-
-        fun updateAllWidgets(context: Context) {
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            val ids = appWidgetManager.getAppWidgetIds(ComponentName(context, WeatherClockWidgetProvider::class.java))
-            if (ids.isNotEmpty()) {
-                val provider = WeatherClockWidgetProvider()
-                provider.onUpdate(context, appWidgetManager, ids)
-            }
-        }
+        // اندازه‌ی پایه‌ی فونت متن (بر حسب sp) که بقیه‌ی اندازه‌ها نسبت به آن محاسبه می‌شوند
+        private const val BASE_TEXT_SIZE_SP = 14f
 
         private fun buildTickPendingIntent(context: Context): PendingIntent {
             val intent = Intent(context, WeatherClockWidgetProvider::class.java).apply {
@@ -95,105 +75,56 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    /**
-     * متغیرهای دریافتی را به‌ترتیب، پشت سر هم اندازه می‌گیرد و به ردیف‌هایی
-     * تقسیم می‌کند که هرکدام در عرضِ واقعیِ ویجت جا می‌شوند؛ به‌محض اینکه
-     * متغیرِ بعدی در ردیفِ جاری جا نشود (از جمله وقتی این اتفاق برای آخرین
-     * متغیر بیفتد)، همان و بقیه‌ی متغیرها به ردیف بعدی منتقل می‌شوند. هیچ
-     * متغیری هرگز بریده (ellipsize) نمی‌شود.
-     */
-    private fun packIntoLines(context: Context, items: List<FlowItem>, maxWidthPx: Float): List<List<FlowItem>> {
-        val metrics = context.resources.displayMetrics
-        val gapPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, ITEM_GAP_DP, metrics)
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-
-        val lines = mutableListOf<MutableList<FlowItem>>()
-        var current = mutableListOf<FlowItem>()
-        var currentWidth = 0f
-
-        for (item in items) {
-            paint.textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, item.baseSp, metrics)
-            paint.isFakeBoldText = item.style != ItemStyle.REGULAR
-            val itemWidth = gapPx + paint.measureText(item.text)
-            if (current.isNotEmpty() && currentWidth + itemWidth > maxWidthPx) {
-                lines.add(current)
-                current = mutableListOf()
-                currentWidth = 0f
+    /** یک گروه از متغیرها را به یک متنِ پیوسته (با جداکننده «•») تبدیل می‌کند و به انتهای builder اضافه می‌کند. */
+    private fun appendGroup(builder: SpannableStringBuilder, items: List<FlowItem>) {
+        for ((index, item) in items.withIndex()) {
+            if (builder.isNotEmpty()) builder.append("  •  ")
+            val start = builder.length
+            builder.append(item.text)
+            val end = builder.length
+            builder.setSpan(ForegroundColorSpan(item.color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            builder.setSpan(RelativeSizeSpan(item.relativeSize), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            if (item.style != ItemStyle.REGULAR) {
+                builder.setSpan(StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
-            current.add(item)
-            currentWidth += itemWidth
-        }
-        if (current.isNotEmpty()) lines.add(current)
-        return lines
-    }
-
-    /** ردیف‌های ساخته‌شده از یک گروه از متغیرها را داخل ویو-گروهِ مقصد اضافه می‌کند. */
-    private fun appendFlowGroup(context: Context, container: RemoteViews, containerId: Int, lines: List<List<FlowItem>>) {
-        for (line in lines) {
-            val rowViews = RemoteViews(context.packageName, R.layout.widget_flow_row)
-            for (item in line) {
-                val layoutRes = when (item.style) {
-                    ItemStyle.CLOCK -> R.layout.widget_flow_item_clock
-                    ItemStyle.BOLD -> R.layout.widget_flow_item_bold
-                    ItemStyle.REGULAR -> R.layout.widget_flow_item
-                }
-                val itemViews = RemoteViews(context.packageName, layoutRes)
-                itemViews.setTextViewText(R.id.flow_text, item.text)
-                itemViews.setTextColor(R.id.flow_text, item.color)
-                itemViews.setTextViewTextSize(R.id.flow_text, TypedValue.COMPLEX_UNIT_SP, item.baseSp)
-                rowViews.addView(R.id.widget_flow_row, itemViews)
-            }
-            container.addView(containerId, rowViews)
         }
     }
 
-    /** ساخت کاملِ RemoteViews: متن‌های فعلی را می‌خواند، اندازه‌گیری می‌کند و به ردیف‌های چیدمانی تبدیل می‌کند. */
+    /** ساخت کاملِ RemoteViews: متن‌های فعلی را می‌خواند و به یک متنِ رنگی و پیوسته تبدیل می‌کند. */
     private fun buildViews(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int): RemoteViews {
         val widgetData = HomeWidgetPlugin.getData(context)
         val views = RemoteViews(context.packageName, R.layout.weather_clock_widget)
 
-        val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
-        val minWidthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, BASE_WIDTH_DP.toInt())
-        val minHeightDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, BASE_HEIGHT_DP.toInt())
-
-        val widthScale = minWidthDp / BASE_WIDTH_DP
-        val heightScale = minHeightDp / BASE_HEIGHT_DP
-        // هر کدام از عرض/ارتفاع که رشد کمتری داشته، مقیاس نهایی را تعیین می‌کند.
-        var scale = if (widthScale < heightScale) widthScale else heightScale
-        if (scale < MIN_SCALE) scale = MIN_SCALE
-        if (scale > MAX_SCALE) scale = MAX_SCALE
-
-        val metrics = context.resources.displayMetrics
-        val rootPaddingPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, ROOT_PADDING_DP * 2, metrics)
-        val widthPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, minWidthDp.toFloat(), metrics)
-        val maxWidthPx = (widthPx - rootPaddingPx).coerceAtLeast(1f)
-
-        // گروه ۰ (اول از همه، جدا از بقیه، در ردیف خودش): ساعت — بزرگ‌تر و با
-        // رنگی درخشان‌تر از بقیه‌ی متغیرها (جزئیاتِ درخشش در
-        // widget_flow_item_clock.xml تعریف شده است)
+        // گروه ۰: ساعت — بزرگ‌تر و با رنگی درخشان‌تر از بقیه‌ی متغیرها
         val group0 = listOf(
-            FlowItem(currentTimeText(), 0xFF00E5FF.toInt(), 32f * scale, ItemStyle.CLOCK),
+            FlowItem(currentTimeText(), 0xFF00E5FF.toInt(), 1.7f, ItemStyle.CLOCK),
         )
 
-        // گروه ۱ (همان ترتیبِ قبلی، بدون ساعت): یادآوری، شهر، دما، ابر
+        // گروه ۱: یادآوری، شهر، دما، ابر
         val group1 = listOf(
-            FlowItem(widgetData.getString("reminder_text", "0 یادآوری") ?: "0 یادآوری", 0xFFFFD54F.toInt(), 12f * scale, ItemStyle.BOLD),
-            FlowItem(widgetData.getString("city_name", "—") ?: "—", 0xFF8ED8FF.toInt(), 13f * scale, ItemStyle.BOLD),
-            FlowItem(widgetData.getString("temperature", "--") ?: "--", 0xFF8ED8FF.toInt(), 18f * scale, ItemStyle.BOLD),
-            FlowItem(widgetData.getString("weather_emoji", "🌤️") ?: "🌤️", 0xFF8ED8FF.toInt(), 20f * scale, ItemStyle.REGULAR),
+            FlowItem(widgetData.getString("reminder_text", "0 یادآوری") ?: "0 یادآوری", 0xFFFFD54F.toInt(), 0.9f, ItemStyle.BOLD),
+            FlowItem(widgetData.getString("city_name", "—") ?: "—", 0xFF8ED8FF.toInt(), 1.0f, ItemStyle.BOLD),
+            FlowItem(widgetData.getString("temperature", "--") ?: "--", 0xFF8ED8FF.toInt(), 1.3f, ItemStyle.BOLD),
+            FlowItem(widgetData.getString("weather_emoji", "🌤️") ?: "🌤️", 0xFF8ED8FF.toInt(), 1.4f, ItemStyle.REGULAR),
         )
 
-        // گروه ۲ (همان ترتیبِ قبلی): تاریخ میلادی، تاریخ قمری، روز هفته، تاریخ شمسی
+        // گروه ۲: تاریخ میلادی، تاریخ قمری، روز هفته، تاریخ شمسی
         val group2 = listOf(
-            FlowItem(widgetData.getString("date_gregorian", "—") ?: "—", 0xFF000000.toInt(), 11f * scale, ItemStyle.REGULAR),
-            FlowItem(widgetData.getString("date_hijri", "—") ?: "—", 0xFF000000.toInt(), 11f * scale, ItemStyle.REGULAR),
-            FlowItem(widgetData.getString("weekday_text", "—") ?: "—", 0xFF1B5E20.toInt(), 11f * scale, ItemStyle.BOLD),
-            FlowItem(widgetData.getString("date_shamsi", "—") ?: "—", 0xFF000000.toInt(), 11f * scale, ItemStyle.REGULAR),
+            FlowItem(widgetData.getString("date_gregorian", "—") ?: "—", 0xFFFFFFFF.toInt(), 0.8f, ItemStyle.REGULAR),
+            FlowItem(widgetData.getString("date_hijri", "—") ?: "—", 0xFFFFFFFF.toInt(), 0.8f, ItemStyle.REGULAR),
+            FlowItem(widgetData.getString("weekday_text", "—") ?: "—", 0xFFA5D6A7.toInt(), 0.8f, ItemStyle.BOLD),
+            FlowItem(widgetData.getString("date_shamsi", "—") ?: "—", 0xFFFFFFFF.toInt(), 0.8f, ItemStyle.REGULAR),
         )
 
-        appendFlowGroup(context, views, R.id.widget_flow_group0, packIntoLines(context, group0, maxWidthPx))
-        appendFlowGroup(context, views, R.id.widget_flow_group1, packIntoLines(context, group1, maxWidthPx))
-        appendFlowGroup(context, views, R.id.widget_flow_group2, packIntoLines(context, group2, maxWidthPx))
+        val builder = SpannableStringBuilder()
+        appendGroup(builder, group0)
+        if (builder.isNotEmpty()) builder.append("\n")
+        appendGroup(builder, group1)
+        if (builder.isNotEmpty()) builder.append("  •  ")
+        appendGroup(builder, group2)
+
+        views.setTextViewText(R.id.widget_content, builder)
+        views.setTextViewTextSize(R.id.widget_content, android.util.TypedValue.COMPLEX_UNIT_SP, BASE_TEXT_SIZE_SP)
 
         return views
     }
@@ -218,18 +149,15 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         newOptions: Bundle,
     ) {
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-        // وقتی کاربر اندازه‌ی ویجت را تغییر می‌دهد، چیدمان و فونت‌ها دوباره
-        // متناسب با عرض/ارتفاع جدید بازسازی می‌شوند.
+        // وقتی کاربر اندازه‌ی ویجت را تغییر می‌دهد، چیدمان دوباره بازسازی می‌شود.
         updateOneWidget(context, appWidgetManager, appWidgetId)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (intent.action == ACTION_TICK) {
-            // چون ساعت هم یکی از متغیرهای همان چیدمانِ پویاست (نه یک View با
-            // شناسه‌ی ثابت)، برای تیکِ هر دقیقه هم کل چیدمان با
-            // updateOneWidget بازسازی می‌شود؛ برای این ویجتِ سبک، هزینه‌ی این
-            // کار ناچیز است.
+            // چون ساعت هم یکی از متغیرهای همان متنِ پویاست، برای تیکِ هر دقیقه
+            // هم کل محتوا با updateOneWidget بازسازی می‌شود.
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val ids = appWidgetManager.getAppWidgetIds(ComponentName(context, WeatherClockWidgetProvider::class.java))
             for (appWidgetId in ids) {
