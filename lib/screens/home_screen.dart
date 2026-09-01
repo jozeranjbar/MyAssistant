@@ -16,6 +16,7 @@ import '../data/iranian_holidays.dart';
 import '../widgets/weather_card.dart';
 import 'weather_settings_screen.dart';
 import 'ten_day_forecast_screen.dart';
+import 'hourly_forecast_screen.dart';
 import 'chart_maker_screen.dart';
 import 'calendar_screen.dart';
 import 'reminder_screen.dart';
@@ -155,6 +156,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _openHourlyForecast(WeatherLocation loc) async {
+    final data = _weatherByLocation[loc.id];
+    if (data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('هنوز اطلاعاتی برای این لوکیشن ذخیره نشده است. لطفاً یک بار با اینترنت وصل شوید.')),
+      );
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => HourlyForecastScreen(location: loc, data: data)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -257,6 +271,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                       elevated: true,
                                       showArrow: false,
                                     ),
+                                    const SizedBox(height: 8),
+                                    _NavButton(
+                                      icon: Icons.access_time,
+                                      richLabel: RichText(
+                                        textAlign: TextAlign.right,
+                                        text: TextSpan(
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.indigo.shade900,
+                                          ),
+                                          children: [
+                                            const TextSpan(text: 'وضعیت هوای ساعتی '),
+                                            TextSpan(
+                                              text: loc.name,
+                                              style: const TextStyle(color: _kBrownCity, fontWeight: FontWeight.w900),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      onTap: () => _openHourlyForecast(loc),
+                                      backgroundColor: Colors.indigo.shade50,
+                                      foregroundColor: Colors.indigo.shade900,
+                                      borderColor: const Color(0xFFE6E7FA),
+                                      elevated: true,
+                                      showArrow: false,
+                                    ),
                                   ],
                                 )),
                           const SizedBox(height: 8),
@@ -309,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             icon: Icons.settings,
                             borderColor: const Color(0xFFF6EDFA),
                             elevated: true,
-                            label: 'تنظیم مناسبت‌ها و مشاهده تقویم کامل',
+                            label: 'تنظیمات و مشاهده تقویم سال',
                             onTap: () async {
                               await Navigator.of(context).push(
                                 MaterialPageRoute(builder: (_) => const CalendarScreen()),
