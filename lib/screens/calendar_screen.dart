@@ -71,25 +71,31 @@ Future<Jalali?> showJalaliDatePicker(BuildContext context, {Jalali? initial}) {
           return Dialog(
             insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFE1D3FF), Color(0xFFFFE0EE), Color(0xFFFFF3D6)],
+            child: ConstrainedBox(
+              // حداکثر ارتفاعِ دیالوگ محدود به ارتفاعِ واقعیِ صفحه می‌شود تا در
+              // گوشی‌های با صفحه‌ی کوتاه‌تر، هیچ بخشی (مثلاً نام ماه) بریده
+              // نشود؛ اگر باز هم جا نشد، خودِ محتوا اسکرول می‌شود.
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.88),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(28),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFE1D3FF), Color(0xFFFFE0EE), Color(0xFFFFF3D6)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(color: Colors.deepPurple.withOpacity(0.25), blurRadius: 24, offset: const Offset(0, 10)),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(color: Colors.deepPurple.withOpacity(0.25), blurRadius: 24, offset: const Offset(0, 10)),
-                ],
-              ),
-              padding: const EdgeInsets.fromLTRB(22, 26, 22, 22),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
+                padding: const EdgeInsets.fromLTRB(22, 26, 22, 22),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
@@ -208,11 +214,13 @@ Future<Jalali?> showJalaliDatePicker(BuildContext context, {Jalali? initial}) {
                 ],
               ),
             ),
-          );
-        },
+          ),
+        ),
       );
     },
   );
+},
+);
 }
 
 class CalendarScreen extends StatefulWidget {
