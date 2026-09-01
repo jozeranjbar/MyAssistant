@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzdata;
@@ -44,11 +45,24 @@ class NotificationService {
     _initialized = true;
   }
 
-  String _channelId(Reminder r) =>
-      r.category == ReminderCategory.medication ? 'reminders_med_channel' : 'reminders_daily_channel';
+  /// شناسه‌ی کانال بر اساس دسته + ترکیب صدا/لرزش ساخته می‌شود، چون در
+  /// اندروید ۸ به بعد، تنظیمات صدا/لرزشِ یک کانال فقط در اولین بار ساختنش
+  /// قابل تعیین است و بعدش دیگر قابل تغییر برنامه‌ای نیست؛ پس هر ترکیب باید
+  /// کانال مخصوص به خودش را داشته باشد.
+  String _channelId(Reminder r) {
+    final base = r.category == ReminderCategory.medication ? 'reminders_med' : 'reminders_daily';
+    final soundPart = r.soundEnabled ? 'snd' : 'nosnd';
+    final vibratePart = r.vibrationEnabled ? 'vib' : 'novib';
+    return '${base}_${soundPart}_${vibratePart}_channel';
+  }
 
-  String _channelName(Reminder r) =>
-      r.category == ReminderCategory.medication ? 'یادآوری داروها' : 'یادآوری‌های روزمره';
+  String _channelName(Reminder r) {
+    final categoryLabel = r.category == ReminderCategory.medication ? 'یادآوری داروها' : 'یادآوری‌های روزمره';
+    final parts = <String>[];
+    parts.add(r.soundEnabled ? 'با صدا' : 'بی‌صدا');
+    parts.add(r.vibrationEnabled ? 'با لرزش' : 'بی‌لرزش');
+    return '$categoryLabel (${parts.join(' - ')})';
+  }
 
   String _bodyFor(Reminder r) {
     if (r.category == ReminderCategory.medication) {
@@ -69,10 +83,13 @@ class NotificationService {
       channelDescription: 'اعلان‌های یادآوری MyAssistant',
       importance: Importance.max,
       priority: Priority.high,
+      playSound: reminder.soundEnabled,
+      enableVibration: reminder.vibrationEnabled,
+      vibrationPattern: reminder.vibrationEnabled ? Int64List.fromList([0, 400, 250, 400]) : null,
     );
     final details = NotificationDetails(
       android: androidDetails,
-      iOS: const DarwinNotificationDetails(),
+      iOS: DarwinNotificationDetails(presentSound: reminder.soundEnabled),
     );
 
     await _plugin.zonedSchedule(
