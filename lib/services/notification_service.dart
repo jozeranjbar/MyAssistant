@@ -92,13 +92,25 @@ class NotificationService {
       iOS: DarwinNotificationDetails(presentSound: reminder.soundEnabled),
     );
 
+    // اگر گوشی مجوز «هشدار دقیق» (Alarms & reminders) را به برنامه نداده
+    // باشد، حالت exactAllowWhileIdle بی‌سروصدا رد می‌شود و هیچ اعلانی هرگز
+    // شلیک نمی‌شود. به‌جای آن، ابتدا وضعیت مجوز چک می‌شود؛ اگر داده نشده،
+    // با حالت غیردقیق زمان‌بندی می‌کنیم تا لااقل با کمی تاخیر (معمولاً چند
+    // دقیقه، به‌دست خودِ سیستم‌عامل) اعلان برسد، به‌جای اینکه اصلاً نیاید.
+    final androidImpl = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    final canExact = await androidImpl?.canScheduleExactNotifications() ?? true;
+    final scheduleMode = canExact
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
+
     await _plugin.zonedSchedule(
       reminder.id,
       reminder.title,
       _bodyFor(reminder),
       scheduledDate,
       details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: scheduleMode,
       matchDateTimeComponents: reminder.repeatType == RepeatType.daily ? DateTimeComponents.time : null,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
