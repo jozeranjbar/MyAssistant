@@ -5,16 +5,7 @@ import 'package:intl/intl.dart';
 import '../services/events_service.dart';
 import '../data/iranian_holidays.dart';
 import 'date_converter_screen.dart';
-
-String _toPersianDigits(String input) {
-  const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  var result = input;
-  for (var i = 0; i < western.length; i++) {
-    result = result.replaceAll(western[i], persian[i]);
-  }
-  return result;
-}
+import '../utils/persian_numbers.dart';
 
 /// اطلاعات تعطیلی یک روز مشخص شمسی (بررسی جمعه، تعطیلات شمسی و قمری)
 class _HolidayInfo {
@@ -125,7 +116,7 @@ Future<Jalali?> showJalaliDatePicker(BuildContext context, {Jalali? initial}) {
                               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepPurple, height: 1.4),
                               value: selectedDay,
                               items: List.generate(daysInMonth, (i) => i + 1)
-                                  .map((d) => DropdownMenuItem(value: d, child: Text(_toPersianDigits(d.toString()))))
+                                  .map((d) => DropdownMenuItem(value: d, child: Text(toPersianDigits(d.toString()))))
                                   .toList(),
                               onChanged: (v) => setModalState(() => selectedDay = v!),
                             ),
@@ -164,7 +155,7 @@ Future<Jalali?> showJalaliDatePicker(BuildContext context, {Jalali? initial}) {
                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange.shade800, height: 1.4),
                               value: selectedYear,
                               items: List.generate(8, (i) => now.year - 1 + i)
-                                  .map((y) => DropdownMenuItem(value: y, child: Text(_toPersianDigits(y.toString()))))
+                                  .map((y) => DropdownMenuItem(value: y, child: Text(toPersianDigits(y.toString()))))
                                   .toList(),
                               onChanged: (v) => setModalState(() => selectedYear = v!),
                             ),
@@ -405,7 +396,7 @@ class _MonthBlock extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Text(
-                '${firstOfMonth.formatter.mN} ${_toPersianDigits(year.toString())}',
+                '${firstOfMonth.formatter.mN} ${toPersianDigits(year.toString())}',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
               ),
@@ -472,14 +463,14 @@ class _MonthBlock extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          _toPersianDigits(day.toString()),
+                          toPersianDigits(day.toString()),
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: fg),
                         ),
                         const SizedBox(height: 1),
                         Text(DateFormat('MMM d').format(gDate),
                             style: TextStyle(fontSize: 10, color: fg.withOpacity(0.8))),
                         Text(
-                          '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]}',
+                          '${toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]}',
                           style: TextStyle(fontSize: 10, color: fg.withOpacity(0.8)),
                         ),
                       ],
@@ -540,7 +531,7 @@ class _MonthBlock extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  'شمسی: ${_toPersianDigits(jDate.day.toString())} ${jDate.formatter.mN} ${_toPersianDigits(jDate.year.toString())}',
+                  'شمسی: ${toPersianDigits(jDate.day.toString())} ${jDate.formatter.mN} ${toPersianDigits(jDate.year.toString())}',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.blue.shade800),
                 ),
                 const SizedBox(height: 6),
@@ -548,7 +539,7 @@ class _MonthBlock extends StatelessWidget {
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.teal.shade700)),
                 const SizedBox(height: 6),
                 Text(
-                  'قمری: ${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]} ${_toPersianDigits(hijri.hYear.toString())}',
+                  'قمری: ${toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]} ${toPersianDigits(hijri.hYear.toString())}',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.orange.shade800),
                 ),
                 Divider(height: 26, color: Colors.deepPurple.shade100),
@@ -717,7 +708,7 @@ class _EventsListViewState extends State<_EventsListView> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      '📅 شمسی: ${_toPersianDigits(jPicked.day.toString())} ${jPicked.formatter.mN} ${_toPersianDigits(jPicked.year.toString())}',
+                      '📅 شمسی: ${toPersianDigits(jPicked.day.toString())} ${jPicked.formatter.mN} ${toPersianDigits(jPicked.year.toString())}',
                       style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Colors.blue.shade800),
                     ),
                     const SizedBox(height: 10),
@@ -725,7 +716,7 @@ class _EventsListViewState extends State<_EventsListView> {
                         style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.teal.shade700)),
                     const SizedBox(height: 10),
                     Text(
-                      '🌙 قمری: ${_toPersianDigits(hPicked.hDay.toString())} ${hijriMonthNamesFa[hPicked.hMonth - 1]} ${_toPersianDigits(hPicked.hYear.toString())}',
+                      '🌙 قمری: ${toPersianDigits(hPicked.hDay.toString())} ${hijriMonthNamesFa[hPicked.hMonth - 1]} ${toPersianDigits(hPicked.hYear.toString())}',
                       style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.orange.shade800),
                     ),
                   ],
@@ -857,7 +848,7 @@ class _EventsListViewState extends State<_EventsListView> {
                             color: e.isPublic ? Colors.grey : Colors.purple),
                         title: Text(e.title, style: TextStyle(fontWeight: isJustAdded ? FontWeight.bold : FontWeight.normal)),
                         subtitle: Text(
-                            '${_toPersianDigits(e.day.toString())} ${Jalali(1400, e.month, 1).formatter.mN}${e.year != null ? ' ${_toPersianDigits(e.year.toString())}' : ''}'),
+                            '${toPersianDigits(e.day.toString())} ${Jalali(1400, e.month, 1).formatter.mN}${e.year != null ? ' ${toPersianDigits(e.year.toString())}' : ''}'),
                         trailing: isJustAdded
                             ? Row(
                                 mainAxisSize: MainAxisSize.min,
