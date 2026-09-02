@@ -105,7 +105,7 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         val darkBlueColor = 0xFF0D47A1.toInt() // آبی غلیظ (شهر/دما/وضعیت آسمان)
         val reminderColor = 0xFFFFD54F.toInt() // زرد (یادآوری)
         val darkGreenColor = 0xFF1B5E20.toInt() // سبز غلیظ (روز هفته)
-        val dateColor = 0xFFFFFFFF.toInt() // سفید (تاریخ‌های شمسی/قمری/میلادی)
+        val dateColor = 0xFF000000.toInt() // سیاه (تاریخ‌های شمسی/قمری/میلادی)
 
         val clock = FlowItem(currentTimeText(), goldColor, 30f / BASE_TEXT_SIZE_SP, ItemStyle.CLOCK)
         val city = FlowItem(widgetData.getString("city_name", "—") ?: "—", darkBlueColor, 1.0f, ItemStyle.BOLD)
@@ -188,14 +188,11 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
     }
 
     private fun currentTimeText(): String {
-        // اعداد انگلیسی (بدون تبدیل به فارسی)، اما به‌صورت ۱۲ ساعتی همراه با
-        // قبل/بعدازظهر — همسو با بقیه‌ی برنامه که دیگر ۲۴ ساعتی نیست.
+        // اعداد انگلیسی (بدون تبدیل به فارسی)، به‌صورت ۲۴ ساعتی.
         val calendar = Calendar.getInstance()
         val hour24 = calendar.get(Calendar.HOUR_OF_DAY)
         val minute = calendar.get(Calendar.MINUTE)
-        val hour12 = if (hour24 % 12 == 0) 12 else hour24 % 12
-        val period = if (hour24 < 12) "ق.ظ" else "ب.ظ"
-        return String.format(Locale.US, "%d:%02d %s", hour12, minute, period)
+        return String.format(Locale.US, "%02d:%02d", hour24, minute)
     }
 
     override fun onEnabled(context: Context) {
