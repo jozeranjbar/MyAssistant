@@ -2,18 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import '../models/weather_location.dart';
 import '../models/weather_data.dart';
-
-String _toPersianDigits(String input) {
-  const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  var result = input;
-  for (var i = 0; i < western.length; i++) {
-    result = result.replaceAll(western[i], persian[i]);
-  }
-  return result;
-}
-
-const _weekdayNamesFa = ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه', 'یکشنبه'];
+import '../data/iranian_holidays.dart';
+import '../utils/persian_numbers.dart';
 
 /// صفحه‌ی وضعیت ده روز آینده آب‌وهوا (از فردا شروع می‌شود)
 class TenDayForecastScreen extends StatelessWidget {
@@ -62,9 +52,9 @@ class TenDayForecastScreen extends StatelessWidget {
                 separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final f = days[index];
-                  final weekday = _weekdayNamesFa[f.date.weekday - 1];
+                  final weekday = gregorianWeekdayNamesFa[f.date.weekday - 1];
                   final jalali = Jalali.fromDateTime(f.date);
-                  final dateStr = '${_toPersianDigits(jalali.day.toString())} ${jalali.formatter.mN}';
+                  final dateStr = '${toPersianDigits(jalali.day.toString())} ${jalali.formatter.mN}';
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
@@ -92,26 +82,26 @@ class TenDayForecastScreen extends StatelessWidget {
                             ],
                           ),
                           Text(
-                            '${_toPersianDigits(f.minTemp.round().toString())}°/${_toPersianDigits(f.maxTemp.round().toString())}°',
+                            '${toPersianDigits(f.minTemp.round().toString())}°/${toPersianDigits(f.maxTemp.round().toString())}°',
                             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.brown.shade700),
                           ),
                           _DayStatChip(
                             icon: Icons.grain,
                             color: Colors.blue,
                             label: 'بارش',
-                            value: '${_toPersianDigits(f.precipitationProbability.toString())}%',
+                            value: '${toPersianDigits(f.precipitationProbability.toString())}%',
                           ),
                           _DayStatChip(
                             icon: Icons.water_drop,
                             color: Colors.blue,
                             label: 'رطوبت',
-                            value: '${_toPersianDigits(f.humidity.toString())}%',
+                            value: '${toPersianDigits(f.humidity.toString())}%',
                           ),
                           _DayStatChip(
                             icon: Icons.wb_sunny,
                             color: Colors.orange,
                             label: 'UV',
-                            value: _toPersianDigits(f.uvIndex.round().toString()),
+                            value: toPersianDigits(f.uvIndex.round().toString()),
                           ),
                         ],
                       ),
