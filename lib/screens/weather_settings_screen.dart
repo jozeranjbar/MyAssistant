@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/weather_location.dart';
 import '../services/location_storage_service.dart';
 import '../data/iran_locations.dart';
+import '../utils/persian_numbers.dart';
 
 // رنگ‌های اصلی طرح جدید (گرادیانت فیروزه‌ای/نعنایی و دکمه‌های آبی-نارنجی)
 const _kBgGradient = LinearGradient(
@@ -39,23 +40,11 @@ const _kBrownCity = Color(0xFF6D4C29);
 const _kGreenBorder = Color(0xFF66BB6A);
 const _kGreenShadowColor = Color(0xFF2E7D32);
 
-/// ارقام فارسی/عربی را به معادل انگلیسی تبدیل می‌کند (برای پردازش داخلی).
-String _normalizeDigitsToAscii(String input) {
-  const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-  var result = input;
-  for (var i = 0; i < 10; i++) {
-    result = result.replaceAll(persian[i], i.toString());
-    result = result.replaceAll(arabic[i], i.toString());
-  }
-  return result;
-}
-
 /// مقدار طول/عرض جغرافیایی را از چند شیوه‌ی نوشتاریِ مختلف می‌خواند، چون
 /// کیبورد عددیِ خیلی از گوشی‌ها کلید «منفی» ندارد: «-92.567»، «منفی92.567»،
 /// «_92.567» یا حرف جهت در انتها («92.567S» یا «92.567W» یعنی منفی).
 double? _parseCoordinate(String raw) {
-  var s = _normalizeDigitsToAscii(raw.trim());
+  var s = normalizeDigitsToAscii(raw.trim());
   if (s.isEmpty) return null;
 
   var negative = s.contains('منفی') || s.startsWith('-') || s.startsWith('_');
