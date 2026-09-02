@@ -1,30 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shamsi_date/shamsi_date.dart';
-
-String _toPersianDigits(String input) {
-  const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  var result = input;
-  for (var i = 0; i < western.length; i++) {
-    result = result.replaceAll(western[i], persian[i]);
-  }
-  return result;
-}
-
-const _gregorianMonthNamesFa = [
-  'ژانویه',
-  'فوریه',
-  'مارس',
-  'آوریل',
-  'مه',
-  'ژوئن',
-  'ژوئیه',
-  'اوت',
-  'سپتامبر',
-  'اکتبر',
-  'نوامبر',
-  'دسامبر',
-];
+import '../data/iranian_holidays.dart';
+import '../utils/persian_numbers.dart';
 
 /// صفحه‌ی «تبدیل تاریخ»: با دو کلید بین «شمسی ← میلادی» و «میلادی ← شمسی»
 /// جابه‌جا می‌شود؛ با انتخاب تاریخ از فیلدهای کشویی، نتیجه‌ی تبدیل بلافاصله
@@ -130,7 +107,7 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
     if (_jDay > daysInMonth) _jDay = daysInMonth;
     final gregorian = Jalali(_jYear, _jMonth, _jDay).toDateTime();
     final resultText =
-        '${_toPersianDigits(gregorian.day.toString())} ${_gregorianMonthNamesFa[gregorian.month - 1]} ${_toPersianDigits(gregorian.year.toString())}';
+        '${toPersianDigits(gregorian.day.toString())} ${gregorianMonthNamesFa[gregorian.month - 1]} ${toPersianDigits(gregorian.year.toString())}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -148,7 +125,7 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepPurple, height: 1.4),
                 value: _jDay,
                 items: List.generate(daysInMonth, (i) => i + 1)
-                    .map((d) => DropdownMenuItem(value: d, child: Text(_toPersianDigits(d.toString()))))
+                    .map((d) => DropdownMenuItem(value: d, child: Text(toPersianDigits(d.toString()))))
                     .toList(),
                 onChanged: (v) => setState(() => _jDay = v!),
               ),
@@ -175,7 +152,7 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange.shade800, height: 1.4),
                 value: _jYear,
                 items: List.generate(30, (i) => _jYear - 15 + i)
-                    .map((y) => DropdownMenuItem(value: y, child: Text(_toPersianDigits(y.toString()))))
+                    .map((y) => DropdownMenuItem(value: y, child: Text(toPersianDigits(y.toString()))))
                     .toList(),
                 onChanged: (v) => setState(() => _jYear = v!),
               ),
@@ -193,7 +170,7 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
     if (_gDay > daysInMonth) _gDay = daysInMonth;
     final jalali = Jalali.fromDateTime(DateTime(_gYear, _gMonth, _gDay));
     final resultText =
-        '${_toPersianDigits(jalali.day.toString())} ${jalali.formatter.mN} ${_toPersianDigits(jalali.year.toString())}';
+        '${toPersianDigits(jalali.day.toString())} ${jalali.formatter.mN} ${toPersianDigits(jalali.year.toString())}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -211,7 +188,7 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepPurple, height: 1.4),
                 value: _gDay,
                 items: List.generate(daysInMonth, (i) => i + 1)
-                    .map((d) => DropdownMenuItem(value: d, child: Text(_toPersianDigits(d.toString()))))
+                    .map((d) => DropdownMenuItem(value: d, child: Text(toPersianDigits(d.toString()))))
                     .toList(),
                 onChanged: (v) => setState(() => _gDay = v!),
               ),
@@ -225,7 +202,7 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.pink, height: 1.4),
                 value: _gMonth,
                 items: List.generate(12, (i) => i + 1)
-                    .map((m) => DropdownMenuItem(value: m, child: Text(_gregorianMonthNamesFa[m - 1])))
+                    .map((m) => DropdownMenuItem(value: m, child: Text(gregorianMonthNamesFa[m - 1])))
                     .toList(),
                 onChanged: (v) => setState(() => _gMonth = v!),
               ),
@@ -238,7 +215,7 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange.shade800, height: 1.4),
                 value: _gYear,
                 items: List.generate(30, (i) => _gYear - 15 + i)
-                    .map((y) => DropdownMenuItem(value: y, child: Text(_toPersianDigits(y.toString()))))
+                    .map((y) => DropdownMenuItem(value: y, child: Text(toPersianDigits(y.toString()))))
                     .toList(),
                 onChanged: (v) => setState(() => _gYear = v!),
               ),
