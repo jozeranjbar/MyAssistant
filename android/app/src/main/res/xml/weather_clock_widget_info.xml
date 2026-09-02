@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  اندازه‌ی پیش‌فرض: ۳ ستون × ۱ ردیف (targetCellWidth/Height، اندروید ۸ به بعد).
+  اندازه‌ی پیش‌فرض: ۴ ستون × ۱ ردیف (targetCellWidth/Height، اندروید ۱۲ به بعد).
   minWidth/minHeight = اندازه‌ی ۱ ستون × ۱ ردیف، یعنی کاربر می‌تواند ویجت را
   تا همین حداقل کوچک کند.
   maxResizeHeight = اندازه‌ی ۳ ردیف (سقفِ بزرگ‌شدنِ ارتفاع)، اندروید ۱۲ به بعد.
@@ -9,7 +9,7 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="40dp"
     android:minHeight="40dp"
-    android:targetCellWidth="3"
+    android:targetCellWidth="4"
     android:targetCellHeight="1"
     android:maxResizeHeight="180dp"
     android:updatePeriodMillis="1800000"
