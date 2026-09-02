@@ -346,16 +346,31 @@ class _YearCalendarViewState extends State<_YearCalendarView> {
 
   void _scrollToToday() {
     final ctx = _todayKey.currentContext;
-    if (ctx != null) {
+    final scrollable = ctx != null ? Scrollable.maybeOf(ctx) : null;
+    // فقط وجود ctx کافی نیست؛ اگر پوزیشنِ اسکرولِ لیستِ بیرونی هنوز pixels
+    // نداشته باشد (مثلاً چون صفحه هنوز وسطِ انیمیشنِ ورود است)، صدا زدنِ
+    // ensureVisible یک خطای بی‌صدا می‌دهد که در حالت ریلیز هیچ اثری هم
+    // نشان داده نمی‌شود؛ برای همین قبل از اسکرول، آماده بودنش را هم چک
+    // می‌کنیم و در صورت خطا هم دوباره تلاش می‌کنیم.
+    final ready = ctx != null && (scrollable?.position.hasPixels ?? false);
+
+    if (ready) {
       Scrollable.ensureVisible(
         ctx,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeOut,
         alignment: 0.15,
-      );
-    } else if (_scrollAttempts < 15) {
+      ).catchError((_) {
+        if (mounted && _scrollAttempts < 20) {
+          _scrollAttempts++;
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (mounted) _scrollToToday();
+          });
+        }
+      });
+    } else if (_scrollAttempts < 20) {
       _scrollAttempts++;
-      Future.delayed(const Duration(milliseconds: 80), () {
+      Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) _scrollToToday();
       });
     }
