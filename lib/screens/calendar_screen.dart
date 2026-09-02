@@ -357,8 +357,7 @@ class _YearCalendarViewState extends State<_YearCalendarView> {
     if (ready) {
       Scrollable.ensureVisible(
         ctx,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeOut,
+        duration: Duration.zero,
         alignment: 0.15,
       ).catchError((_) {
         if (mounted && _scrollAttempts < 20) {
