@@ -13,13 +13,6 @@ String _toPersianDigits(String input) {
   return result;
 }
 
-/// ساعت را به‌صورت ۱۲ ساعتی همراه با قبل/بعدازظهر برمی‌گرداند (نه ۲۴ ساعتی).
-String _formatTime12(DateTime dt) {
-  final h12 = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
-  final period = dt.hour < 12 ? 'ق.ظ' : 'ب.ظ';
-  return '${h12.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} $period';
-}
-
 class WeatherCard extends StatelessWidget {
   final WeatherLocation location;
   final WeatherData? data;
@@ -37,7 +30,7 @@ class WeatherCard extends StatelessWidget {
   String _formattedUpdateTime() {
     if (data == null) return '--';
     final d = data!.updatedAt;
-    return _toPersianDigits('${DateFormat('yyyy/MM/dd').format(d)} - ${_formatTime12(d)}');
+    return _toPersianDigits('${DateFormat('yyyy/MM/dd').format(d)} - ${DateFormat('HH:mm').format(d)}');
   }
 
   @override
