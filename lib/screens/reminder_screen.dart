@@ -200,7 +200,11 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
     await _storage.updateReminder(r);
     await _load();
     if (value) {
-      unawaited(_notifications.scheduleReminder(r));
+      try {
+        await _notifications.scheduleReminder(r);
+      } catch (e) {
+        if (mounted) _showSnack('خطا در فعال‌سازی یادآوری: $e');
+      }
     } else {
       unawaited(_notifications.cancelReminder(r.id));
     }
@@ -232,6 +236,10 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
     );
   }
 
+  void _showSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   Future<void> _openAddOrEdit(ReminderCategory category, {Reminder? existing}) async {
     final saved = await showModalBottomSheet<Reminder>(
       context: context,
@@ -250,7 +258,11 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
     // گوشی‌ها (به‌خصوص بار اول) چند ثانیه طول بکشد و نباید صفحه را معطل کند.
     await _load();
     if (saved.isActive) {
-      unawaited(_notifications.scheduleReminder(saved));
+      try {
+        await _notifications.scheduleReminder(saved);
+      } catch (e) {
+        if (mounted) _showSnack('خطا در زمان‌بندی یادآوری: $e');
+      }
     } else {
       unawaited(_notifications.cancelReminder(saved.id));
     }
