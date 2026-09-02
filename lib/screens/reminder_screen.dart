@@ -14,11 +14,144 @@ String _toPersianDigits(String input) {
   return result;
 }
 
-/// ساعت را به‌صورت ۱۲ ساعتی همراه با قبل/بعدازظهر برمی‌گرداند (نه ۲۴ ساعتی).
-String _formatTime12(int hour, int minute) {
-  final h12 = hour % 12 == 0 ? 12 : hour % 12;
-  final period = hour < 12 ? 'ق.ظ' : 'ب.ظ';
-  return '${h12.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
+/// برای نمایش: اگر ساعت صفر (نیمه‌شب) باشد به‌جای «۰۰»، «۲۴» نشان داده
+/// می‌شود؛ چون شمارشِ ساعت‌ها در این انتخاب‌گر از ۱ تا ۲۴ است، نه ۰ تا ۲۳.
+String _displayHourMinute(TimeOfDay t) {
+  final displayHour = t.hour == 0 ? 24 : t.hour;
+  return '${displayHour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+}
+
+/// انتخاب‌گرِ بزرگِ ساعتِ یادآوری: دو فیلد کشویی با فونتِ درشت — «ساعت»
+/// (۱ تا ۲۴) و «دقیقه» (۰۰ تا ۵۹). برخلاف picker پیش‌فرضِ فلاتر که از «۰»
+/// شروع می‌شود، اینجا شمارشِ ساعت از «۱» تا «۲۴» است و «۲۴» معادلِ نیمه‌شب
+/// (ساعتِ صفرِ داخلی) است.
+Future<TimeOfDay?> showBigHourTimePicker(BuildContext context, {required TimeOfDay initial}) {
+  int selectedHour = initial.hour == 0 ? 24 : initial.hour;
+  int selectedMinute = initial.minute;
+
+  InputDecoration pickerDecoration() => InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 18),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+      );
+
+  return showDialog<TimeOfDay>(
+    context: context,
+    builder: (dialogContext) {
+      return StatefulBuilder(builder: (context, setDialogState) {
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFE1D3FF), Color(0xFFFFE0EE), Color(0xFFFFF3D6)],
+                ),
+                boxShadow: [
+                  BoxShadow(color: Colors.deepPurple.withOpacity(0.25), blurRadius: 24, offset: const Offset(0, 10)),
+                ],
+              ),
+              padding: const EdgeInsets.fromLTRB(22, 26, 22, 22),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'انتخاب ساعت یادآوری',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.deepPurple),
+                    ),
+                    const SizedBox(height: 22),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            children: [
+                              const Text('ساعت (۱ تا ۲۴)',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black54)),
+                              const SizedBox(height: 8),
+                              DropdownButtonFormField<int>(
+                                isExpanded: true,
+                                decoration: pickerDecoration(),
+                                style: const TextStyle(
+                                    fontSize: 30, fontWeight: FontWeight.bold, color: Colors.deepPurple, height: 1.4),
+                                value: selectedHour,
+                                items: List.generate(24, (i) => i + 1)
+                                    .map((h) => DropdownMenuItem(
+                                        value: h, child: Text(_toPersianDigits(h.toString().padLeft(2, '0')))))
+                                    .toList(),
+                                onChanged: (v) => setDialogState(() => selectedHour = v!),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              const Text('دقیقه',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black54)),
+                              const SizedBox(height: 8),
+                              DropdownButtonFormField<int>(
+                                isExpanded: true,
+                                decoration: pickerDecoration(),
+                                style: const TextStyle(
+                                    fontSize: 30, fontWeight: FontWeight.bold, color: Colors.pink, height: 1.4),
+                                value: selectedMinute,
+                                items: List.generate(60, (i) => i)
+                                    .map((m) => DropdownMenuItem(
+                                        value: m, child: Text(_toPersianDigits(m.toString().padLeft(2, '0')))))
+                                    .toList(),
+                                onChanged: (v) => setDialogState(() => selectedMinute = v!),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 26),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text('انصراف', style: TextStyle(fontSize: 16)),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              final storedHour = selectedHour == 24 ? 0 : selectedHour;
+                              Navigator.pop(dialogContext, TimeOfDay(hour: storedHour, minute: selectedMinute));
+                            },
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white),
+                            child: const Text('تأیید', style: TextStyle(fontSize: 16)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      });
+    },
+  );
 }
 
 class ReminderScreen extends StatefulWidget {
@@ -284,7 +417,7 @@ class _ReminderCard extends StatelessWidget {
                 SizedBox(
                   width: 62,
                   child: Text(
-                    _toPersianDigits(reminder.displayTimeLabel),
+                    _toPersianDigits(reminder.timeLabel),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                   ),
@@ -392,7 +525,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
   }
 
   Future<void> _pickTime() async {
-    final picked = await showTimePicker(context: context, initialTime: _time);
+    final picked = await showBigHourTimePicker(context, initial: _time);
     if (picked != null) setState(() => _time = picked);
   }
 
@@ -522,16 +655,16 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
                   borderRadius: BorderRadius.circular(14),
                   onTap: _pickTime,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.access_time, color: Color(0xFF9775FA)),
-                        const SizedBox(width: 8),
+                        const Icon(Icons.access_time, color: Color(0xFF9775FA), size: 34),
+                        const SizedBox(width: 10),
                         Text(
-                          _toPersianDigits(_formatTime12(_time.hour, _time.minute)),
+                          _toPersianDigits(_displayHourMinute(_time)),
                           style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF9775FA)),
+                              fontSize: 34, fontWeight: FontWeight.w800, color: Color(0xFF9775FA)),
                         ),
                       ],
                     ),
