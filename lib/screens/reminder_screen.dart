@@ -706,8 +706,8 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
                               ),
                             );
                           }
-                        } catch (e) {
-                          if (mounted) _showSnack('خطا در تست اعلان: $e');
+                        } catch (_) {
+                          // خطای احتمالی نادیده گرفته می‌شود؛ پیامی به کاربر نشان داده نمی‌شود.
                         }
                       },
                       style: OutlinedButton.styleFrom(
