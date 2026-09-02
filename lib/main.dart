@@ -88,10 +88,10 @@ class MyAssistantApp extends StatelessWidget {
                     minScaleFactor: 0.9,
                     maxScaleFactor: 1.2,
                   ),
-              // نمایش ساعت در کل برنامه به‌صورت ۱۲ ساعتی (نه ۲۴ ساعتی)، صرف‌نظر
-              // از تنظیمات ساعتِ خودِ گوشی — روی TimeOfDay.format و
-              // showTimePicker در همه‌ی صفحات اثر می‌گذارد.
-              alwaysUse24HourFormat: false,
+              // نمایش ساعت در کل برنامه به‌صورت ۲۴ ساعتی، صرف‌نظر از تنظیمات
+              // ساعتِ خودِ گوشی — روی TimeOfDay.format و showTimePicker در
+              // همه‌ی صفحات اثر می‌گذارد.
+              alwaysUse24HourFormat: true,
             ),
             child: child!,
           ),
