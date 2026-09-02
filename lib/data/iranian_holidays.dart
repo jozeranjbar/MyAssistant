@@ -67,6 +67,17 @@ const List<String> gregorianMonthNamesFa = [
   'دسامبر',
 ];
 
+/// نام روزهای هفته با اندیسِ `DateTime.weekday` (۱=دوشنبه ... ۷=یکشنبه).
+const List<String> gregorianWeekdayNamesFa = [
+  'دوشنبه',
+  'سه‌شنبه',
+  'چهارشنبه',
+  'پنجشنبه',
+  'جمعه',
+  'شنبه',
+  'یکشنبه',
+];
+
 const List<String> hijriMonthNamesFa = [
   'محرم',
   'صفر',
