@@ -17,7 +17,6 @@ import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
-import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
@@ -75,53 +74,61 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    /** یک گروه از متغیرها را به یک متنِ پیوسته (با جداکننده «•») تبدیل می‌کند و به انتهای builder اضافه می‌کند. */
-    private fun appendGroup(builder: SpannableStringBuilder, items: List<FlowItem>) {
-        for ((index, item) in items.withIndex()) {
-            if (builder.isNotEmpty()) builder.append("  •  ")
-            val start = builder.length
-            builder.append(item.text)
-            val end = builder.length
-            builder.setSpan(ForegroundColorSpan(item.color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            builder.setSpan(RelativeSizeSpan(item.relativeSize), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            if (item.style != ItemStyle.REGULAR) {
-                builder.setSpan(StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
+    /** یک متغیر را به builder اضافه می‌کند؛ separator دقیقاً همانی است که پیش از متن درج می‌شود
+     *  (""=بدون فاصله، " "=فقط فاصله برای چسباندن به‌هم، "  •  "=نقطه‌ی سفیدِ جداکننده). */
+    private fun appendItem(builder: SpannableStringBuilder, item: FlowItem, separator: String) {
+        // نقطه‌ی جداکننده و فاصله‌ی ساده رنگ پیش‌فرضِ TextView (سفید) را می‌گیرند،
+        // پس نیازی به اسپن رنگ جداگانه برای خودِ separator نیست.
+        builder.append(separator)
+        val start = builder.length
+        builder.append(item.text)
+        val end = builder.length
+        builder.setSpan(ForegroundColorSpan(item.color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        builder.setSpan(RelativeSizeSpan(item.relativeSize), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        if (item.style != ItemStyle.REGULAR) {
+            builder.setSpan(StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
     }
 
-    /** ساخت کاملِ RemoteViews: متن‌های فعلی را می‌خواند و به یک متنِ رنگی و پیوسته تبدیل می‌کند. */
+    /**
+     * ساخت کاملِ RemoteViews، دقیقاً به همین ترتیب:
+     * ساعت (زرد طلایی، فونت ۳۰) ← •(سفید) ← شهر+دما+وضعیت‌آسمان (آبی غلیظ،
+     * بدون نقطه‌ی داخلی) ← •(سفید) ← عدد و کلمه‌ی یادآوری ← •(سفید) ←
+     * هفته (سبز غلیظ) ← روز/ماه شمسی ← روز/ماه قمری ← روز/ماه میلادی
+     * (این سه‌تای آخر بدون هیچ نقطه‌ای، فقط با فاصله از هم جدا می‌شوند).
+     */
     private fun buildViews(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int): RemoteViews {
         val widgetData = HomeWidgetPlugin.getData(context)
         val views = RemoteViews(context.packageName, R.layout.weather_clock_widget)
 
-        // گروه ۰: ساعت — بزرگ‌تر و با رنگی درخشان‌تر از بقیه‌ی متغیرها
-        val group0 = listOf(
-            FlowItem(currentTimeText(), 0xFF00E5FF.toInt(), 1.7f, ItemStyle.CLOCK),
-        )
+        val goldColor = 0xFFFFD700.toInt() // زرد طلایی (ساعت)
+        val darkBlueColor = 0xFF0D47A1.toInt() // آبی غلیظ (شهر/دما/وضعیت آسمان)
+        val reminderColor = 0xFFFFD54F.toInt() // زرد (یادآوری)
+        val darkGreenColor = 0xFF1B5E20.toInt() // سبز غلیظ (روز هفته)
+        val dateColor = 0xFFFFFFFF.toInt() // سفید (تاریخ‌های شمسی/قمری/میلادی)
 
-        // گروه ۱: یادآوری، شهر، دما، ابر
-        val group1 = listOf(
-            FlowItem(widgetData.getString("reminder_text", "0 یادآوری") ?: "0 یادآوری", 0xFFFFD54F.toInt(), 0.9f, ItemStyle.BOLD),
-            FlowItem(widgetData.getString("city_name", "—") ?: "—", 0xFF8ED8FF.toInt(), 1.0f, ItemStyle.BOLD),
-            FlowItem(widgetData.getString("temperature", "--") ?: "--", 0xFF8ED8FF.toInt(), 1.3f, ItemStyle.BOLD),
-            FlowItem(widgetData.getString("weather_emoji", "🌤️") ?: "🌤️", 0xFF8ED8FF.toInt(), 1.4f, ItemStyle.REGULAR),
-        )
+        val clock = FlowItem(currentTimeText(), goldColor, 30f / BASE_TEXT_SIZE_SP, ItemStyle.CLOCK)
+        val city = FlowItem(widgetData.getString("city_name", "—") ?: "—", darkBlueColor, 1.0f, ItemStyle.BOLD)
+        val temp = FlowItem(widgetData.getString("temperature", "--") ?: "--", darkBlueColor, 1.3f, ItemStyle.BOLD)
+        val emoji = FlowItem(widgetData.getString("weather_emoji", "🌤️") ?: "🌤️", darkBlueColor, 1.4f, ItemStyle.REGULAR)
+        val reminder = FlowItem(widgetData.getString("reminder_text", "0 یادآوری") ?: "0 یادآوری", reminderColor, 0.9f, ItemStyle.BOLD)
+        val weekday = FlowItem(widgetData.getString("weekday_text", "—") ?: "—", darkGreenColor, 0.85f, ItemStyle.BOLD)
+        val dateShamsi = FlowItem(widgetData.getString("date_shamsi", "—") ?: "—", dateColor, 0.8f, ItemStyle.REGULAR)
+        val dateHijri = FlowItem(widgetData.getString("date_hijri", "—") ?: "—", dateColor, 0.8f, ItemStyle.REGULAR)
+        val dateGregorian = FlowItem(widgetData.getString("date_gregorian", "—") ?: "—", dateColor, 0.8f, ItemStyle.REGULAR)
 
-        // گروه ۲: تاریخ میلادی، تاریخ قمری، روز هفته، تاریخ شمسی
-        val group2 = listOf(
-            FlowItem(widgetData.getString("date_gregorian", "—") ?: "—", 0xFFFFFFFF.toInt(), 0.8f, ItemStyle.REGULAR),
-            FlowItem(widgetData.getString("date_hijri", "—") ?: "—", 0xFFFFFFFF.toInt(), 0.8f, ItemStyle.REGULAR),
-            FlowItem(widgetData.getString("weekday_text", "—") ?: "—", 0xFFA5D6A7.toInt(), 0.8f, ItemStyle.BOLD),
-            FlowItem(widgetData.getString("date_shamsi", "—") ?: "—", 0xFFFFFFFF.toInt(), 0.8f, ItemStyle.REGULAR),
-        )
-
+        val dot = "  •  "
         val builder = SpannableStringBuilder()
-        appendGroup(builder, group0)
-        if (builder.isNotEmpty()) builder.append("\n")
-        appendGroup(builder, group1)
-        if (builder.isNotEmpty()) builder.append("  •  ")
-        appendGroup(builder, group2)
+        appendItem(builder, clock, "")
+        builder.append("\n")
+        appendItem(builder, city, "")
+        appendItem(builder, temp, " ")
+        appendItem(builder, emoji, " ")
+        appendItem(builder, reminder, dot)
+        appendItem(builder, weekday, dot)
+        appendItem(builder, dateShamsi, " ")
+        appendItem(builder, dateHijri, " ")
+        appendItem(builder, dateGregorian, " ")
 
         views.setTextViewText(R.id.widget_content, builder)
         views.setTextViewTextSize(R.id.widget_content, android.util.TypedValue.COMPLEX_UNIT_SP, BASE_TEXT_SIZE_SP)
@@ -181,9 +188,14 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
     }
 
     private fun currentTimeText(): String {
-        // اعداد انگلیسی، بدون تبدیل به فارسی
-        val formatter = SimpleDateFormat("HH:mm", Locale.US)
-        return formatter.format(Calendar.getInstance().time)
+        // اعداد انگلیسی (بدون تبدیل به فارسی)، اما به‌صورت ۱۲ ساعتی همراه با
+        // قبل/بعدازظهر — همسو با بقیه‌ی برنامه که دیگر ۲۴ ساعتی نیست.
+        val calendar = Calendar.getInstance()
+        val hour24 = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+        val hour12 = if (hour24 % 12 == 0) 12 else hour24 % 12
+        val period = if (hour24 < 12) "ق.ظ" else "ب.ظ"
+        return String.format(Locale.US, "%d:%02d %s", hour12, minute, period)
     }
 
     override fun onEnabled(context: Context) {
