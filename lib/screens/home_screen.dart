@@ -21,19 +21,10 @@ import 'chart_maker_screen.dart';
 import 'calendar_screen.dart';
 import 'reminder_screen.dart';
 import 'about_screen.dart';
+import '../utils/persian_numbers.dart';
 
 // رنگ قهوه‌ای برای نام شهرها
 const _kBrownCity = Color(0xFF6D4C29);
-
-String _toPersianDigits(String input) {
-  const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  var result = input;
-  for (var i = 0; i < western.length; i++) {
-    result = result.replaceAll(western[i], persian[i]);
-  }
-  return result;
-}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -649,9 +640,9 @@ class _TodayCalendarCard extends StatelessWidget {
     final gDate = today.toDateTime();
     final hijri = HijriCalendar.fromDate(gDate);
 
-    final jalaliStr = '${_toPersianDigits(today.day.toString())} ${today.formatter.mN} ${_toPersianDigits(today.year.toString())}';
+    final jalaliStr = '${toPersianDigits(today.day.toString())} ${today.formatter.mN} ${toPersianDigits(today.year.toString())}';
     final gregorianStr = '${gDate.day} ${gregorianMonthNamesFa[gDate.month - 1]} ${gDate.year}';
-    final hijriStr = '${_toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]} ${_toPersianDigits(hijri.hYear.toString())}';
+    final hijriStr = '${toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]} ${toPersianDigits(hijri.hYear.toString())}';
 
     final dateStr = '${_weekdays[today.weekDay - 1]}، $jalaliStr ، $gregorianStr ، $hijriStr';
 
