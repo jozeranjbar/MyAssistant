@@ -2,16 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/weather_location.dart';
 import '../models/weather_data.dart';
-
-String _toPersianDigits(String input) {
-  const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  var result = input;
-  for (var i = 0; i < western.length; i++) {
-    result = result.replaceAll(western[i], persian[i]);
-  }
-  return result;
-}
+import '../utils/persian_numbers.dart';
 
 class WeatherCard extends StatelessWidget {
   final WeatherLocation location;
@@ -30,7 +21,7 @@ class WeatherCard extends StatelessWidget {
   String _formattedUpdateTime() {
     if (data == null) return '--';
     final d = data!.updatedAt;
-    return _toPersianDigits('${DateFormat('yyyy/MM/dd').format(d)} - ${DateFormat('HH:mm').format(d)}');
+    return toPersianDigits('${DateFormat('yyyy/MM/dd').format(d)} - ${DateFormat('HH:mm').format(d)}');
   }
 
   @override
@@ -86,13 +77,13 @@ class WeatherCard extends StatelessWidget {
                   TextSpan(
                     children: [
                       TextSpan(
-                        text: '${_toPersianDigits(data!.temperature.round().toString())}°',
+                        text: '${toPersianDigits(data!.temperature.round().toString())}°',
                         style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.blue),
                       ),
                       if (data!.todayForecast != null)
                         TextSpan(
                           text:
-                              ' (${_toPersianDigits(data!.todayForecast!.minTemp.round().toString())}°-${_toPersianDigits(data!.todayForecast!.maxTemp.round().toString())}°)',
+                              ' (${toPersianDigits(data!.todayForecast!.minTemp.round().toString())}°-${toPersianDigits(data!.todayForecast!.maxTemp.round().toString())}°)',
                           style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.normal),
                         ),
                     ],
