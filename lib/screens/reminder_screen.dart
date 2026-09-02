@@ -3,7 +3,16 @@ import 'package:flutter/material.dart';
 import '../models/reminder.dart';
 import '../services/reminder_storage_service.dart';
 import '../services/notification_service.dart';
-import '../utils/persian_numbers.dart';
+
+String _toPersianDigits(String input) {
+  const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+  var result = input;
+  for (var i = 0; i < western.length; i++) {
+    result = result.replaceAll(western[i], persian[i]);
+  }
+  return result;
+}
 
 /// برای نمایش: اگر ساعت صفر (نیمه‌شب) باشد به‌جای «۰۰»، «۲۴» نشان داده
 /// می‌شود؛ چون شمارشِ ساعت‌ها در این انتخاب‌گر از ۱ تا ۲۴ است، نه ۰ تا ۲۳.
@@ -81,7 +90,7 @@ Future<TimeOfDay?> showBigHourTimePicker(BuildContext context, {required TimeOfD
                                 value: selectedHour,
                                 items: List.generate(24, (i) => i + 1)
                                     .map((h) => DropdownMenuItem(
-                                        value: h, child: Text(toPersianDigits(h.toString().padLeft(2, '0')))))
+                                        value: h, child: Text(_toPersianDigits(h.toString().padLeft(2, '0')))))
                                     .toList(),
                                 onChanged: (v) => setDialogState(() => selectedHour = v!),
                               ),
@@ -103,7 +112,7 @@ Future<TimeOfDay?> showBigHourTimePicker(BuildContext context, {required TimeOfD
                                 value: selectedMinute,
                                 items: List.generate(60, (i) => i)
                                     .map((m) => DropdownMenuItem(
-                                        value: m, child: Text(toPersianDigits(m.toString().padLeft(2, '0')))))
+                                        value: m, child: Text(_toPersianDigits(m.toString().padLeft(2, '0')))))
                                     .toList(),
                                 onChanged: (v) => setDialogState(() => selectedMinute = v!),
                               ),
@@ -270,30 +279,6 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
           '🔔 تنظیمات یادآوری',
           style: TextStyle(color: Colors.purple, fontWeight: FontWeight.bold),
         ),
-        actions: [
-          IconButton(
-            tooltip: 'تست فوری صدا/لرزش',
-            icon: const Icon(Icons.notifications_active, color: Colors.purple),
-            onPressed: () async {
-              try {
-                await _notifications.sendTestNotification();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      duration: Duration(seconds: 6),
-                      content: Text(
-                        'اعلان آزمایشی تا ۵ ثانیه دیگر می‌آید. اگه صدا/لرزش نداشت، '
-                        'اول حجم صدای اعلان‌ها و حالت مزاحم نشوید رو در تنظیمات گوشی چک کن.',
-                      ),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (mounted) _showSnack('خطا در تست اعلان: $e');
-              }
-            },
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: const Color(0xFF1B5E20),
@@ -444,7 +429,7 @@ class _ReminderCard extends StatelessWidget {
                 SizedBox(
                   width: 62,
                   child: Text(
-                    toPersianDigits(reminder.timeLabel),
+                    _toPersianDigits(reminder.timeLabel),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                   ),
@@ -503,7 +488,7 @@ class _ReminderCard extends StatelessWidget {
   String _repeatLabelFa(Reminder r) {
     final label = r.repeatLabel;
     // اعداد داخل برچسب (برای «هر چند روز/ساعت یک‌بار») هم فارسی نمایش داده شوند
-    return toPersianDigits(label);
+    return _toPersianDigits(label);
   }
 }
 
@@ -519,6 +504,7 @@ class _ReminderEditSheet extends StatefulWidget {
 }
 
 class _ReminderEditSheetState extends State<_ReminderEditSheet> {
+  final _notifications = NotificationService();
   late final TextEditingController _nameController;
   late final TextEditingController _doseOrNoteController;
   late final TextEditingController _intervalController;
@@ -689,7 +675,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
                         const Icon(Icons.access_time, color: Color(0xFF9775FA), size: 34),
                         const SizedBox(width: 10),
                         Text(
-                          toPersianDigits(_displayHourMinute(_time)),
+                          _toPersianDigits(_displayHourMinute(_time)),
                           style: const TextStyle(
                               fontSize: 34, fontWeight: FontWeight.w800, color: Color(0xFF9775FA)),
                         ),
@@ -699,7 +685,44 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
                 ),
               ),
               const SizedBox(height: 18),
-              _FieldLabel(text: 'نحوه‌ی اعلان', color: _color),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _FieldLabel(text: 'نحوه‌ی اعلان', color: _color),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 7),
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        try {
+                          await _notifications.sendTestNotification();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                duration: Duration(seconds: 6),
+                                content: Text(
+                                  'اعلان آزمایشی تا ۵ ثانیه دیگر می‌آید. اگه صدا/لرزش نداشت، '
+                                  'اول حجم صدای اعلان‌ها و حالت مزاحم نشوید رو در تنظیمات گوشی چک کن.',
+                                ),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) _showSnack('خطا در تست اعلان: $e');
+                        }
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _color,
+                        side: BorderSide(color: _color),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        minimumSize: const Size(0, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      icon: const Icon(Icons.volume_up, size: 16),
+                      label: const Text('تست', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
               Container(
                 decoration: BoxDecoration(
                   color: _color.withOpacity(0.08),
