@@ -3,18 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import '../models/weather_location.dart';
 import '../models/weather_data.dart';
-
-String _toPersianDigits(String input) {
-  const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  var result = input;
-  for (var i = 0; i < western.length; i++) {
-    result = result.replaceAll(western[i], persian[i]);
-  }
-  return result;
-}
-
-const _weekdayNamesFa = ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه', 'یکشنبه'];
+import '../data/iranian_holidays.dart';
+import '../utils/persian_numbers.dart';
 
 /// یک گرادیانِ رنگی متناسب با ساعت روز (برای ظاهر رنگی و زیبای هر کارتِ ساعتی)
 LinearGradient _gradientForHour(int hour) {
@@ -93,8 +83,8 @@ class HourlyForecastScreen extends StatelessWidget {
                     final jalali = Jalali.fromDateTime(h.dateTime);
                     final showDateLabel =
                         index == 0 || (index > 0 && !_sameJalaliDay(jalali, Jalali.fromDateTime(hours[index - 1].dateTime)));
-                    final weekday = _weekdayNamesFa[h.dateTime.weekday - 1];
-                    final dateStr = '$weekday ${_toPersianDigits(jalali.day.toString())} ${jalali.formatter.mN}';
+                    final weekday = gregorianWeekdayNamesFa[h.dateTime.weekday - 1];
+                    final dateStr = '$weekday ${toPersianDigits(jalali.day.toString())} ${jalali.formatter.mN}';
                     final gradient = _gradientForHour(h.dateTime.hour);
 
                     return Column(
@@ -124,7 +114,7 @@ class HourlyForecastScreen extends StatelessWidget {
                               SizedBox(
                                 width: 64,
                                 child: Text(
-                                  isNow ? 'اکنون' : _toPersianDigits(DateFormat('HH:mm').format(h.dateTime)),
+                                  isNow ? 'اکنون' : toPersianDigits(DateFormat('HH:mm').format(h.dateTime)),
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white),
                                 ),
                               ),
@@ -136,13 +126,13 @@ class HourlyForecastScreen extends StatelessWidget {
                                   style: const TextStyle(fontSize: 14, color: Colors.white),
                                 ),
                               ),
-                              _HourStatChip(icon: Icons.water_drop, value: '${_toPersianDigits(h.humidity.toString())}%'),
+                              _HourStatChip(icon: Icons.water_drop, value: '${toPersianDigits(h.humidity.toString())}%'),
                               const SizedBox(width: 10),
                               _HourStatChip(
-                                  icon: Icons.grain, value: '${_toPersianDigits(h.precipitationProbability.toString())}%'),
+                                  icon: Icons.grain, value: '${toPersianDigits(h.precipitationProbability.toString())}%'),
                               const SizedBox(width: 12),
                               Text(
-                                '${_toPersianDigits(h.temperature.round().toString())}°',
+                                '${toPersianDigits(h.temperature.round().toString())}°',
                                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                               ),
                             ],
