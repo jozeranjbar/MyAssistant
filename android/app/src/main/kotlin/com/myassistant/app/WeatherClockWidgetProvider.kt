@@ -120,8 +120,7 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         val dot = "  •  "
         val builder = SpannableStringBuilder()
         appendItem(builder, clock, "")
-        builder.append("\n")
-        appendItem(builder, city, "")
+        appendItem(builder, city, " ")
         appendItem(builder, temp, " ")
         appendItem(builder, emoji, " ")
         appendItem(builder, reminder, dot)
