@@ -279,6 +279,30 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
           '🔔 تنظیمات یادآوری',
           style: TextStyle(color: Colors.purple, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'تست فوری صدا/لرزش',
+            icon: const Icon(Icons.notifications_active, color: Colors.purple),
+            onPressed: () async {
+              try {
+                await _notifications.sendTestNotification();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      duration: Duration(seconds: 6),
+                      content: Text(
+                        'اعلان آزمایشی تا ۵ ثانیه دیگر می‌آید. اگه صدا/لرزش نداشت، '
+                        'اول حجم صدای اعلان‌ها و حالت مزاحم نشوید رو در تنظیمات گوشی چک کن.',
+                      ),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) _showSnack('خطا در تست اعلان: $e');
+              }
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: const Color(0xFF1B5E20),
