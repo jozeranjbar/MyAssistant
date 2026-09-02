@@ -5,6 +5,8 @@
 /// است تا فایل پشتیبانی که از هرکدام گرفته می‌شود، در دیگری هم قابل بازیابی باشد.
 library chart_board;
 
+import '../utils/persian_numbers.dart' as persian_numbers;
+
 /// پالت رنگ ثابت افراد؛ رنگ هر فرد بر اساس [ChartBoardData.colorIndices] تعیین
 /// می‌شود، نه موقعیت فعلی‌اش در لیست؛ به این ترتیب با حذف یک نفر، رنگ بقیه عوض نمی‌شود.
 const List<int> chartColorPalette = [
@@ -28,33 +30,14 @@ const String kDefaultChartVariable = 'وزن';
 /// حداکثر تعداد افرادی که می‌توان به نمودار اضافه کرد.
 const int kMaxChartPeople = 5;
 
-const String _persianDigits = '۰۱۲۳۴۵۶۷۸۹';
-
 /// ارقام فارسی/عربی یک رشته را به معادل انگلیسی تبدیل می‌کند (برای پردازش داخلی).
-String normalizeDigits(String input) {
-  final buffer = StringBuffer();
-  for (final rune in input.runes) {
-    final ch = String.fromCharCode(rune);
-    final idx = _persianDigits.indexOf(ch);
-    if (idx != -1) {
-      buffer.write(idx);
-    } else if (ch == '٫') {
-      buffer.write('.');
-    } else {
-      buffer.write(ch);
-    }
-  }
-  return buffer.toString();
-}
+/// (نام‌های toFaDigits/normalizeDigits برای سازگاری با فایل‌های موجودِ نمودار
+/// ساز حفظ شده‌اند؛ پیاده‌سازیِ واقعی در utils/persian_numbers.dart است تا
+/// همین منطق در همه‌ی برنامه یکسان و یک‌جا نگهداری شود.)
+String normalizeDigits(String input) => persian_numbers.normalizeDigitsToAscii(input);
 
 /// عدد را به ارقام فارسی تبدیل می‌کند.
-String toFaDigits(String input) {
-  var result = input;
-  for (var i = 0; i < 10; i++) {
-    result = result.replaceAll(i.toString(), _persianDigits[i]);
-  }
-  return result;
-}
+String toFaDigits(String input) => persian_numbers.toPersianDigits(input);
 
 /// رشته‌ی مقدار (که می‌تواند شامل متن هم باشد، مثل «۵۴ کیلوگرم») را به عدد
 /// تبدیل می‌کند؛ در صورت نامعتبر بودن null برمی‌گرداند. برای رسم نمودار استفاده می‌شود.
