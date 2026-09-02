@@ -122,6 +122,43 @@ class NotificationService {
     await _plugin.cancel(id);
   }
 
+  /// یک اعلانِ آزمایشی، ۵ ثانیه دیگر، با صدا و لرزش کامل شلیک می‌کند. برای
+  /// تشخیص سریع اینکه آیا اعلان‌ها/صدا/لرزش روی این گوشی درست کار می‌کنند،
+  /// بدون نیاز به منتظر ماندن تا سرِ ساعت یک یادآوری واقعی.
+  Future<void> sendTestNotification() async {
+    await init();
+    const androidDetails = AndroidNotificationDetails(
+      'test_channel',
+      'اعلان آزمایشی',
+      channelDescription: 'برای تست فوری صدا و لرزش',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+      vibrationPattern: null,
+    );
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(presentSound: true),
+    );
+    final scheduledDate = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5));
+
+    final androidImpl = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    final canExact = await androidImpl?.canScheduleExactNotifications() ?? true;
+
+    await _plugin.zonedSchedule(
+      999999999,
+      'اعلان آزمایشی',
+      'اگه این رو با صدا و لرزش دیدی، یعنی تنظیمات گوشی درسته ✅',
+      scheduledDate,
+      details,
+      androidScheduleMode:
+          canExact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+
   /// دوباره زمان‌بندی کردن همه یادآوری‌های فعال (بعد از بوت گوشی یا باز شدن برنامه)
   Future<void> rescheduleAll(List<Reminder> reminders) async {
     await init();
