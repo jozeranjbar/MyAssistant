@@ -18,6 +18,19 @@ allprojects {
     }
 }
 
+// برخی پکیج‌های قدیمی‌تر (مثل geolocator_android) هنوز به‌شکل قدیمی از یک
+// متغیر سراسری به‌نام «flutter» (شامل نسخه‌های SDK) استفاده می‌کنند. در
+// ساختار جدید Gradle این پروژه (که با dev.flutter.flutter-gradle-plugin
+// بارگذاری می‌شود) این متغیر به‌صورت خودکار ساخته نمی‌شود، پس این‌جا با همان
+// مقادیرِ app/build.gradle به‌صورت دستی تعریفش می‌کنیم تا چنین پکیج‌هایی هم
+// درست build شوند.
+rootProject.ext.flutter = [
+    compileSdkVersion: 34,
+    minSdkVersion: 23,
+    targetSdkVersion: 34,
+    ndkVersion: "25.1.8937393",
+]
+
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
