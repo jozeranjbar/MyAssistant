@@ -6,6 +6,7 @@ import '../services/events_service.dart';
 import '../data/iranian_holidays.dart';
 import '../utils/persian_numbers.dart';
 import 'date_converter_screen.dart';
+import 'compass_screen.dart';
 
 /// اطلاعات تعطیلی یک روز مشخص شمسی (بررسی جمعه، تعطیلات شمسی و قمری)
 class _HolidayInfo {
@@ -242,29 +243,40 @@ class _CalendarScreenState extends State<CalendarScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  _ModeButton(
-                    label: 'تقویم سال',
-                    selected: _mode == 'year',
-                    onTap: () => setState(() => _mode = 'year'),
-                  ),
-                  const SizedBox(width: 8),
-                  _ModeButton(
-                    label: 'مناسبت‌ها',
-                    selected: _mode == 'events',
-                    onTap: () => setState(() => _mode = 'events'),
-                  ),
-                  const SizedBox(width: 8),
-                  _ModeButton(
-                    label: 'تبدیل تاریخ',
-                    selected: false,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const DateConverterScreen()),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    _ModeButton(
+                      label: 'تقویم سال',
+                      selected: _mode == 'year',
+                      onTap: () => setState(() => _mode = 'year'),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    _ModeButton(
+                      label: 'مناسبت‌ها',
+                      selected: _mode == 'events',
+                      onTap: () => setState(() => _mode = 'events'),
+                    ),
+                    const SizedBox(width: 8),
+                    _ModeButton(
+                      label: 'تبدیل تاریخ',
+                      selected: false,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const DateConverterScreen()),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _ModeButton(
+                      label: 'قطب‌نما',
+                      selected: false,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const CompassScreen()),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(
