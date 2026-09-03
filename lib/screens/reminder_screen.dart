@@ -3,16 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/reminder.dart';
 import '../services/reminder_storage_service.dart';
 import '../services/notification_service.dart';
-
-String _toPersianDigits(String input) {
-  const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  var result = input;
-  for (var i = 0; i < western.length; i++) {
-    result = result.replaceAll(western[i], persian[i]);
-  }
-  return result;
-}
+import '../utils/persian_numbers.dart';
 
 /// برای نمایش: اگر ساعت صفر (نیمه‌شب) باشد به‌جای «۰۰»، «۲۴» نشان داده
 /// می‌شود؛ چون شمارشِ ساعت‌ها در این انتخاب‌گر از ۱ تا ۲۴ است، نه ۰ تا ۲۳.
@@ -90,7 +81,7 @@ Future<TimeOfDay?> showBigHourTimePicker(BuildContext context, {required TimeOfD
                                 value: selectedHour,
                                 items: List.generate(24, (i) => i + 1)
                                     .map((h) => DropdownMenuItem(
-                                        value: h, child: Text(_toPersianDigits(h.toString().padLeft(2, '0')))))
+                                        value: h, child: Text(toPersianDigits(h.toString().padLeft(2, '0')))))
                                     .toList(),
                                 onChanged: (v) => setDialogState(() => selectedHour = v!),
                               ),
@@ -112,7 +103,7 @@ Future<TimeOfDay?> showBigHourTimePicker(BuildContext context, {required TimeOfD
                                 value: selectedMinute,
                                 items: List.generate(60, (i) => i)
                                     .map((m) => DropdownMenuItem(
-                                        value: m, child: Text(_toPersianDigits(m.toString().padLeft(2, '0')))))
+                                        value: m, child: Text(toPersianDigits(m.toString().padLeft(2, '0')))))
                                     .toList(),
                                 onChanged: (v) => setDialogState(() => selectedMinute = v!),
                               ),
@@ -429,7 +420,7 @@ class _ReminderCard extends StatelessWidget {
                 SizedBox(
                   width: 62,
                   child: Text(
-                    _toPersianDigits(reminder.timeLabel),
+                    toPersianDigits(reminder.timeLabel),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                   ),
@@ -488,7 +479,7 @@ class _ReminderCard extends StatelessWidget {
   String _repeatLabelFa(Reminder r) {
     final label = r.repeatLabel;
     // اعداد داخل برچسب (برای «هر چند روز/ساعت یک‌بار») هم فارسی نمایش داده شوند
-    return _toPersianDigits(label);
+    return toPersianDigits(label);
   }
 }
 
@@ -569,7 +560,6 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
       isActive: existing?.isActive ?? true,
       createdAt: existing?.createdAt,
       lastFiredAt: existing?.lastFiredAt,
-      lastFiredDate: existing?.lastFiredDate,
       soundEnabled: _soundEnabled,
       vibrationEnabled: _vibrationEnabled,
     );
@@ -675,7 +665,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
                         const Icon(Icons.access_time, color: Color(0xFF9775FA), size: 34),
                         const SizedBox(width: 10),
                         Text(
-                          _toPersianDigits(_displayHourMinute(_time)),
+                          toPersianDigits(_displayHourMinute(_time)),
                           style: const TextStyle(
                               fontSize: 34, fontWeight: FontWeight.w800, color: Color(0xFF9775FA)),
                         ),
