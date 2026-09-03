@@ -93,6 +93,14 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
     setState(() => _locations = locations);
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _latController.dispose();
+    _lngController.dispose();
+    super.dispose();
+  }
+
   bool get _reachedLimit => _locations.length >= LocationStorageService.maxLocations;
 
   Future<void> _addManualLocation() async {
@@ -218,21 +226,6 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
         borderSide: const BorderSide(color: _kGreenTextStrong, width: 1.6),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-    );
-  }
-
-  BoxDecoration _greenCardDecoration() {
-    return BoxDecoration(
-      color: _kGreenFieldFill,
-      borderRadius: BorderRadius.circular(18),
-      border: Border.all(color: _kGreenBorder.withOpacity(0.4), width: 1.2),
-      boxShadow: [
-        BoxShadow(
-          color: _kGreenShadowColor.withOpacity(0.28),
-          blurRadius: 14,
-          offset: const Offset(0, 6),
-        ),
-      ],
     );
   }
 
