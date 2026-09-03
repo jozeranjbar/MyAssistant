@@ -14,6 +14,14 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
+    <!-- موقعیت مکانی برای صفحه‌ی قطب‌نما (نمایش طول/عرض جغرافیایی) -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- اعلام سخت‌افزار مغناطیس‌سنج به‌عنوان اختیاری تا برنامه روی گوشی‌های
+         بدون این سنسور هم از فروشگاه قابل نصب باشد (کد به‌صورت نرم مدیریت می‌کند) -->
+    <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
+
     <application
         android:label="MyAssistant"
         android:name="${applicationName}"
