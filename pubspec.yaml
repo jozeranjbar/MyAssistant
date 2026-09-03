@@ -1,7 +1,7 @@
 name: my_assistant
 description: "MyAssistant - آب و هوا، تقویم و یادآوری"
 publish_to: 'none'
-version: 1.0.28+29
+version: 1.0.29+30
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -45,6 +45,12 @@ dependencies:
   # اشتراک‌گذاری فایل پشتیبان و تصویر نمودار (نمودار ساز)
   share_plus: ^7.2.2
   path_provider: ^2.1.3
+
+  # قطب‌نما: خواندن سنسورهای مغناطیس‌سنج/شتاب‌سنج دستگاه (کاملاً آفلاین)
+  flutter_compass: ^0.8.1
+
+  # موقعیت جغرافیایی (طول/عرض) برای صفحه‌ی قطب‌نما
+  geolocator: ^13.0.1
 
 dev_dependencies:
   flutter_test:
