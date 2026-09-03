@@ -9,7 +9,6 @@ import '../services/weather_service.dart';
 import '../services/location_storage_service.dart';
 import '../services/reminder_storage_service.dart';
 import '../services/chart_storage_service.dart';
-import '../services/notification_service.dart';
 import '../services/events_service.dart';
 import '../services/widget_service.dart';
 import '../data/iranian_holidays.dart';
