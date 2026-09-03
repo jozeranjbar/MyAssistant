@@ -71,8 +71,6 @@ class ChartRow {
 
   ChartRow({required this.date, List<String>? values}) : values = values ?? [];
 
-  ChartRow copy() => ChartRow(date: date, values: List<String>.from(values));
-
   Map<String, dynamic> toJson() => {'date': date, 'values': values};
 
   factory ChartRow.fromJson(Map<String, dynamic> json) => ChartRow(
