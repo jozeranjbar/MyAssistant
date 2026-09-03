@@ -78,11 +78,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _updateWidget(List<Reminder> reminders) async {
-    if (_locations.isEmpty) return;
-    final firstLoc = _locations.first;
+    // تاریخ، روز هفته و تعداد یادآوری‌ها باید همیشه در ویجت نمایش داده شوند،
+    // حتی اگر کاربر هنوز هیچ شهری برای آب‌وهوا انتخاب نکرده باشد. فقط نام
+    // شهر و دما به وجود لوکیشن بستگی دارند.
+    final firstLoc = _locations.isNotEmpty ? _locations.first : null;
     await WidgetService.updateWidgetData(
       location: firstLoc,
-      weather: _weatherByLocation[firstLoc.id],
+      weather: firstLoc != null ? _weatherByLocation[firstLoc.id] : null,
       reminders: reminders,
     );
   }
