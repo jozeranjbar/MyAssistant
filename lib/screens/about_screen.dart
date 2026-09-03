@@ -13,6 +13,26 @@ class AboutScreen extends StatefulWidget {
 class _AboutScreenState extends State<AboutScreen> {
   bool _showInfo = true; // true: اطلاعات برنامه ، false: آموزش برنامه
 
+  // این دو Recognizer باید یک‌بار ساخته و در dispose() آزاد شوند، نه هر بار
+  // که build() اجرا می‌شود (مثلاً با هر بار سوییچ بین تب‌ها)؛ در غیر این
+  // صورت نمونه‌های قدیمی هیچ‌وقت آزاد نمی‌شوند.
+  final _emailRecognizer = TapGestureRecognizer();
+  final _telegramRecognizer = TapGestureRecognizer();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailRecognizer.onTap = () => _openUrl('mailto:ranjberan@gmail.com');
+    _telegramRecognizer.onTap = () => _openUrl('https://t.me/wajehha');
+  }
+
+  @override
+  void dispose() {
+    _emailRecognizer.dispose();
+    _telegramRecognizer.dispose();
+    super.dispose();
+  }
+
   Future<void> _openUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
@@ -222,8 +242,7 @@ class _AboutScreenState extends State<AboutScreen> {
                                       TextSpan(
                                         text: 'ranjberan@gmail.com',
                                         style: _linkStyle,
-                                        recognizer: TapGestureRecognizer()
-                                          ..onTap = () => _openUrl('mailto:ranjberan@gmail.com'),
+                                        recognizer: _emailRecognizer,
                                       ),
                                     ],
                                   ),
@@ -237,8 +256,7 @@ class _AboutScreenState extends State<AboutScreen> {
                                       TextSpan(
                                         text: 'wajehha@',
                                         style: _linkStyle,
-                                        recognizer: TapGestureRecognizer()
-                                          ..onTap = () => _openUrl('https://t.me/wajehha'),
+                                        recognizer: _telegramRecognizer,
                                       ),
                                     ],
                                   ),
