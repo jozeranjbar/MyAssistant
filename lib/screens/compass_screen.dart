@@ -104,7 +104,7 @@ class _CompassScreenState extends State<CompassScreen> {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         setState(() {
-          _locationError = 'سرویسِ موقعیت مکانی گوشی خاموش است.';
+          _locationError = 'سرویسِ موقعیت مکانی گوشی خاموش است. آن را از تنظیمات گوشی روشن کنید.';
           _locationLoading = false;
         });
         return;
@@ -128,16 +128,38 @@ class _CompassScreenState extends State<CompassScreen> {
         });
         return;
       }
+
+      // ابتدا آخرین موقعیتِ شناخته‌شده (در صورت وجود) را فوری نمایش می‌دهیم
+      // تا کاربر منتظر نماند، سپس تلاش می‌کنیم موقعیت تازه را با فرصت
+      // کافی (تا ۳۰ ثانیه) دریافت کنیم — دریافت فیکس GPS داخل ساختمان یا
+      // بدون آسمان باز می‌تواند چند ثانیه طول بکشد.
+      try {
+        final lastKnown = await Geolocator.getLastKnownPosition();
+        if (lastKnown != null && mounted) {
+          setState(() => _position = lastKnown);
+        }
+      } catch (_) {
+        // نبودِ موقعیتِ قبلی مشکلی نیست؛ ادامه می‌دهیم.
+      }
+
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.medium,
-          timeLimit: Duration(seconds: 12),
+          timeLimit: Duration(seconds: 30),
         ),
       );
       if (!mounted) return;
       setState(() {
         _position = pos;
         _locationLoading = false;
+      });
+    } on TimeoutException {
+      if (!mounted) return;
+      setState(() {
+        _locationLoading = false;
+        _locationError = _position != null
+            ? 'دریافت موقعیت دقیق‌تر زمان‌بر شد؛ مقدار بالا آخرین موقعیت شناخته‌شده است. برای موقعیت دقیق‌تر به فضای باز بروید و دوباره تلاش کنید.'
+            : 'زمانِ دریافت موقعیت به پایان رسید. به فضای بازتر بروید (یا مطمئن شوید GPS روشن است) و دوباره تلاش کنید.';
       });
     } catch (_) {
       if (!mounted) return;
@@ -370,49 +392,54 @@ class _CompassScreenState extends State<CompassScreen> {
               'برای نمایش طول و عرض جغرافیایی، ابتدا به اینترنت متصل شوید.',
               style: TextStyle(fontSize: 13, color: Colors.black54),
             )
-          else if (_position != null)
-            Row(
-              children: [
-                Expanded(
-                  child: _CoordChip(
-                    label: 'عرض جغرافیایی',
-                    value: toPersianDigits(_position!.latitude.toStringAsFixed(5)),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _CoordChip(
-                    label: 'طول جغرافیایی',
-                    value: toPersianDigits(_position!.longitude.toStringAsFixed(5)),
-                  ),
-                ),
-              ],
-            )
           else ...[
+            if (_position != null) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _CoordChip(
+                      label: 'عرض جغرافیایی',
+                      value: toPersianDigits(_position!.latitude.toStringAsFixed(5)),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _CoordChip(
+                      label: 'طول جغرافیایی',
+                      value: toPersianDigits(_position!.longitude.toStringAsFixed(5)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+            ],
             if (_locationError != null) ...[
               Text(_locationError!, style: const TextStyle(fontSize: 13, color: Colors.redAccent)),
               const SizedBox(height: 10),
             ],
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _locationLoading ? null : _fetchLocation,
-                icon: _locationLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.location_searching, size: 18),
-                label: Text(_locationLoading ? 'در حال دریافت موقعیت...' : 'نمایش مختصات مکان'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            if (_position == null || _locationError != null)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _locationLoading ? null : _fetchLocation,
+                  icon: _locationLoading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.location_searching, size: 18),
+                  label: Text(_locationLoading
+                      ? 'در حال دریافت موقعیت...'
+                      : (_position == null ? 'نمایش مختصات مکان' : 'تلاش دوباره برای موقعیت دقیق‌تر')),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
                 ),
               ),
-            ),
           ],
         ],
       ),
