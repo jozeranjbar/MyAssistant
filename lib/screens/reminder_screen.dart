@@ -576,20 +576,25 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     final needsInterval = _repeatType == RepeatType.everyXDays || _repeatType == RepeatType.everyXHours;
 
     return Padding(
-      // هم ارتفاعِ کیبورد (وقتی باز است) و هم ناحیه‌ی امنِ پایین گوشی (نوار
-      // حرکتی در گوشی‌های جدید) در نظر گرفته می‌شود تا این صفحه هیچ‌وقت
-      // چسبیده به لبه‌ی پایین نباشد.
+      // هم ارتفاعِ کیبورد (وقتی باز است) هم ناحیه‌ی امنِ پایین گوشی (نوار
+      // حرکتی در گوشی‌های جدید) و هم یک فاصله‌ی اضافه (که این پنجره را چند
+      // خط بالاتر از لبه‌ی پایین صفحه نگه می‌دارد) در نظر گرفته می‌شود.
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 40,
       ),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFE3F9EA),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-        child: SingleChildScrollView(
-          child: Column(
+      child: ConstrainedBox(
+        // محدود کردن حداکثر ارتفاع پنجره تا کمی کوچک‌تر و جمع‌وجورتر از تمام
+        // ارتفاع صفحه باشد؛ اگر محتوا بیشتر جا نگرفت، خودش به‌صورت داخلی
+        // اسکرول می‌شود (چون از قبل داخل SingleChildScrollView است).
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFE3F9EA),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
@@ -782,6 +787,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
