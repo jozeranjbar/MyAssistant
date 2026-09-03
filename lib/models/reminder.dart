@@ -79,8 +79,6 @@ class Reminder {
   bool isActive;
   DateTime createdAt; // مبنای محاسبه‌ی «هر چند روز یک‌بار»
   DateTime? lastFiredAt; // آخرین لحظه‌ی شلیک (برای «هر چند ساعت»)
-  String? lastFiredDate; // yyyy-MM-dd، آخرین روزی که شلیک شده (برای انواع مبتنی بر ساعت مشخص)
-  DateTime? nextFireAt; // فقط برای «یک‌بار»: لحظه‌ی دقیقی که قرار است شلیک شود
   bool soundEnabled; // پخش صدا هنگام اعلان
   bool vibrationEnabled; // لرزش هنگام اعلان
 
@@ -97,8 +95,6 @@ class Reminder {
     this.isActive = true,
     DateTime? createdAt,
     this.lastFiredAt,
-    this.lastFiredDate,
-    this.nextFireAt,
     this.soundEnabled = true,
     this.vibrationEnabled = true,
   }) : createdAt = createdAt ?? DateTime.now();
@@ -150,8 +146,6 @@ class Reminder {
         'isActive': isActive,
         'createdAt': createdAt.toIso8601String(),
         'lastFiredAt': lastFiredAt?.toIso8601String(),
-        'lastFiredDate': lastFiredDate,
-        'nextFireAt': nextFireAt?.toIso8601String(),
         'soundEnabled': soundEnabled,
         'vibrationEnabled': vibrationEnabled,
       };
@@ -169,8 +163,6 @@ class Reminder {
         isActive: json['isActive'] ?? true,
         createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
         lastFiredAt: json['lastFiredAt'] != null ? DateTime.parse(json['lastFiredAt']) : null,
-        lastFiredDate: json['lastFiredDate'],
-        nextFireAt: json['nextFireAt'] != null ? DateTime.parse(json['nextFireAt']) : null,
         // فیلدهای جدید؛ یادآوری‌های قدیمی‌ترِ ذخیره‌شده آن‌ها را ندارند، پس
         // پیش‌فرض هردو «روشن» است (دقیقاً همان رفتاری که قبلاً بدون تنظیم داشتند)
         soundEnabled: json['soundEnabled'] ?? true,
