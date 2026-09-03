@@ -174,9 +174,9 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  Future<String?> _promptName({required String title, String initial = ''}) {
+  Future<String?> _promptName({required String title, String initial = ''}) async {
     final controller = TextEditingController(text: initial);
-    return showDialog<String>(
+    final result = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(title, textAlign: TextAlign.center),
@@ -198,6 +198,8 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
         ],
       ),
     );
+    controller.dispose();
+    return result;
   }
 
   // ---------------------------------------------------------------------
@@ -877,6 +879,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
         );
       }),
     );
+    controller.dispose();
   }
 
   // ---------------------------------------------------------------------
