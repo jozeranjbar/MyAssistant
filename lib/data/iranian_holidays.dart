@@ -78,6 +78,17 @@ const List<String> gregorianWeekdayNamesFa = [
   'یکشنبه',
 ];
 
+/// نام روزهای هفته با اندیسِ `Jalali.weekDay` (۱=شنبه ... ۷=جمعه).
+const List<String> shamsiWeekdayNamesFa = [
+  'شنبه',
+  'یکشنبه',
+  'دوشنبه',
+  'سه‌شنبه',
+  'چهارشنبه',
+  'پنجشنبه',
+  'جمعه',
+];
+
 const List<String> hijriMonthNamesFa = [
   'محرم',
   'صفر',
