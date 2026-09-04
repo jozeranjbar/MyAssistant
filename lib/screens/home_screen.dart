@@ -634,8 +634,6 @@ class _TodayCalendarCard extends StatelessWidget {
 
   const _TodayCalendarCard({required this.today, required this.events, required this.onTap});
 
-  static const _weekdays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-
   @override
   Widget build(BuildContext context) {
     final gDate = today.toDateTime();
@@ -645,7 +643,7 @@ class _TodayCalendarCard extends StatelessWidget {
     final gregorianStr = '${gDate.day} ${gregorianMonthNamesFa[gDate.month - 1]} ${gDate.year}';
     final hijriStr = '${toPersianDigits(hijri.hDay.toString())} ${hijriMonthNamesFa[hijri.hMonth - 1]} ${toPersianDigits(hijri.hYear.toString())}';
 
-    final dateStr = '${_weekdays[today.weekDay - 1]}، $jalaliStr ، $gregorianStr ، $hijriStr';
+    final dateStr = '${shamsiWeekdayNamesFa[today.weekDay - 1]}، $jalaliStr ، $gregorianStr ، $hijriStr';
 
     return Material(
       color: Colors.transparent,
