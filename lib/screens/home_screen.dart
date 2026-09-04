@@ -188,9 +188,59 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [
+                  _SectionHeader(title: 'تقویم', topPadding: 0),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.green.shade100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.18),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _TodayCalendarCard(
+                            today: _today,
+                            events: _todayEvents,
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const CalendarScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          _NavButton(
+                            icon: Icons.settings,
+                            borderColor: const Color(0xFFF6EDFA),
+                            elevated: true,
+                            label: 'تنظیمات و مشاهده تقویم سال',
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const CalendarScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
                   // بخش «آب و هوا»: عنوان بیرون از مستطیل + کارت(های) آب‌وهوا + نوار «وضعیت ده روز آینده»
                   // + نوار «تنظیمات آب و هوا»، همگی داخل یک مستطیل واحد
-                  _SectionHeader(title: 'آب و هوا', topPadding: 0),
+                  _SectionHeader(title: 'آب و هوا'),
                   Padding(
                     padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
                     child: Container(
@@ -299,56 +349,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             elevated: true,
                             label: 'افزودن مکان ، حذف ، انتقال به بالا',
                             onTap: _openWeatherSettings,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-
-                  _SectionHeader(title: 'تقویم'),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.green.shade100),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.18),
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _TodayCalendarCard(
-                            today: _today,
-                            events: _todayEvents,
-                            onTap: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const CalendarScreen()),
-                              );
-                              await _loadEverything();
-                            },
-                          ),
-                          const SizedBox(height: 8),
-                          _NavButton(
-                            icon: Icons.settings,
-                            borderColor: const Color(0xFFF6EDFA),
-                            elevated: true,
-                            label: 'تنظیمات و مشاهده تقویم سال',
-                            onTap: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const CalendarScreen()),
-                              );
-                              await _loadEverything();
-                            },
                           ),
                         ],
                       ),
