@@ -10,6 +10,7 @@ import android.content.Intent
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
@@ -51,6 +52,11 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
          * با تأخیر اجرا می‌کند)، هر بار یک آلارم دقیق فقط برای لحظه‌ی شروع
          * دقیقه‌ی بعد تنظیم می‌شود؛ در هر تیک دوباره برای دقیقه‌ی بعدی
          * زمان‌بندی می‌شود.
+         *
+         * این تابع را فقط باید وقتی صدا زد که صفحه روشن است — کنترلِ همین
+         * شرط بر عهده‌ی onScreenOn/onScreenOff و onUpdate/onEnabled است، نه
+         * خودِ این تابع، تا نقطه‌ی واحدی برای «آیا الان باید تیک بزنیم؟»
+         * نداشته باشیم.
          */
         private fun scheduleNextTick(context: Context) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -71,6 +77,42 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         private fun cancelPeriodicTick(context: Context) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             alarmManager.cancel(buildTickPendingIntent(context))
+        }
+
+        /** آیا صفحه‌ی گوشی الان روشن/بیدار است؟ */
+        private fun isScreenOn(context: Context): Boolean {
+            val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            return powerManager.isInteractive
+        }
+
+        private fun updateAllWidgetInstances(context: Context) {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val ids = appWidgetManager.getAppWidgetIds(ComponentName(context, WeatherClockWidgetProvider::class.java))
+            if (ids.isEmpty()) return
+            val provider = WeatherClockWidgetProvider()
+            for (appWidgetId in ids) {
+                provider.updateOneWidget(context, appWidgetManager, appWidgetId)
+            }
+        }
+
+        /**
+         * از WidgetScreenReceiver صدا زده می‌شود (پخشِ ACTION_SCREEN_ON).
+         * صفحه که روشن شد: فوراً ساعتِ ویجت به‌روز می‌شود (چون تا الان
+         * ثابت مانده بود) و تیکِ هر-دقیقه دوباره شروع می‌شود.
+         */
+        fun onScreenOn(context: Context) {
+            updateAllWidgetInstances(context)
+            scheduleNextTick(context)
+        }
+
+        /**
+         * از WidgetScreenReceiver صدا زده می‌شود (پخشِ ACTION_SCREEN_OFF).
+         * صفحه که خاموش شد: تیکِ هر-دقیقه متوقف می‌شود تا گوشی هر دقیقه
+         * از حالت خواب بیدار نشود؛ آب‌وهوا/تاریخ/یادآوری همچنان هر ۳۰
+         * دقیقه توسط WorkManager به‌روز می‌مانند.
+         */
+        fun onScreenOff(context: Context) {
+            cancelPeriodicTick(context)
         }
     }
 
@@ -145,7 +187,12 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             updateOneWidget(context, appWidgetManager, appWidgetId)
         }
-        scheduleNextTick(context)
+        // فقط وقتی صفحه روشن است تیکِ هر-دقیقه را برنامه‌ریزی کن؛ اگر صفحه
+        // خاموش است، همین‌که WidgetScreenReceiver پیامِ SCREEN_ON را بگیرد
+        // خودش scheduleNextTick را صدا می‌زند.
+        if (isScreenOn(context)) {
+            scheduleNextTick(context)
+        }
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -169,8 +216,12 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
             for (appWidgetId in ids) {
                 updateOneWidget(context, appWidgetManager, appWidgetId)
             }
-            // زمان‌بندی تیک دقیق بعدی
-            scheduleNextTick(context)
+            // زمان‌بندی تیک دقیق بعدی — فقط اگر صفحه هنوز روشن است. اگر بین
+            // این تیک و تیک بعدی صفحه خاموش شود، WidgetScreenReceiver خودش
+            // با cancelPeriodicTick این آلارم را لغو می‌کند.
+            if (isScreenOn(context)) {
+                scheduleNextTick(context)
+            }
         }
     }
 
@@ -195,7 +246,12 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onEnabled(context: Context) {
-        scheduleNextTick(context)
+        // اولین‌بار که ویجت به صفحه‌ی خانه اضافه می‌شود، معمولاً کاربر همان
+        // لحظه صفحه را باز نگه داشته، پس اینجا هم همان شرطِ isScreenOn را
+        // رعایت می‌کنیم تا رفتار همیشه یکسان باشد.
+        if (isScreenOn(context)) {
+            scheduleNextTick(context)
+        }
     }
 
     override fun onDisabled(context: Context) {
