@@ -472,7 +472,6 @@ class _MonthBlock extends StatelessWidget {
     HijriCalendar hijri,
     _HolidayInfo holidayInfo,
   ) async {
-    const weekdays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
     final events = await EventsService().getEventsForJalali(jDate);
 
     if (!context.mounted) return;
@@ -500,7 +499,7 @@ class _MonthBlock extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(weekdays[jDate.weekDay - 1],
+                      child: Text(shamsiWeekdayNamesFa[jDate.weekDay - 1],
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 19, color: Colors.deepPurple.shade700)),
                     ),
