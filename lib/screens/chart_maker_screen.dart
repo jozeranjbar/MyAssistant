@@ -36,6 +36,8 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
   final GlobalKey _variableFieldKey = GlobalKey();
   final GlobalKey _peopleFieldKey = GlobalKey();
   final Map<String, TextEditingController> _valueControllers = {};
+  final Map<String, FocusNode> _valueFocusNodes = {};
+  final _rowsScrollController = ScrollController();
   OverlayEntry? _dropdownOverlay;
 
   @override
@@ -48,6 +50,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
   void dispose() {
     _closeDropdown();
     _resetValueControllers();
+    _rowsScrollController.dispose();
     super.dispose();
   }
 
@@ -59,6 +62,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
       _data = data;
       _loading = false;
     });
+    _focusLastRowValue(scrollOnly: true);
   }
 
   Future<void> _persist() => _storage.save(_data);
@@ -68,6 +72,10 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
       c.dispose();
     }
     _valueControllers.clear();
+    for (final f in _valueFocusNodes.values) {
+      f.dispose();
+    }
+    _valueFocusNodes.clear();
   }
 
   TextEditingController _valueControllerFor(ChartRow row, int personIndex) {
@@ -75,6 +83,28 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     return _valueControllers.putIfAbsent(key, () {
       final initial = personIndex < row.values.length ? row.values[personIndex] : '';
       return TextEditingController(text: initial);
+    });
+  }
+
+  FocusNode _valueFocusNodeFor(ChartRow row, int personIndex) {
+    final key = '${identityHashCode(row)}_$personIndex';
+    return _valueFocusNodes.putIfAbsent(key, () => FocusNode());
+  }
+
+  /// خطِ چشمک‌زن را همیشه روی مقدارِ (فردِ اول در) آخرین ردیف قرار می‌دهد و
+  /// جدول را به پایین اسکرول می‌کند تا آن ردیف دیده شود. با [scrollOnly] فقط
+  /// اسکرول انجام می‌شود (بدون گرفتنِ فوکوس)، برای زمانی که صفحه تازه باز
+  /// شده و نمی‌خواهیم بی‌مقدمه کیبورد بالا بیاید.
+  void _focusLastRowValue({bool scrollOnly = false}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_rowsScrollController.hasClients) {
+        _rowsScrollController.jumpTo(_rowsScrollController.position.maxScrollExtent);
+      }
+      if (scrollOnly) return;
+      final rows = _data.currentRows;
+      if (rows.isEmpty || _data.individuals.isEmpty) return;
+      _valueFocusNodeFor(rows.last, 0).requestFocus();
     });
   }
 
@@ -244,6 +274,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                     setState(() => _data.currentVariable = v);
                     unawaited(_persist());
                     close();
+                    _focusLastRowValue(scrollOnly: true);
                   },
                 ),
               const SizedBox(height: 6),
@@ -452,6 +483,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     }
     setState(() {});
     await _persist();
+    _focusLastRowValue();
   }
 
   Future<void> _editRowDate(int rowIndex) async {
@@ -481,6 +513,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     }
     setState(() => rows.removeAt(rowIndex));
     await _persist();
+    _focusLastRowValue(scrollOnly: true);
   }
 
   Future<void> _clearAll() async {
@@ -550,6 +583,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
               width: colWidth,
               child: TextField(
                 controller: _valueControllerFor(row, i),
+                focusNode: _valueFocusNodeFor(row, i),
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Color(0xFF1558DF), fontSize: 15),
                 decoration: const InputDecoration(border: InputBorder.none, hintText: 'مقدار', isDense: true),
@@ -575,12 +609,60 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     );
   }
 
+  /// ردیفِ همیشه-حاضرِ «افزودنِ تاریخِ جدید»؛ دقیقاً هم‌شکلِ یک ردیفِ داده‌ی
+  /// معمولی است (یک سلولِ تاریخ + سلول‌های مقدار) اما به‌جای مقدارِ واقعی،
+  /// راهنمای خالی نشان می‌دهد. همیشه به‌عنوان آخرین ردیفِ جدول رسم می‌شود؛
+  /// با لمسِ سلولِ تاریخ، انتخاب‌گرِ تاریخِ شمسی باز می‌شود (همان [_addDate]).
+  Widget _buildAddRow(double dateColWidth, double colWidth) {
+    return Container(
+      height: 56,
+      decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFC4CBC9)))),
+      child: Row(
+        children: [
+          SizedBox(
+            width: dateColWidth,
+            child: InkWell(
+              onTap: _addDate,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'تاریخ را وارد کنید',
+                        textAlign: TextAlign.right,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 14, fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                    const Icon(Icons.add_circle_outline, size: 18, color: Color(0xFF2E7D32)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          for (int i = 0; i < _data.individuals.length; i++)
+            SizedBox(
+              width: colWidth,
+              child: const Center(
+                child: Text('مقدار', style: TextStyle(color: Color(0xFFB0B0B0), fontSize: 14)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTable() {
     final rows = _data.currentRows;
     final people = _data.individuals;
     const dateColWidth = 150.0;
     const colWidth = 92.0;
+    const rowHeight = 56.0;
     final totalWidth = dateColWidth + people.length * colWidth;
+    // +۱ برای ردیفِ همیشه-حاضرِ «افزودن تاریخ» در انتهای جدول.
+    final itemCount = rows.length + 1;
 
     return Container(
       decoration: BoxDecoration(
@@ -607,41 +689,20 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                     ],
                   ),
                 ),
+                // ارتفاع دقیقاً به‌اندازه‌ی دو ردیف است تا به‌طور پیش‌فرض
+                // (پس از اسکرول خودکار به پایین) فقط دو ردیفِ انتهایی دیده
+                // شوند؛ برای دیدن بقیه‌ی ردیف‌ها باید اسکرول کرد.
                 SizedBox(
-                  height: 140,
-                  child: rows.isEmpty
-                      ? const Center(child: Text('تاریخی ثبت نشده', style: TextStyle(color: Colors.grey, fontSize: 12)))
-                      : ListView.builder(
-                          itemCount: rows.length,
-                          itemBuilder: (context, rowIndex) => _buildDataRow(rowIndex, dateColWidth, colWidth),
-                        ),
-                ),
-                Container(
-                  height: 40,
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: dateColWidth,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: SizedBox(
-                            height: 30,
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _addDate,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2E7D32),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                                alignment: Alignment.centerRight,
-                              ),
-                              child: const Text('افزودن تاریخ', style: TextStyle(fontSize: 12)),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: colWidth * people.length),
-                    ],
+                  height: rowHeight * 2,
+                  child: ListView.builder(
+                    controller: _rowsScrollController,
+                    itemCount: itemCount,
+                    itemBuilder: (context, index) {
+                      if (index == rows.length) {
+                        return _buildAddRow(dateColWidth, colWidth);
+                      }
+                      return _buildDataRow(index, dateColWidth, colWidth);
+                    },
                   ),
                 ),
               ],
@@ -1256,7 +1317,7 @@ class _AxisPainter extends CustomPainter {
   final double paddingTop;
   final double paddingBottom;
 
-  _AxisPainter({required this.scale, this.paddingTop = 20, this.paddingBottom = 10});
+  _AxisPainter({required this.scale, this.paddingTop = 20, this.paddingBottom = 34});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1307,7 +1368,7 @@ class _LineChartPainter extends CustomPainter {
     this.innerLeftPad = 14,
     this.innerRightPad = 15,
     this.paddingTop = 20,
-    this.paddingBottom = 10,
+    this.paddingBottom = 34,
   });
 
   @override
@@ -1354,6 +1415,26 @@ class _LineChartPainter extends CustomPainter {
         canvas.drawCircle(pt, 5, dotPaint);
         canvas.drawCircle(pt, 5, borderPaint);
       }
+    }
+
+    // برچسبِ تاریخِ هر ستون، به‌فارسی و به‌صورت مورب زیرِ محورِ افقی؛ این
+    // بخش قبلاً وجود نداشت و فقط نسخه‌ی خروجی/عکسِ نمودار ([_ExportChartPainter])
+    // تاریخ را نشان می‌داد.
+    final axisY = size.height - paddingBottom + 6;
+    for (int r = 0; r < rows.length; r++) {
+      final x = innerLeftPad + r * xStep;
+      final tp = TextPainter(
+        text: TextSpan(
+          text: rows[r].date,
+          style: const TextStyle(fontSize: 10, color: Color(0xFF4A5B57), fontWeight: FontWeight.w600),
+        ),
+        textDirection: TextDirection.rtl,
+      )..layout();
+      canvas.save();
+      canvas.translate(x, axisY);
+      canvas.rotate(-0.6);
+      tp.paint(canvas, Offset(-tp.width, 0));
+      canvas.restore();
     }
   }
 
