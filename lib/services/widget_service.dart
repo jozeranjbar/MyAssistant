@@ -8,8 +8,6 @@ import '../models/weather_data.dart';
 import '../models/reminder.dart';
 import '../data/iranian_holidays.dart';
 
-const _weekdaysFa = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-
 /// انتخاب ایموجی پوشش ابر متناسب با وضعیت هوا و زمان روز/شب.
 String _cloudCoverageEmoji(WeatherData? weather, bool isDay) {
   final desc = weather?.description ?? '';
@@ -52,7 +50,7 @@ class WidgetService {
       final gDate = today.toDateTime();
       final hijri = HijriCalendar.fromDate(gDate);
 
-      final weekdayText = _weekdaysFa[today.weekDay - 1];
+      final weekdayText = shamsiWeekdayNamesFa[today.weekDay - 1];
       // اعداد انگلیسی (بدون تبدیل به ارقام فارسی)
       final dateShamsi = '${today.day} ${today.formatter.mN}';
       final dateHijri = '${hijri.hDay} ${hijriMonthNamesFa[hijri.hMonth - 1]}';
