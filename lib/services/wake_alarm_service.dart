@@ -3,29 +3,37 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 
-/// یک گزینه‌ی صدا برای زنگِ بیدارباش.
-///
-/// نکته‌ی مهم: چون امکانِ ساختن یا دانلودِ فایلِ موسیقیِ واقعی برای این
-/// سرویس وجود ندارد (بدون دسترسی به اینترنتِ عمومی/فروشگاه‌های صدا)، این سه
-/// گزینه به‌جای موسیقیِ اختصاصی، از صداهای پیش‌فرضِ خودِ گوشی (که روی هر
-/// اندرویدی از قبل وجود دارند) استفاده می‌کنند. اگر بعداً خواستی یک موسیقیِ
-/// آرامِ واقعی جایگزین کنی، کافی است یک فایلِ mp3 کوتاه (مثلاً ۱۵ تا ۳۰
-/// ثانیه) را در پوشه‌ی
-/// android/app/src/main/kotlin/../../res/raw/  («android/app/src/main/res/raw/»)
-/// با یک اسمِ ساده مثلِ wake_calm_1.mp3 بگذاری، و پایینِ همین فایل، به‌جای
-/// یکی از uriهای زیر، این خط را جایگزین کنی:
-/// `sound: RawResourceAndroidNotificationSound('wake_calm_1')`.
+/// یک گزینه‌ی صدا برای زنگِ بیدارباش. یا یک فایلِ موسیقیِ واقعی (که در
+/// android/app/src/main/res/raw/ گذاشته شده) یا یکی از صداهای پیش‌فرضِ
+/// خودِ گوشی است.
 class WakeAlarmSound {
   final String label;
-  final String androidUri;
 
-  const WakeAlarmSound(this.label, this.androidUri);
+  /// اسمِ فایلِ raw، بدون پسوند (مثلاً برای wake_calm_1.mp3 مقدارِ
+  /// 'wake_calm_1'). برای افزودنِ یک موسیقیِ آرامِ دیگر: فایلِ mp3 را با یک
+  /// اسمِ ساده (فقط حروفِ کوچکِ انگلیسی/عدد/زیرخط) در همان پوشه بگذار و یک
+  /// آیتمِ جدید با rawResourceName متناظر به لیستِ زیر اضافه کن.
+  final String? rawResourceName;
+
+  /// آدرسِ یکی از صداهای پیش‌فرضِ سیستم (وقتی rawResourceName نداریم).
+  final String? androidUri;
+
+  const WakeAlarmSound(this.label, {this.rawResourceName, this.androidUri})
+      : assert(rawResourceName != null || androidUri != null);
+
+  AndroidNotificationSound toAndroidSound() {
+    if (rawResourceName != null) {
+      return RawResourceAndroidNotificationSound(rawResourceName!);
+    }
+    return UriAndroidNotificationSound(androidUri!);
+  }
 }
 
 const List<WakeAlarmSound> wakeAlarmSounds = [
-  WakeAlarmSound('صدای پیش‌فرض اعلان (ملایم‌تر)', 'content://settings/system/notification_sound'),
-  WakeAlarmSound('صدای پیش‌فرض زنگ هشدار', 'content://settings/system/alarm_alert'),
-  WakeAlarmSound('صدای پیش‌فرض رینگ‌تون', 'content://settings/system/ringtone'),
+  WakeAlarmSound('موسیقی آرام', rawResourceName: 'wake_calm_1'),
+  WakeAlarmSound('صدای پیش‌فرض اعلان', androidUri: 'content://settings/system/notification_sound'),
+  WakeAlarmSound('صدای پیش‌فرض زنگ هشدار', androidUri: 'content://settings/system/alarm_alert'),
+  WakeAlarmSound('صدای پیش‌فرض رینگ‌تون', androidUri: 'content://settings/system/ringtone'),
 ];
 
 class WakeAlarmSettings {
@@ -106,7 +114,7 @@ class WakeAlarmService {
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,
-      sound: UriAndroidNotificationSound(settings.sound.androidUri),
+      sound: settings.sound.toAndroidSound(),
       enableVibration: true,
       vibrationPattern: Int64List.fromList([0, 400, 250, 400, 250, 400]),
       fullScreenIntent: true,
@@ -149,7 +157,7 @@ class WakeAlarmService {
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,
-      sound: UriAndroidNotificationSound(sound.androidUri),
+      sound: sound.toAndroidSound(),
       category: AndroidNotificationCategory.alarm,
     );
     final details = NotificationDetails(android: androidDetails);
