@@ -172,9 +172,9 @@ class _WakeAlarmScreenState extends State<WakeAlarmScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Text(
-                    'این سه گزینه صداهای پیش‌فرضِ خودِ گوشی‌اند (چون امکانِ افزودنِ '
-                    'فایلِ موسیقیِ اختصاصی وجود نداشت). با دکمه‌ی ▶ می‌توانید هرکدام را '
-                    'قبل از انتخاب بشنوید.',
+                    'گزینه‌ی اول («موسیقی آرام») همان فایلی است که خودت اضافه کردی؛ '
+                    'سه گزینه‌ی بعدی صداهای پیش‌فرضِ خودِ گوشی‌اند. با دکمه‌ی ▶ '
+                    'می‌توانی هرکدام را قبل از انتخاب بشنوی.',
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                   ),
                 ),
