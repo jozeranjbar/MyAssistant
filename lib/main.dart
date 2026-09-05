@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/notification_service.dart';
 import 'services/reminder_storage_service.dart';
+import 'services/wake_alarm_service.dart';
 import 'services/background_service.dart';
 import 'screens/home_screen.dart';
 
@@ -48,6 +49,13 @@ Future<void> main() async {
     await NotificationService().rescheduleAll(reminders);
   } catch (e) {
     debugPrint('خطا در بازتنظیم یادآوری‌ها: $e');
+  }
+
+  try {
+    // زمان‌بندی مجددِ زنگِ بیدارباش (در صورت روشن‌بودن)
+    await WakeAlarmService().reschedule();
+  } catch (e) {
+    debugPrint('خطا در بازتنظیمِ زنگِ بیدارباش: $e');
   }
 
   runApp(const MyAssistantApp());
