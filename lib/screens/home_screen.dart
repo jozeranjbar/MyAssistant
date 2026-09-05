@@ -19,6 +19,7 @@ import 'hourly_forecast_screen.dart';
 import 'chart_maker_screen.dart';
 import 'calendar_screen.dart';
 import 'reminder_screen.dart';
+import 'wake_alarm_screen.dart';
 import 'about_screen.dart';
 import '../utils/persian_numbers.dart';
 
@@ -238,6 +239,73 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 4),
 
+                  _SectionHeader(title: 'یادآوری'),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.green.shade100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.18),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _NavButton(
+                            emoji: '🔔',
+                            emoji2: '💊',
+                            label: _activeReminderCount == 0
+                                ? 'یادآوری ثبت نشده است'
+                                : '$_activeReminderCount یادآوری فعال',
+                            backgroundColor: Colors.green.shade50,
+                            foregroundColor: Colors.green.shade900,
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ReminderScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          _NavButton(
+                            icon: Icons.alarm,
+                            borderColor: const Color(0xFFF6EDFA),
+                            elevated: true,
+                            label: 'تنظیم زمان بیدار کردن',
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const WakeAlarmScreen()),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          _NavButton(
+                            icon: Icons.settings,
+                            borderColor: const Color(0xFFF6EDFA),
+                            elevated: true,
+                            label: 'تنظیمات یادآوری',
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ReminderScreen()),
+                              );
+                              await _loadEverything();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
                   // بخش «آب و هوا»: عنوان بیرون از مستطیل + کارت(های) آب‌وهوا + نوار «وضعیت ده روز آینده»
                   // + نوار «تنظیمات آب و هوا»، همگی داخل یک مستطیل واحد
                   _SectionHeader(title: 'آب و هوا'),
@@ -349,61 +417,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             elevated: true,
                             label: 'افزودن مکان ، حذف ، انتقال به بالا',
                             onTap: _openWeatherSettings,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-
-                  _SectionHeader(title: 'یادآوری'),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.green.shade100),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.18),
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _NavButton(
-                            emoji: '🔔',
-                            emoji2: '💊',
-                            label: _activeReminderCount == 0
-                                ? 'یادآوری ثبت نشده است'
-                                : '$_activeReminderCount یادآوری فعال',
-                            backgroundColor: Colors.green.shade50,
-                            foregroundColor: Colors.green.shade900,
-                            onTap: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const ReminderScreen()),
-                              );
-                              await _loadEverything();
-                            },
-                          ),
-                          const SizedBox(height: 8),
-                          _NavButton(
-                            icon: Icons.settings,
-                            borderColor: const Color(0xFFF6EDFA),
-                            elevated: true,
-                            label: 'تنظیمات یادآوری',
-                            onTap: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const ReminderScreen()),
-                              );
-                              await _loadEverything();
-                            },
                           ),
                         ],
                       ),
