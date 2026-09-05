@@ -1,6 +1,5 @@
 import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:shamsi_date/shamsi_date.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/weather_location.dart';
@@ -38,40 +37,35 @@ class WidgetService {
 
   static const String androidWidgetName = 'WeatherClockWidgetProvider';
 
-  /// بروزرسانی اطلاعات ویجت با آخرین وضعیت آب‌وهوای اولین لوکیشن، ساعت،
-  /// تاریخ (شمسی/قمری/میلادی) و تعداد یادآوری‌های فعال امروز.
+  /// بروزرسانی اطلاعات ویجت با آخرین وضعیت آب‌وهوای اولین لوکیشن و تعداد
+  /// یادآوری‌های فعال امروز. توجه: ساعت، هفته، تاریخِ شمسی و میلادی دیگر
+  /// اینجا محاسبه نمی‌شوند؛ چون سمتِ بومیِ ویجت
+  /// (WeatherClockWidgetProvider.kt) خودش آن‌ها را هر دقیقه زنده محاسبه
+  /// می‌کند تا حتی بلافاصله بعد از روشن‌شدنِ گوشی هم درست باشند. فقط
+  /// تاریخِ قمری همچنان اینجا محاسبه و ذخیره می‌شود، چون تقویمِ اُم‌القرا
+  /// جدولی است و معادلِ ساده‌ی بومی ندارد.
   static Future<void> updateWidgetData({
     WeatherLocation? location,
     WeatherData? weather,
     List<Reminder> reminders = const [],
   }) async {
     try {
-      final today = Jalali.now();
-      final gDate = today.toDateTime();
+      final gDate = DateTime.now();
       final hijri = HijriCalendar.fromDate(gDate);
-
-      final weekdayText = shamsiWeekdayNamesFa[today.weekDay - 1];
-      // اعداد انگلیسی (بدون تبدیل به ارقام فارسی)
-      final dateShamsi = '${today.day} ${today.formatter.mN}';
       final dateHijri = '${hijri.hDay} ${hijriMonthNamesFa[hijri.hMonth - 1]}';
-      final dateGregorian = '${gDate.day} ${gregorianMonthNamesFa[gDate.month - 1]}';
 
       // تعداد یادآوری‌های فعال (هر دو دسته‌ی دارو و روزمره)
       final activeCount = reminders.where((r) => r.isActive).length;
       final reminderText = '$activeCount یادآوری';
 
-      final now = DateTime.now();
-      final hour = now.hour;
+      final hour = gDate.hour;
       final isDay = hour >= 6 && hour < 18;
 
       await HomeWidget.saveWidgetData<String>('city_name', location?.name ?? '—');
       await HomeWidget.saveWidgetData<String>(
           'temperature', weather != null ? '${weather.temperature.round()}°' : '--');
       await HomeWidget.saveWidgetData<String>('weather_emoji', _cloudCoverageEmoji(weather, isDay));
-      await HomeWidget.saveWidgetData<String>('weekday_text', weekdayText);
-      await HomeWidget.saveWidgetData<String>('date_shamsi', dateShamsi);
       await HomeWidget.saveWidgetData<String>('date_hijri', dateHijri);
-      await HomeWidget.saveWidgetData<String>('date_gregorian', dateGregorian);
       await HomeWidget.saveWidgetData<String>('reminder_text', reminderText);
 
       await HomeWidget.updateWidget(
