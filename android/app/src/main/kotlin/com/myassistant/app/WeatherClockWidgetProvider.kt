@@ -112,10 +112,26 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         val temp = FlowItem(widgetData.getString("temperature", "--") ?: "--", darkBlueColor, 1.3f, ItemStyle.BOLD)
         val emoji = FlowItem(widgetData.getString("weather_emoji", "🌤️") ?: "🌤️", darkBlueColor, 1.4f, ItemStyle.REGULAR)
         val reminder = FlowItem(widgetData.getString("reminder_text", "0 یادآوری") ?: "0 یادآوری", reminderColor, 0.9f, ItemStyle.BOLD)
-        val weekday = FlowItem(widgetData.getString("weekday_text", "—") ?: "—", darkGreenColor, 0.85f, ItemStyle.BOLD)
-        val dateShamsi = FlowItem(widgetData.getString("date_shamsi", "—") ?: "—", dateColor, 0.8f, ItemStyle.REGULAR)
+        // هفته/شمسی/میلادی به‌صورت بومی و زنده محاسبه می‌شوند (نه از حافظه‌ی
+        // مشترک) تا همیشه، حتی بلافاصله بعد از روشن‌شدنِ گوشی، درست باشند.
+        val today = Calendar.getInstance()
+        val gy = today.get(Calendar.YEAR)
+        val gm = today.get(Calendar.MONTH) + 1
+        val gd = today.get(Calendar.DAY_OF_MONTH)
+        val shamsi = PersianCalendarUtils.gregorianToJalali(gy, gm, gd)
+        val weekdayIndex = today.get(Calendar.DAY_OF_WEEK) % 7
+        val weekdayText = FlowItem(PersianCalendarUtils.shamsiWeekdayNamesFa[weekdayIndex], darkGreenColor, 0.85f, ItemStyle.BOLD)
+        val dateShamsi = FlowItem(
+            "${shamsi.day} ${PersianCalendarUtils.shamsiMonthNamesFa[shamsi.month - 1]}",
+            dateColor, 0.8f, ItemStyle.REGULAR,
+        )
+        // تاریخِ قمری، برخلاف بقیه، همچنان از حافظه‌ی مشترک خوانده می‌شود؛
+        // توضیحِ کامل در PersianCalendarUtils.kt آمده است.
         val dateHijri = FlowItem(widgetData.getString("date_hijri", "—") ?: "—", dateColor, 0.8f, ItemStyle.REGULAR)
-        val dateGregorian = FlowItem(widgetData.getString("date_gregorian", "—") ?: "—", dateColor, 0.8f, ItemStyle.REGULAR)
+        val dateGregorian = FlowItem(
+            "$gd ${PersianCalendarUtils.gregorianMonthNamesFa[gm - 1]}",
+            dateColor, 0.8f, ItemStyle.REGULAR,
+        )
 
         val dot = "  •  "
         val builder = SpannableStringBuilder()
@@ -124,7 +140,7 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
         appendItem(builder, temp, " ")
         appendItem(builder, emoji, " ")
         appendItem(builder, reminder, dot)
-        appendItem(builder, weekday, dot)
+        appendItem(builder, weekdayText, dot)
         appendItem(builder, dateShamsi, " ")
         appendItem(builder, dateHijri, " ")
         appendItem(builder, dateGregorian, " ")
