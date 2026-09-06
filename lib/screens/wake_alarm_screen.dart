@@ -169,15 +169,6 @@ class _WakeAlarmScreenState extends State<WakeAlarmScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(
-                    'گزینه‌ی اول («موسیقی آرام») همان فایلی است که خودت اضافه کردی؛ '
-                    'سه گزینه‌ی بعدی صداهای پیش‌فرضِ خودِ گوشی‌اند. با دکمه‌ی ▶ '
-                    'می‌توانی هرکدام را قبل از انتخاب بشنوی.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                  ),
-                ),
               ],
             ),
     );
