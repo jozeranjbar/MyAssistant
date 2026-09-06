@@ -4,6 +4,7 @@ import '../models/reminder.dart';
 import '../services/reminder_storage_service.dart';
 import '../services/notification_service.dart';
 import '../utils/persian_numbers.dart';
+import 'wake_alarm_screen.dart';
 
 /// برای نمایش: اگر ساعت صفر (نیمه‌شب) باشد به‌جای «۰۰»، «۲۴» نشان داده
 /// می‌شود؛ چون شمارشِ ساعت‌ها در این انتخاب‌گر از ۱ تا ۲۴ است، نه ۰ تا ۲۳.
@@ -161,7 +162,7 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _load();
   }
 
@@ -267,7 +268,7 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          '🔔 تنظیمات یادآوری',
+          '🔔 تنظیمات اعلان‌ها',
           style: TextStyle(color: Colors.purple, fontWeight: FontWeight.bold),
         ),
         bottom: TabBar(
@@ -276,8 +277,9 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
           labelColor: const Color(0xFF1B5E20),
           unselectedLabelColor: const Color(0xFF1B5E20).withOpacity(0.55),
           tabs: const [
-            Tab(text: '💊 یادآوری داروها'),
+            Tab(text: '💊 داروها'),
             Tab(text: '📝 یادآوری‌های روزمره'),
+            Tab(text: '⏰ زنگ بیداری'),
           ],
         ),
       ),
@@ -306,6 +308,7 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
             onToggle: _toggleActive,
             onDelete: _quickDelete,
           ),
+          const WakeAlarmScreen(),
         ],
       ),
     );
