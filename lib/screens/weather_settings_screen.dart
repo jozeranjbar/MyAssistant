@@ -435,12 +435,6 @@ class _WeatherSettingsScreenState extends State<WeatherSettingsScreen> {
                     ],
                   ),
                 ),
-                if (_reachedLimit)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 12),
-                    child: Text('به حداکثر تعداد لوکیشن (۴) رسیده‌اید.',
-                        style: TextStyle(color: Colors.deepOrange)),
-                  ),
                 const SizedBox(height: 24),
                 const Center(child: Icon(Icons.auto_awesome, color: Colors.white70, size: 26)),
               ],
