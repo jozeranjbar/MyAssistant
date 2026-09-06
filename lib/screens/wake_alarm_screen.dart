@@ -69,18 +69,12 @@ class _WakeAlarmScreenState extends State<WakeAlarmScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          '⏰ تنظیم زمان بیدار کردن',
-          style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -169,8 +163,7 @@ class _WakeAlarmScreenState extends State<WakeAlarmScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-              ],
-            ),
+      ],
     );
   }
 }
