@@ -18,8 +18,16 @@ class WakeAlarmSound {
   /// آدرسِ یکی از صداهای پیش‌فرضِ سیستم (وقتی rawResourceName نداریم).
   final String? androidUri;
 
-  const WakeAlarmSound(this.label, {this.rawResourceName, this.androidUri})
-      : assert(rawResourceName != null || androidUri != null);
+  /// طولِ تقریبیِ فایل/صدا؛ برای زمان‌بندیِ «تکرارِ دوم» استفاده می‌شود
+  /// (اجرای دوباره‌ی همان صدا، درست بعد از تمام‌شدنِ اجرای اول).
+  final int durationSeconds;
+
+  const WakeAlarmSound(
+    this.label, {
+    this.rawResourceName,
+    this.androidUri,
+    this.durationSeconds = 5,
+  }) : assert(rawResourceName != null || androidUri != null);
 
   AndroidNotificationSound toAndroidSound() {
     if (rawResourceName != null) {
@@ -30,11 +38,15 @@ class WakeAlarmSound {
 }
 
 const List<WakeAlarmSound> wakeAlarmSounds = [
-  WakeAlarmSound('موسیقی آرام', rawResourceName: 'wake_calm_1'),
+  WakeAlarmSound('موسیقی آرام', rawResourceName: 'wake_calm_1', durationSeconds: 29),
   WakeAlarmSound('صدای پیش‌فرض اعلان', androidUri: 'content://settings/system/notification_sound'),
   WakeAlarmSound('صدای پیش‌فرض زنگ هشدار', androidUri: 'content://settings/system/alarm_alert'),
   WakeAlarmSound('صدای پیش‌فرض رینگ‌تون', androidUri: 'content://settings/system/ringtone'),
 ];
+
+/// شناسه‌ی اکشنِ دکمه‌ی «قطع» روی اعلانِ بیدارباش. notification_service.dart
+/// این مقدار را برای تشخیصِ اینکه کدام دکمه زده شده چک می‌کند.
+const String wakeAlarmStopActionId = 'stop_wake_alarm';
 
 class WakeAlarmSettings {
   final bool enabled;
@@ -65,7 +77,8 @@ class WakeAlarmService {
   static const _keySoundIndex = 'wake_alarm_sound_index';
 
   /// شناسه‌ی ثابتِ اعلانِ بیدارباش (خارج از محدوده‌ی شناسه‌های یادآوری‌های عادی)
-  static const int _notificationId = 999900001;
+  static const int notificationId = 999900001;
+  static const int notificationIdEcho = 999900003;
   static const int _testNotificationId = 999900002;
 
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
@@ -90,7 +103,8 @@ class WakeAlarmService {
     if (settings.enabled) {
       await _schedule(settings);
     } else {
-      await _plugin.cancel(_notificationId);
+      await _plugin.cancel(notificationId);
+      await _plugin.cancel(notificationIdEcho);
     }
   }
 
@@ -107,6 +121,12 @@ class WakeAlarmService {
     // شناسه‌ی کانال باید شاملِ ایندکسِ صدا باشد، چون در اندروید ۸ به بعد
     // صدای یک کانال فقط در اولین ساختش قابل تعیین است.
     final channelId = 'wake_alarm_channel_${settings.soundIndex}';
+    const stopAction = AndroidNotificationAction(
+      wakeAlarmStopActionId,
+      'قطع زنگ',
+      cancelNotification: true,
+      showsUserInterface: false,
+    );
     final androidDetails = AndroidNotificationDetails(
       channelId,
       'زنگ بیدارباش',
@@ -119,6 +139,7 @@ class WakeAlarmService {
       vibrationPattern: Int64List.fromList([0, 400, 250, 400, 250, 400]),
       fullScreenIntent: true,
       category: AndroidNotificationCategory.alarm,
+      actions: const [stopAction],
     );
     final details = NotificationDetails(android: androidDetails);
 
@@ -128,19 +149,33 @@ class WakeAlarmService {
       next = next.add(const Duration(days: 1));
     }
     final scheduledDate = tz.TZDateTime.from(next, tz.local);
+    // نوبتِ دوم (تکرارِ صدا)، درست بعد از تمام‌شدنِ اجرای اول.
+    final scheduledDateEcho =
+        tz.TZDateTime.from(next.add(Duration(seconds: settings.sound.durationSeconds)), tz.local);
 
     final androidImpl =
         _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     final canExact = await androidImpl?.canScheduleExactNotifications() ?? true;
+    final scheduleMode =
+        canExact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle;
 
     await _plugin.zonedSchedule(
-      _notificationId,
+      notificationId,
       '⏰ وقتِ بیدار شدنه',
       'زنگِ بیدارباشِ شما به صدا در آمد',
       scheduledDate,
       details,
-      androidScheduleMode:
-          canExact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: scheduleMode,
+      matchDateTimeComponents: DateTimeComponents.time,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    );
+    await _plugin.zonedSchedule(
+      notificationIdEcho,
+      '⏰ وقتِ بیدار شدنه',
+      'زنگِ بیدارباشِ شما به صدا در آمد',
+      scheduledDateEcho,
+      details,
+      androidScheduleMode: scheduleMode,
       matchDateTimeComponents: DateTimeComponents.time,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
@@ -159,6 +194,9 @@ class WakeAlarmService {
       playSound: true,
       sound: sound.toAndroidSound(),
       category: AndroidNotificationCategory.alarm,
+      actions: const [
+        AndroidNotificationAction(wakeAlarmStopActionId, 'قطع', cancelNotification: true, showsUserInterface: false),
+      ],
     );
     final details = NotificationDetails(android: androidDetails);
     final scheduledDate = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 3));
