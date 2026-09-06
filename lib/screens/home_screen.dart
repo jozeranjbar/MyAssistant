@@ -8,6 +8,7 @@ import '../models/reminder.dart';
 import '../services/weather_service.dart';
 import '../services/location_storage_service.dart';
 import '../services/reminder_storage_service.dart';
+import '../services/wake_alarm_service.dart';
 import '../services/chart_storage_service.dart';
 import '../services/events_service.dart';
 import '../services/widget_service.dart';
@@ -37,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _weatherService = WeatherService();
   final _locationStorage = LocationStorageService();
   final _reminderStorage = ReminderStorageService();
+  final _wakeAlarmService = WakeAlarmService();
   final _chartStorage = ChartStorageService();
   final _eventsService = EventsService();
 
@@ -45,6 +47,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final Map<String, String?> _errorByLocation = {};
   bool _loading = true;
   int _activeReminderCount = 0;
+  bool _wakeAlarmEnabled = false;
+  String _wakeAlarmTimeLabel = '';
   List<CalendarEvent> _todayEvents = [];
   List<String> _chartVariables = [];
   List<String> _chartPeople = [];
@@ -56,6 +60,17 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadEverything();
   }
 
+  /// خلاصه‌ی بالای بخش «یادآوری»: تعداد یادآوری‌های فعال و (اگر روشن باشد)
+  /// ساعتِ زنگِ بیدارباش. تا وقتی بیدارباش روشن است، همیشه اینجا دیده
+  /// می‌شود؛ با خاموش‌کردنش از این خط حذف می‌شود.
+  String get _reminderSummaryLabel {
+    final parts = <String>[];
+    if (_activeReminderCount > 0) parts.add('$_activeReminderCount یادآوری فعال');
+    if (_wakeAlarmEnabled) parts.add('زنگ بیداری $_wakeAlarmTimeLabel');
+    if (parts.isEmpty) return 'یادآوری ثبت نشده است';
+    return parts.join('  •  ');
+  }
+
   Future<void> _loadEverything() async {
     final locations = await _locationStorage.loadLocations();
     // بارگذاری فوری از کش (برای نمایش سریع/آفلاین)
@@ -63,11 +78,14 @@ class _HomeScreenState extends State<HomeScreen> {
       _weatherByLocation[loc.id] = await _locationStorage.getCachedWeather(loc.id);
     }
     final reminders = await _reminderStorage.loadReminders();
+    final wakeAlarm = await _wakeAlarmService.load();
     final todayEvents = await _eventsService.getEventsForJalali(_today);
     final chartData = await _chartStorage.load();
     setState(() {
       _locations = locations;
       _activeReminderCount = reminders.where((r) => r.isActive).length;
+      _wakeAlarmEnabled = wakeAlarm.enabled;
+      _wakeAlarmTimeLabel = wakeAlarm.timeLabel;
       _todayEvents = todayEvents;
       _chartVariables = chartData.variables;
       _chartPeople = chartData.individuals;
@@ -263,9 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _NavButton(
                             emoji: '🔔',
                             emoji2: '💊',
-                            label: _activeReminderCount == 0
-                                ? 'یادآوری ثبت نشده است'
-                                : '$_activeReminderCount یادآوری فعال',
+                            label: _reminderSummaryLabel,
                             backgroundColor: Colors.green.shade50,
                             foregroundColor: Colors.green.shade900,
                             onTap: () async {
@@ -285,6 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               await Navigator.of(context).push(
                                 MaterialPageRoute(builder: (_) => const WakeAlarmScreen()),
                               );
+                              await _loadEverything();
                             },
                           ),
                           const SizedBox(height: 8),
