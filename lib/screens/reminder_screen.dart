@@ -277,21 +277,22 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
           labelColor: const Color(0xFF1B5E20),
           unselectedLabelColor: const Color(0xFF1B5E20).withOpacity(0.55),
           tabs: const [
+            Tab(text: '⏰ زنگ بیداری'),
             Tab(text: '💊 داروها'),
             Tab(text: '📝 یادآوری‌های روزمره'),
-            Tab(text: '⏰ زنگ بیداری'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
+          const WakeAlarmScreen(),
           _ReminderList(
             reminders: _medReminders,
             color: medColor,
             emptyEmoji: '💊',
-            emptyText: 'هنوز یادآوری دارویی ثبت نشده',
-            addLabel: '+ افزودن یادآوری دارو',
+            emptyText: 'هنوز دارویی ثبت نشده',
+            addLabel: '+ افزودن دارو',
             onAdd: () => _openAddOrEdit(ReminderCategory.medication),
             onEdit: (r) => _openAddOrEdit(ReminderCategory.medication, existing: r),
             onToggle: _toggleActive,
@@ -308,7 +309,6 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
             onToggle: _toggleActive,
             onDelete: _quickDelete,
           ),
-          const WakeAlarmScreen(),
         ],
       ),
     );
