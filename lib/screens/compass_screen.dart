@@ -36,6 +36,12 @@ class _CompassScreenState extends State<CompassScreen> {
   String? _locationError;
   Position? _position;
 
+  // جهتِ قبله (نسبت به شمالِ جغرافیایی)، فقط وقتی کاربر دکمه‌ی «نمایش جهتِ
+  // قبله» را بزند محاسبه می‌شود؛ مبتنی بر مختصاتِ کعبه (۲۱.۴۲۲۵، ۳۹.۸۲۶۲).
+  double? _qiblaBearing;
+  bool _qiblaLoading = false;
+  String? _qiblaError;
+
   @override
   void initState() {
     super.initState();
@@ -177,6 +183,57 @@ class _CompassScreenState extends State<CompassScreen> {
     super.dispose();
   }
 
+  /// مختصاتِ خانه‌ی کعبه در مکه.
+  static const double _kaabaLat = 21.4225;
+  static const double _kaabaLon = 39.8262;
+
+  /// جهتِ قبله (بر حسب درجه، نسبت به شمالِ جغرافیایی) با فرمولِ استانداردِ
+  /// «بیرینگِ اولیه» بینِ دو نقطه روی کره؛ همان فرمولی که همه‌ی اپ‌های
+  /// قبله‌نما استفاده می‌کنند.
+  double _calculateQiblaBearing(double userLat, double userLon) {
+    final phi1 = userLat * math.pi / 180;
+    final phi2 = _kaabaLat * math.pi / 180;
+    final deltaLambda = (_kaabaLon - userLon) * math.pi / 180;
+    final y = math.sin(deltaLambda) * math.cos(phi2);
+    final x = math.cos(phi1) * math.sin(phi2) - math.sin(phi1) * math.cos(phi2) * math.cos(deltaLambda);
+    final theta = math.atan2(y, x);
+    return (theta * 180 / math.pi + 360) % 360;
+  }
+
+  /// کوچک‌ترین اختلافِ زاویه‌ای بینِ دو جهت (همیشه بینِ ۰ تا ۱۸۰).
+  double _angularDiff(double a, double b) {
+    var d = (a - b) % 360;
+    if (d > 180) d -= 360;
+    if (d < -180) d += 360;
+    return d.abs();
+  }
+
+  /// با فشردنِ دکمه‌ی «نمایش جهتِ قبله»: اگر موقعیتِ مکانی هنوز نداریم،
+  /// اول آن را می‌گیرد (همان مجوزِ مکانی‌ای که برای بخشِ «موقعیت جغرافیایی»
+  /// همین صفحه از قبل استفاده می‌شود، بدون نیاز به مجوزِ جدید)، سپس جهتِ
+  /// قبله را حساب می‌کند تا روی خودِ قطب‌نما نشان داده شود.
+  Future<void> _showQibla() async {
+    setState(() {
+      _qiblaLoading = true;
+      _qiblaError = null;
+    });
+    if (_position == null) {
+      await _fetchLocation();
+    }
+    if (!mounted) return;
+    if (_position == null) {
+      setState(() {
+        _qiblaLoading = false;
+        _qiblaError = _locationError ?? 'دریافتِ موقعیت مکانی ممکن نشد.';
+      });
+      return;
+    }
+    setState(() {
+      _qiblaBearing = _calculateQiblaBearing(_position!.latitude, _position!.longitude);
+      _qiblaLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final heading = _displayAngle % 360 < 0 ? (_displayAngle % 360) + 360 : _displayAngle % 360;
@@ -292,7 +349,7 @@ class _CompassScreenState extends State<CompassScreen> {
                     curve: Curves.easeOutCubic,
                     child: CustomPaint(
                       size: Size(size, size),
-                      painter: _CompassDialPainter(),
+                      painter: _CompassDialPainter(qiblaBearingDeg: _qiblaBearing),
                     ),
                   ),
                   // نشانگر ثابت جهت رو‌به‌رو (نوک تیز رو به بالا)
@@ -342,7 +399,14 @@ class _CompassScreenState extends State<CompassScreen> {
           ),
         ),
         const SizedBox(height: 22),
+        if (_qiblaBearing != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _buildQiblaFeedback(headingRounded.toDouble()),
+          ),
         _buildLocationCard(),
+        const SizedBox(height: 12),
+        _buildQiblaCard(),
         const SizedBox(height: 12),
       ],
     );
@@ -446,6 +510,101 @@ class _CompassScreenState extends State<CompassScreen> {
     );
   }
 
+  /// نوارِ فیدبک زیرِ قطب‌نما وقتی جهتِ قبله محاسبه شده: اگر گوشی فعلاً
+  /// (تقریباً) رو به قبله باشد، پیامِ تاییدی نشان می‌دهد.
+  Widget _buildQiblaFeedback(double currentHeading) {
+    final facingQibla = _angularDiff(currentHeading, _qiblaBearing!) <= 5;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: facingQibla ? Colors.green.shade50 : Colors.teal.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: facingQibla ? Colors.green.shade300 : Colors.teal.shade200),
+      ),
+      child: Row(
+        children: [
+          Text(facingQibla ? '✅' : '🕋', style: const TextStyle(fontSize: 18)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              facingQibla
+                  ? 'رو به قبله‌اید'
+                  : 'نشانگرِ 🕋 روی قطب‌نما را زیرِ نوکِ قرمز بیاورید تا رو به قبله بایستید.',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: facingQibla ? Colors.green.shade800 : Colors.teal.shade800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// کارتِ «جهتِ قبله»: دکمه‌ای که با فشردنش (و در صورتِ نیاز، گرفتنِ
+  /// مختصاتِ مکانی با همان مجوزِ موقعیتِ مکانیِ موجود) جهتِ قبله را روی
+  /// خودِ قطب‌نما نشان می‌دهد.
+  Widget _buildQiblaCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(color: Colors.indigo.withOpacity(0.12), blurRadius: 14, offset: const Offset(0, 6)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Text('🕋', style: TextStyle(fontSize: 20)),
+              const SizedBox(width: 8),
+              const Text('جهت قبله', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              if (_qiblaBearing != null) ...[
+                const Spacer(),
+                Text(
+                  '${toPersianDigits(_qiblaBearing!.round().toString())}°',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal.shade700),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_qiblaError != null) ...[
+            Text(_qiblaError!, style: const TextStyle(fontSize: 13, color: Colors.redAccent)),
+            const SizedBox(height: 10),
+          ],
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _qiblaLoading ? null : _showQibla,
+              icon: _qiblaLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.explore, size: 18),
+              label: Text(_qiblaLoading
+                  ? 'در حال محاسبه...'
+                  : (_qiblaBearing == null ? 'نمایش جهت قبله' : 'به‌روزرسانیِ جهت قبله')),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _persianDirectionName(double deg) {
     const names = [
       'شمال',
@@ -486,8 +645,14 @@ class _CoordChip extends StatelessWidget {
   }
 }
 
-/// رسم صفحه‌ی چرخان قطب‌نما: دایره‌ی بیرونی، خط‌کش درجات و حروف جهت‌ها.
+/// رسم صفحه‌ی چرخان قطب‌نما: دایره‌ی بیرونی، خط‌کش درجات، حروف جهت‌ها و
+/// (در صورت وجود) نشانگرِ جهتِ قبله.
 class _CompassDialPainter extends CustomPainter {
+  /// جهتِ قبله بر حسب درجه (نسبت به شمال)؛ اگر null باشد نشانگر رسم نمی‌شود.
+  final double? qiblaBearingDeg;
+
+  _CompassDialPainter({this.qiblaBearingDeg});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -524,6 +689,29 @@ class _CompassDialPainter extends CustomPainter {
     _drawLabel(canvas, center, radius * 0.58, 90, 'E', Colors.indigo.shade700);
     _drawLabel(canvas, center, radius * 0.58, 180, 'S', Colors.indigo.shade700);
     _drawLabel(canvas, center, radius * 0.58, 270, 'W', Colors.indigo.shade700);
+
+    if (qiblaBearingDeg != null) {
+      _drawQiblaMarker(canvas, center, radius, qiblaBearingDeg!);
+    }
+  }
+
+  /// نشانگرِ جهتِ قبله: یک نقطه‌ی سبز روی حلقه‌ی بیرونی به‌همراه ایموجیِ
+  /// کعبه، دقیقاً روی زاویه‌ی محاسبه‌شده — این نشانگر هم مثلِ حروفِ N/E/S/W
+  /// جزوِ صفحه‌ی چرخان است، پس با چرخشِ گوشی، خودش را با جهتِ واقعیِ قبله
+  /// هماهنگ نگه می‌دارد.
+  void _drawQiblaMarker(Canvas canvas, Offset center, double radius, double deg) {
+    final angle = (deg - 90) * math.pi / 180;
+    final dotCenter = center + Offset(math.cos(angle), math.sin(angle)) * radius * 0.93;
+    final dotPaint = Paint()..color = Colors.green.shade600;
+    canvas.drawCircle(dotCenter, radius * 0.055, dotPaint);
+    canvas.drawCircle(dotCenter, radius * 0.055, Paint()..color = Colors.white..style = PaintingStyle.stroke..strokeWidth = radius * 0.012);
+
+    final labelCenter = center + Offset(math.cos(angle), math.sin(angle)) * radius * 0.755;
+    final tp = TextPainter(
+      text: TextSpan(text: '🕋', style: TextStyle(fontSize: radius * 0.16)),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, labelCenter - Offset(tp.width / 2, tp.height / 2));
   }
 
   void _drawLabel(Canvas canvas, Offset center, double r, double deg, String text, Color color) {
@@ -540,7 +728,8 @@ class _CompassDialPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _CompassDialPainter oldDelegate) =>
+      oldDelegate.qiblaBearingDeg != qiblaBearingDeg;
 }
 
 /// نشانگر ثابت مثلثی که همیشه رو به بالا (جهت روبه‌رو) اشاره می‌کند.
