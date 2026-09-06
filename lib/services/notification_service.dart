@@ -3,6 +3,26 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import '../models/reminder.dart';
+import 'wake_alarm_service.dart';
+
+/// وقتی دکمه‌ی «قطع زنگ» روی اعلانِ بیدارباش زده شود (چه با برنامه‌ی باز، چه
+/// از پس‌زمینه)، هر دو نوبتِ زنگ (اصلی و تکرار) را کنسل می‌کند تا صدا فوری
+/// قطع شود. باید یک تابعِ سطحِ بالا (top-level) باشد تا هم به‌عنوانِ
+/// callback معمولی و هم به‌عنوانِ callback پس‌زمینه قابلِ استفاده باشد.
+void _handleNotificationResponse(NotificationResponse response) {
+  if (response.actionId == wakeAlarmStopActionId) {
+    final plugin = FlutterLocalNotificationsPlugin();
+    plugin.cancel(WakeAlarmService.notificationId);
+    plugin.cancel(WakeAlarmService.notificationIdEcho);
+  }
+}
+
+/// نسخه‌ی پس‌زمینه‌ی همان تابع؛ چون اندروید برای اجرای کد در حالتی که برنامه
+/// کاملاً بسته است، به یک entry-point جداگانه نیاز دارد.
+@pragma('vm:entry-point')
+void _handleNotificationResponseBackground(NotificationResponse response) {
+  _handleNotificationResponse(response);
+}
 
 /// این سرویس اعلان‌ها را با استفاده از AlarmManager/UNUserNotification در سطح
 /// سیستم‌عامل زمان‌بندی می‌کند، به همین دلیل حتی وقتی برنامه به‌طور کامل بسته
@@ -35,7 +55,11 @@ class NotificationService {
       requestSoundPermission: true,
     );
     const initSettings = InitializationSettings(android: androidInit, iOS: iosInit);
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: _handleNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse: _handleNotificationResponseBackground,
+    );
 
     final androidImpl = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
