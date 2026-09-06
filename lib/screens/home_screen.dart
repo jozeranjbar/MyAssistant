@@ -20,7 +20,6 @@ import 'hourly_forecast_screen.dart';
 import 'chart_maker_screen.dart';
 import 'calendar_screen.dart';
 import 'reminder_screen.dart';
-import 'wake_alarm_screen.dart';
 import 'about_screen.dart';
 import '../utils/persian_numbers.dart';
 
@@ -67,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final parts = <String>[];
     if (_activeReminderCount > 0) parts.add('$_activeReminderCount یادآوری فعال');
     if (_wakeAlarmEnabled) parts.add('زنگ بیداری $_wakeAlarmTimeLabel');
-    if (parts.isEmpty) return 'یادآوری ثبت نشده است';
+    if (parts.isEmpty) return 'هیچ اعلانی ثبت نشده';
     return parts.join('  •  ');
   }
 
@@ -257,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 4),
 
-                  _SectionHeader(title: 'یادآوری'),
+                  _SectionHeader(title: 'اعلان‌ها'),
                   Padding(
                     padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
                     child: Container(
@@ -291,25 +290,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               await _loadEverything();
                             },
                           ),
-                          const SizedBox(height: 8),
-                          _NavButton(
-                            icon: Icons.alarm,
-                            borderColor: const Color(0xFFF6EDFA),
-                            elevated: true,
-                            label: 'تنظیم زمان بیدار کردن',
-                            onTap: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const WakeAlarmScreen()),
-                              );
-                              await _loadEverything();
-                            },
-                          ),
-                          const SizedBox(height: 8),
                           _NavButton(
                             icon: Icons.settings,
                             borderColor: const Color(0xFFF6EDFA),
                             elevated: true,
-                            label: 'تنظیمات یادآوری',
+                            label: 'تنظیمات اعلان‌ها',
                             onTap: () async {
                               await Navigator.of(context).push(
                                 MaterialPageRoute(builder: (_) => const ReminderScreen()),
