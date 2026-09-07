@@ -239,34 +239,21 @@ class _CompassScreenState extends State<CompassScreen> {
     final heading = _displayAngle % 360 < 0 ? (_displayAngle % 360) + 360 : _displayAngle % 360;
     final headingRounded = heading.round() % 360;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('قطب‌نما 🧭'),
-        backgroundColor: Colors.indigo.shade100,
-      ),
-      body: GestureDetector(
-        onHorizontalDragEnd: (details) {
-          if ((details.primaryVelocity ?? 0).abs() > 200) {
-            Navigator.of(context).maybePop();
-          }
-        },
-        child: Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFE3E6FF), Color(0xFFFDF3FF)],
-            ),
-          ),
-          child: SafeArea(
-            child: !_compassChecked
-                ? const Center(child: CircularProgressIndicator())
-                : !_compassSupported
-                    ? _buildUnsupported()
-                    : _buildCompass(headingRounded),
-          ),
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFE3E6FF), Color(0xFFFDF3FF)],
         ),
+      ),
+      child: SafeArea(
+        child: !_compassChecked
+            ? const Center(child: CircularProgressIndicator())
+            : !_compassSupported
+                ? _buildUnsupported()
+                : _buildCompass(headingRounded),
       ),
     );
   }
