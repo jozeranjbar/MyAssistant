@@ -223,100 +223,49 @@ class CalendarScreen extends StatefulWidget {
   State<CalendarScreen> createState() => _CalendarScreenState();
 }
 
-class _CalendarScreenState extends State<CalendarScreen> {
-  String _mode = 'year'; // 'year' یا 'events'
+class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
   final _eventsService = EventsService();
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('مشاهده تقویم سال و تنظیمات 🗓️'),
-      ),
-      body: GestureDetector(
-        onHorizontalDragEnd: (details) {
-          if ((details.primaryVelocity ?? 0).abs() > 200) {
-            Navigator.of(context).maybePop();
-          }
-        },
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    _ModeButton(
-                      label: 'تقویم سال',
-                      selected: _mode == 'year',
-                      onTap: () => setState(() => _mode = 'year'),
-                    ),
-                    const SizedBox(width: 8),
-                    _ModeButton(
-                      label: 'مناسبت‌ها',
-                      selected: _mode == 'events',
-                      onTap: () => setState(() => _mode = 'events'),
-                    ),
-                    const SizedBox(width: 8),
-                    _ModeButton(
-                      label: 'تبدیل تاریخ',
-                      selected: false,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const DateConverterScreen()),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _ModeButton(
-                      label: 'قطب‌نما',
-                      selected: false,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const CompassScreen()),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: _mode == 'year'
-                  ? const _YearCalendarView()
-                  : _EventsListView(eventsService: _eventsService),
-            ),
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicatorColor: Colors.purple,
+          labelColor: Colors.purple,
+          unselectedLabelColor: Colors.purple.withOpacity(0.55),
+          tabs: const [
+            Tab(text: 'تقویم سال'),
+            Tab(text: 'مناسبت‌ها'),
+            Tab(text: 'تبدیل تاریخ'),
+            Tab(text: 'قطب‌نما'),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ModeButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _ModeButton({required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? Colors.purple : Colors.purple.shade50,
-      borderRadius: BorderRadius.circular(24),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 16),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: selected ? Colors.white : Colors.purple,
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
-          ),
-        ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          const _YearCalendarView(),
+          _EventsListView(eventsService: _eventsService),
+          const DateConverterScreen(),
+          const CompassScreen(),
+        ],
       ),
     );
   }
