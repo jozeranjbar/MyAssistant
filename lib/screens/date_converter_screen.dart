@@ -49,25 +49,14 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('تبدیل تاریخ'),
-        backgroundColor: Colors.teal.shade100,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFDFF3EE), Color(0xFFFFF3D6)],
+        ),
       ),
-      body: GestureDetector(
-        onHorizontalDragEnd: (details) {
-          if ((details.primaryVelocity ?? 0).abs() > 200) {
-            Navigator.of(context).maybePop();
-          }
-        },
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFDFF3EE), Color(0xFFFFF3D6)],
-            ),
-          ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -97,8 +86,6 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
               ],
             ),
           ),
-        ),
-      ),
     );
   }
 
