@@ -253,8 +253,8 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
           tabs: const [
             Tab(text: 'تقویم سال'),
             Tab(text: 'مناسبت‌ها'),
-            Tab(text: 'تبدیل تاریخ'),
             Tab(text: 'قطب‌نما'),
+            Tab(text: 'تبدیل تاریخ'),
           ],
         ),
       ),
@@ -263,8 +263,8 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
         children: [
           const _YearCalendarView(),
           _EventsListView(eventsService: _eventsService),
-          const DateConverterScreen(),
           const CompassScreen(),
+          const DateConverterScreen(),
         ],
       ),
     );
