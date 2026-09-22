@@ -7,6 +7,7 @@ import '../data/iranian_holidays.dart';
 import '../utils/persian_numbers.dart';
 import 'date_converter_screen.dart';
 import 'compass_screen.dart';
+import 'measure_screen.dart';
 
 /// اطلاعات تعطیلی یک روز مشخص شمسی (بررسی جمعه، تعطیلات شمسی و قمری)
 class _HolidayInfo {
@@ -230,7 +231,7 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -254,6 +255,7 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
             Tab(text: 'تقویم سال'),
             Tab(text: 'مناسبت‌ها'),
             Tab(text: 'قطب‌نما'),
+            Tab(text: 'اندازه‌گیری'),
             Tab(text: 'تبدیل تاریخ'),
           ],
         ),
@@ -264,6 +266,7 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
           const _YearCalendarView(),
           _EventsListView(eventsService: _eventsService),
           const CompassScreen(),
+          const MeasureScreen(),
           const DateConverterScreen(),
         ],
       ),
