@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>AR Measure</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%;font-family:Tahoma,Arial,sans-serif;background:#000;color:#fff;overflow:hidden}
+#arRoot{position:absolute;inset:0;pointer-events:none}
+#arRoot>*{pointer-events:auto}
+#arUI{display:none}
+body.ar #arUI{display:block}
+#info{position:fixed;top:0;left:0;right:0;padding:calc(14px + env(safe-area-inset-top,0px)) 14px 12px;
+  background:linear-gradient(180deg,rgba(0,0,0,.85),rgba(0,0,0,.55));text-align:center;font-size:14px;line-height:1.85}
+#info b{color:#0f8}#info .w{color:#fc0}
+#setBtn{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:12px;width:42px;height:42px;
+  border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:20px;z-index:12}
+#m{position:fixed;top:calc(80px + env(safe-area-inset-top,0px));right:12px;min-width:180px;
+  background:rgba(0,0,0,.78);border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.9;display:none}
+#m .r{display:flex;justify-content:space-between;gap:12px}
+#m .r span:first-child{opacity:.75}
+#m .r span:last-child{color:#0f8;font-weight:bold}
+#btns{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:12px;right:12px;display:flex;gap:8px}
+.btn{flex:1;padding:13px 6px;border-radius:16px;border:none;font-size:13px;font-weight:bold;color:#fff;
+  font-family:inherit;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+.btn:active{transform:scale(.95)}.btn:disabled{opacity:.35}
+.b-o{background:#f9500}.b-r{background:#f33}.b-b{background:#0a84ff}.b-g{background:#3a3a3c}.b-green{background:#0a651}
+.panel{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.88);display:none;padding:24px;overflow-y:auto}
+.panel.on{display:block}
+.card{max-width:480px;margin:24px auto;background:#1c1c1e;border-radius:16px;padding:20px}
+.card h2{margin:0 0 16px;font-size:18px}
+.f{margin-bottom:16px}
+.f label{display:block;font-size:13px;margin-bottom:8px;opacity:.85}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;padding:10px 6px;border-radius:10px;background:#2c2c2e;color:#fff;border:1.5px solid transparent;font-family:inherit;font-size:13px}
+.seg button.on{border-color:#0f8;background:#0a2a18}
+.step{display:flex;align-items:center;gap:10px}
+.step button{width:44px;height:44px;border-radius:12px;background:#2c2c2e;color:#fff;border:none;font-size:22px;font-weight:bold}
+.step input{flex:1;padding:12px;border-radius:12px;background:#2c2c2e;color:#0f8;border:none;
+  text-align:center;font-size:16px;font-weight:bold;font-family:inherit;direction:ltr}
+.hint{font-size:11px;opacity:.6;margin-top:6px;line-height:1.7}
+.acts{display:flex;gap:10px;margin-top:20px}
+.acts button{flex:1;padding:14px;border-radius:12px;border:none;font-family:inherit;font-size:15px;font-weight:bold;color:#fff}
+#start{position:fixed;inset:0;z-index:30;background:linear-gradient(180deg,#0d0d0d,#1a1a1c);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px}
+#start h1{margin:0;font-size:24px}
+#start p{margin:0;font-size:13px;opacity:.7;line-height:1.9;max-width:380px}
+#go{padding:18px 52px;border-radius:40px;border:none;background:#0a651;color:#fff;font-size:18px;
+  font-weight:bold;font-family:inherit;box-shadow:0 8px 24px rgba(0,166,81,.4)}
+#go:disabled{background:#3a3a3c;box-shadow:none;color:#888}
+#go:active:not(:disabled){transform:scale(.97)}
+.sacts{display:flex;gap:12px}
+.sacts button{padding:10px 18px;border-radius:12px;border:1px solid #3a3a3c;background:transparent;color:#fff;font-family:inherit;font-size:13px}
+#st{font-size:12px;opacity:.6;min-height:1.4em}
+#st.err{color:#f52;opacity:1}
+#warn{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1c1c1e;padding:22px 24px;
+  border-radius:14px;text-align:center;font-size:14px;line-height:1.9;max-width:90%;z-index:50;display:none;
+  box-shadow:0 10px 30px rgba(0,0,0,.7)}
+#warn button{margin-top:14px;padding:10px 24px;border:none;border-radius:10px;background:#f33;color:#fff;
+  font-family:inherit;font-size:14px;font-weight:bold}
+#sum{position:fixed;inset:0;z-index:35;background:#0d0d0d;padding:24px;overflow-y:auto;display:none;flex-direction:column}
+#sum.on{display:flex}
+#sum h2{font-size:20px;margin:0 0 16px;text-align:center}
+#sumCard{background:#1c1c1e;border-radius:16px;padding:20px;max-width:480px;margin:0 auto 16px;width:100%}
+#sumCard .r{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #2c2c2e;font-size:14px}
+#sumCard .r:last-child{border-bottom:none}
+#sumCard .r b{color:#0f8}
+#sumCard .r.big{font-size:18px;padding-top:14px}
+#sumCard .r.big b{font-size:22px}
+#sumCard .dt{font-size:11px;opacity:.5;text-align:center;margin-top:8px}
+.sItem{background:#1c1c1e;border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.sItem .h{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;opacity:.8}
+.sItem .v{font-size:15px}.sItem .v b{color:#0f8}
+.sItem .d{background:none;border:none;color:#f52;font-family:inherit;font-size:12px;margin-top:8px;padding:0}
+</style>
+</head>
+<body>
+
+<div id="arRoot">
+  <div id="arUI">
+    <div id="info">دوربین را به سمت زمین یا دیوار بگیرید</div>
+    <button id="setBtn">⚙️</button>
+    <div id="m"></div>
+    <div id="btns">
+      <button id="undo" class="btn b-o" disabled>↶ واگرد</button>
+      <button id="clr"  class="btn b-r" disabled>🗑 پاک</button>
+      <button id="sav"  class="btn b-b" disabled>💾 ذخیره</button>
+      <button id="done" class="btn b-g">✔ پایان</button>
+    </div>
+  </div>
+  <div id="setPanel" class="panel"><div class="card">
+    <h2>⚙️ تنظیمات</h2>
+    <div class="f"><label>حالت تشخیص سطح</label>
+      <div class="seg" id="segSurf">
+        <button data-v="auto">خودکار</button><button data-v="floor">زمین</button><button data-v="wall">دیوار</button>
+      </div>
+      <div class="hint">اگر خودکار اشتباه می‌گیرد، سطح را دستی انتخاب کنید.</div>
+    </div>
+    <div class="f"><label>ضریب کالیبراسیون</label>
+      <div class="step"><button id="calM">−</button>
+        <input id="calIn" type="number" step="0.01" min="0.5" max="1.5" value="1.00">
+        <button id="calP">+</button>
+      </div>
+      <div class="hint">اگر ۱ متر واقعی را ۱٫۰۵ نشان داد، مقدار را <b>0.95</b> بگذارید.</div>
+    </div>
+    <div class="f"><label>واحد</label>
+      <div class="seg" id="segUnit">
+        <button data-v="metric">متریک</button><button data-v="imp">اینچ/فوت</button>
+      </div>
+    </div>
+    <div class="acts">
+      <button id="setSave" class="btn b-green">ذخیره</button>
+      <button id="setCancel" class="btn b-g">انصراف</button>
+    </div>
+  </div></div>
+  <div id="savPanel" class="panel"><div class="card">
+    <h2>📂 اندازه‌گیری‌های ذخیره‌شده</h2>
+    <div id="savList"></div>
+    <div class="acts">
+      <button id="savClr" class="btn b-r">پاک کردن همه</button>
+      <button id="savClose" class="btn b-g">بستن</button>
+    </div>
+  </div></div>
+</div>
+
+<div id="start">
+  <h1>📐 متر هوشمند AR</h1>
+  <p>گوشی را روی زمین یا دیوار بگیرید و ضربه بزنید.<br>برنامه به‌طور خودکار فاصله، محیط، مساحت و زاویه را محاسبه می‌کند.</p>
+  <button id="go" disabled>در حال آماده‌سازی…</button>
+  <div class="sacts">
+    <button id="opSet">⚙️ تنظیمات</button>
+    <button id="opSav">📂 ذخیره‌ها</button>
+  </div>
+  <div id="st">راه‌اندازی…</div>
+</div>
+
+<div id="sum">
+  <h2>✅ نتیجهٔ اندازه‌گیری</h2>
+  <div id="sumCard"></div>
+  <div class="sacts" style="justify-content:center">
+    <button id="sumSave" class="btn b-green" style="flex:0 0 auto;padding:14px 24px">💾 ذخیره</button>
+    <button id="sumNew" class="btn b-g" style="flex:0 0 auto;padding:14px 24px">🔄 جدید</button>
+  </div>
+</div>
+
+<div id="warn"></div>
+
+<script type="module">
+/* ============================================================
+   AR Measure — نسخهٔ نهایی
+   - Pooling خطوط، Texture Cache، Atlas اعداد
+   - Throttle برچسب‌ها، فیدبک ضربه، مدیریت reset
+   - FIX: قفل select هنگام لمس UI (رفع باگ ذخیره)
+   ============================================================ */
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+addEventListener('error', e => warn('خطای غیرمنتظره:<br>' + esc(e.error?.message || e.message)));
+addEventListener('unhandledrejection', e => { if (!arS) warn('خطا:<br>' + esc(e.reason?.message || e.reason)); });
+
+/* ---------- State ---------- */
+let THREE, cam, scene, rend, reticle, ctrl, hits, arS = null;
+let lastN = null, lastT = 0;
+const P = [], pS = [], lS = [];
+let aS = null;
+const MAXP = 30, MIND = 0.02, DEB = 250, COPL = 0.05, SURF = 0.5;
+
+/* FIX: قفل select هنگام لمس UI — رفع باگ «اضافه شدن نقطه خودکار بعد از ذخیره» */
+let uiLockUntil = 0;
+const lockSelect = (ms = 700) => { uiLockUntil = performance.now() + ms; };
+
+/* --- Reticle pulse animation --- */
+let pulseT = 0;
+const reticleMat = { color: 0x00ff88 };
+
+/* --- Label overlap throttle --- */
+let lastOvT = 0, lastOvQ = null;
+const OV_INTERVAL = 150;
+const OV_ANGLE_THRESHOLD = 0.03;
+const camQ = { q: null };
+
+/* --- Geometry pool for lines --- */
+let linePool = [];
+let lineGeo = null;
+
+/* --- Texture cache for labels --- */
+const texCache = new Map();
+const TEX_CACHE_LIMIT = 60;
+
+/* --- Number atlas --- */
+let numAtlas = null;
+
+const V = (...a) => new THREE.Vector3(...a);
+
+/* ---------- Settings ---------- */
+const DEF = { cal: 1, surf: 'auto', unit: 'metric' };
+let S = { ...DEF };
+try { Object.assign(S, JSON.parse(localStorage.getItem('arS') || 'null')); } catch(_) {}
+const saveS = () => { try { localStorage.setItem('arS', JSON.stringify(S)); } catch(_) {} };
+
+/* ---------- UI helpers ---------- */
+const setSt = (m, e) => { $('st').textContent = m; $('st').classList.toggle('err', !!e); };
+const warn = h => { $('warn').innerHTML = h + '<br><button onclick="location.reload()">بازگشت</button>'; $('warn').style.display = 'block'; };
+const info = h => $('info').innerHTML = h;
+let flashT = null;
+const flash = m => { info(`<span class="w">${m}</span>`); clearTimeout(flashT); flashT = setTimeout(upUi, 1200); };
+const setSeg = (el, v) => el.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+const getSeg = el => el.querySelector('button.on')?.dataset.v;
+
+/* ---------- Format ---------- */
+function fmt(v, kind) {
+  v *= (kind === 'a' ? S.cal ** 2 : S.cal);
+  if (S.unit === 'imp') {
+    if (kind === 'a') return (v / 0.092903).toFixed(2) + ' ft²';
+    return v < 0.3048 ? (v / 0.0254).toFixed(1) + ' in' : (v / 0.3048).toFixed(2) + ' ft';
+  }
+  if (kind === 'a') {
+    if (v < 0.0001) return (v * 1e6).toFixed(0) + ' mm²';
+    if (v < 1)      return (v * 1e4).toFixed(v < 0.01 ? 1 : 0) + ' cm²';
+    if (v < 10000)  return v.toFixed(2) + ' m²';
+    return `${(v/1000).toFixed(2)}k m² (${(v/10000).toFixed(3)} ha)`;
+  }
+  if (v < 0.01) return (v * 1000).toFixed(0) + ' mm';
+  if (v < 1)    return (v * 100).toFixed(1) + ' cm';
+  return v.toFixed(2) + ' m';
+}
+
+/* ---------- Geometry math ---------- */
+function area(pts) {
+  if (pts.length < 3) return 0;
+  let nx = 0, ny = 0, nz = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    nx += (a.y - b.y) * (a.z + b.z);
+    ny += (a.z - b.z) * (a.x + b.x);
+    nz += (a.x - b.x) * (a.y + b.y);
+  }
+  return 0.5 * Math.hypot(nx, ny, nz);
+}
+
+const centroid = pts => {
+  const c = V(0, 0, 0);
+  pts.forEach(p => c.add(p));
+  return c.multiplyScalar(1 / pts.length);
+};
+
+function normal(pts) {
+  if (pts.length < 3) return null;
+  let nx = 0, ny = 0, nz = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    nx += (a.y - b.y) * (a.z + b.z);
+    ny += (a.z - b.z) * (a.x + b.x);
+    nz += (a.x - b.x) * (a.y + b.y);
+  }
+  const L = Math.hypot(nx, ny, nz);
+  return L < 1e-9 ? null : V(nx / L, ny / L, nz / L);
+}
+
+function angle(a, b, c) {
+  const ba = V().subVectors(a, b), bc = V().subVectors(c, b);
+  const l1 = ba.length(), l2 = bc.length();
+  if (l1 < 1e-6 || l2 < 1e-6) return 0;
+  return Math.acos(Math.max(-1, Math.min(1, ba.dot(bc) / (l1 * l2)))) * 180 / Math.PI;
+}
+
+function segX(p1, p2, p3, p4) {
+  const d = (p2.x - p1.x) * (p4.y - p3.y) - (p2.y - p1.y) * (p4.x - p3.x);
+  if (Math.abs(d) < 1e-12) return false;
+  const t = ((p3.x - p1.x) * (p4.y - p3.y) - (p3.y - p1.y) * (p4.x - p3.x)) / d;
+  const u = ((p3.x - p1.x) * (p2.y - p1.y) - (p3.y - p1.y) * (p2.x - p1.x)) / d;
+  return t > 1e-6 && t < 1 - 1e-6 && u > 1e-6 && u < 1 - 1e-6;
+}
+
+function selfX(pts) {
+  if (pts.length < 4) return false;
+  const n = normal(pts); if (!n) return false;
+  const c = centroid(pts);
+  const up = Math.abs(n.y) < 0.9 ? V(0, 1, 0) : V(1, 0, 0);
+  const u = V().crossVectors(up, n).normalize();
+  const v = V().crossVectors(n, u).normalize();
+  const pr = pts.map(p => { const d = V().subVectors(p, c); return { x: d.dot(u), y: d.dot(v) }; });
+  const N = pr.length;
+  for (let i = 0; i < N; i++) {
+    const a1 = pr[i], a2 = pr[(i + 1) % N];
+    for (let j = i + 1; j < N; j++) {
+      if (j === (i + 1) % N || (j + 1) % N === i) continue;
+      if (segX(a1, a2, pr[j], pr[(j + 1) % N])) return true;
+    }
+  }
+  return false;
+}
+
+/* ---------- Texture cache ---------- */
+function getLabelTexture(text, color) {
+  const key = text + '|' + color;
+  if (texCache.has(key)) return texCache.get(key);
+
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 256;
+  const x = c.getContext('2d');
+  const r = 40;
+  x.fillStyle = 'rgba(0,0,0,.85)';
+  x.beginPath();
+  x.moveTo(r, 0); x.lineTo(512 - r, 0); x.arcTo(512, 0, 512, r, r);
+  x.lineTo(512, 256 - r); x.arcTo(512, 256, 512 - r, 256, r);
+  x.lineTo(r, 256); x.arcTo(0, 256, 0, 256 - r, r);
+  x.lineTo(0, r); x.arcTo(0, 0, r, 0, r); x.closePath(); x.fill();
+  x.fillStyle = color; x.font = 'bold 68px Tahoma';
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(text, 256, 138);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.minFilter = THREE.LinearFilter;
+
+  if (texCache.size >= TEX_CACHE_LIMIT) {
+    const first = texCache.keys().next().value;
+    texCache.get(first).dispose();
+    texCache.delete(first);
+  }
+  texCache.set(key, tex);
+  return tex;
+}
+
+function labelSprite(text, color, w = 0.3, h = 0.15) {
+  const tex = getLabelTexture(text, color);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  s.scale.set(w, h, 1);
+  return s;
+}
+
+/* ---------- Number atlas ---------- */
+function buildNumberAtlas() {
+  const SZ = 96, COLS = 10, ROWS = 3;
+  const c = document.createElement('canvas');
+  c.width = SZ * COLS; c.height = SZ * ROWS;
+  const x = c.getContext('2d');
+
+  for (let i = 0; i < 30; i++) {
+    const col = i % COLS, row = Math.floor(i / COLS);
+    const cx = col * SZ + SZ / 2, cy = row * SZ + SZ / 2;
+
+    x.fillStyle = '#ff3b30';
+    x.beginPath(); x.arc(cx, cy, SZ / 2 - 6, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = '#fff'; x.lineWidth = 6; x.stroke();
+
+    x.fillStyle = '#fff'; x.font = 'bold 48px Tahoma';
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(String(i + 1), cx, cy + 3);
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.minFilter = THREE.LinearFilter;
+  return { tex, SZ, COLS, ROWS };
+}
+
+function numberSprite(n) {
+  const a = numAtlas;
+  const u0 = ((n - 1) % a.COLS) / a.COLS;
+  const v0 = Math.floor((n - 1) / a.COLS) / a.ROWS;
+  const du = 1 / a.COLS, dv = 1 / a.ROWS;
+
+  const t = a.tex.clone();
+  t.needsUpdate = true;
+  t.offset.set(u0, 1 - v0 - dv);
+  t.repeat.set(du, dv);
+  t.minFilter = THREE.LinearFilter;
+
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true }));
+  s.scale.set(0.08, 0.08, 1);
+  s.renderOrder = 1001;
+  return s;
+}
+
+const disposeS = s => {
+  if (s.material.map && !texCache.has(s.material.map)) {
+    s.material.map.dispose();
+  }
+  s.material.dispose();
+};
+
+/* ---------- Line pool ---------- */
+function initLinePool() {
+  lineGeo = new THREE.CylinderGeometry(1, 1, 1, 8);
+  lineGeo.translate(0, 0.5, 0);
+
+  const matGreen = new THREE.MeshBasicMaterial({ color: 0x00ff88, depthTest: false });
+  const matClose = new THREE.MeshBasicMaterial({ color: 0x00c060, depthTest: false, transparent: true, opacity: 0.6 });
+
+  for (let i = 0; i < MAXP; i++) {
+    const mesh = new THREE.Mesh(lineGeo, i === MAXP - 1 ? matClose : matGreen);
+    mesh.visible = false;
+    mesh.renderOrder = 998;
+    scene.add(mesh);
+    linePool.push(mesh);
+  }
+}
+
+function setLine(mesh, a, b, radius) {
+  const dir = V().subVectors(b, a);
+  const len = dir.length();
+  if (len < 1e-6) { mesh.visible = false; return; }
+  mesh.visible = true;
+  mesh.position.copy(a);
+  mesh.scale.set(radius, len, radius);
+  const up = V(0, 1, 0);
+  mesh.quaternion.setFromUnitVectors(up, dir.normalize());
+}
+
+/* ---------- Rebuild scene ---------- */
+function rebuild() {
+  linePool.forEach(m => m.visible = false);
+
+  lS.forEach(s => { scene.remove(s); disposeS(s); });
+  lS.length = 0;
+  if (aS) { scene.remove(aS); disposeS(aS); aS = null; }
+
+  const closed = P.length >= 3;
+  const R = 0.0035;
+
+  let idx = 0;
+  for (let i = 0; i < P.length - 1; i++) {
+    setLine(linePool[idx++], P[i], P[i + 1], R);
+  }
+  if (closed && idx < linePool.length) {
+    setLine(linePool[idx], P[P.length - 1], P[0], R * 0.8);
+  }
+
+  const n = P.length, ec = closed ? n : n - 1;
+  for (let i = 0; i < ec; i++) {
+    const a = P[i], b = P[(i + 1) % n];
+    const lb = labelSprite(fmt(a.distanceTo(b), 'd'), '#00ff88');
+    lb.position.copy(V().addVectors(a, b).multiplyScalar(0.5));
+    scene.add(lb);
+    lS.push(lb);
+  }
+
+  if (closed) {
+    const ar = area(P);
+    if (ar > 0) {
+      const sx = selfX(P);
+      aS = labelSprite(`📐 ${fmt(ar, 'a')}${sx ? ' ⚠' : ''}`, sx ? '#ff5252' : '#ffcc00', 0.5, 0.25);
+      aS.position.copy(centroid(P));
+      aS.material.depthTest = false;
+      aS.renderOrder = 1000;
+      scene.add(aS);
+    }
+  }
+
+  lastOvT = 0;
+  resolveOverlap(true);
+}
+
+/* ---------- Label overlap (throttled) ---------- */
+function resolveOverlap(force = false) {
+  if (lS.length < 2 || !cam) return;
+
+  const now = performance.now();
+  if (!force) {
+    if (now - lastOvT < OV_INTERVAL) return;
+
+    if (!camQ.q) camQ.q = new THREE.Quaternion();
+    const curQ = new THREE.Quaternion();
+    cam.getWorldQuaternion(curQ);
+    if (lastOvQ && curQ.angleTo(lastOvQ) < OV_ANGLE_THRESHOLD) return;
+    camQ.q.copy(curQ);
+    lastOvQ = camQ.q.clone();
+  }
+
+  lastOvT = now;
+
+  const W = innerWidth, H = innerHeight;
+  const items = lS.map(s => {
+    const v = s.position.clone().project(cam);
+    return { s, x: (v.x + 1) * 0.5 * W, y: (1 - v.y) * 0.5 * H, hide: false };
+  });
+
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].hide) continue;
+    for (let j = i + 1; j < items.length; j++) {
+      if (items[j].hide) continue;
+      const dx = items[i].x - items[j].x, dy = items[i].y - items[j].y;
+      if (dx * dx + dy * dy < 2704) items[j].hide = true;
+    }
+  }
+  items.forEach(x => { x.s.visible = !x.hide; });
+}
+
+/* ---------- Three.js init ---------- */
+function initThree() {
+  scene = new THREE.Scene();
+  cam = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.01, 20);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 3));
+  const d = new THREE.DirectionalLight(0xffffff, 1.2);
+  d.position.set(1, 3, 2); scene.add(d);
+
+  rend = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  rend.setPixelRatio(Math.min(devicePixelRatio, 2));
+  rend.setSize(innerWidth, innerHeight);
+  rend.xr.enabled = true;
+  document.body.appendChild(rend.domElement);
+
+  const g = new THREE.RingGeometry(0.035, 0.05, 32).rotateX(-Math.PI / 2);
+  const m = new THREE.MeshBasicMaterial({ color: 0x00ff88, side: THREE.DoubleSide, depthTest: false });
+  reticle = new THREE.Mesh(g, m);
+  reticle.matrixAutoUpdate = false; reticle.visible = false;
+  reticle.renderOrder = 999; scene.add(reticle);
+  reticleMat.color = m.color;
+
+  ctrl = rend.xr.getController(0);
+  ctrl.addEventListener('select', onSelect);
+  scene.add(ctrl);
+
+  numAtlas = buildNumberAtlas();
+  initLinePool();
+
+  rend.setAnimationLoop(render);
+}
+
+/* ---------- Load three.js ---------- */
+async function loadThree() {
+  const urls = [
+    './three.module.js',
+    'https://unpkg.com/three@0.160.0/build/three.module.js',
+    'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js',
+    'https://esm.sh/three@0.160.0'
+  ];
+  let err;
+  for (const u of urls) {
+    try {
+      setSt('بارگذاری…');
+      const m = await import(/* @vite-ignore */ u);
+      if (m?.Scene && m?.WebGLRenderer) {
+        console.log('Three.js from:', u);
+        return m;
+      }
+    } catch (e) { err = e; }
+  }
+  throw err || new Error('هیچ منبعی در دسترس نبود');
+}
+
+/* ---------- AR session ---------- */
+async function startAR() {
+  $('go').disabled = true;
+  setSt('باز کردن دوربین…');
+
+  const init = {
+    requiredFeatures: ['hit-test'],
+    optionalFeatures: ['dom-overlay'],
+    domOverlay: { root: $('arRoot') }
+  };
+
+  try { arS = await navigator.xr.requestSession('immersive-ar', init); }
+  catch (e) {
+    try {
+      arS = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
+    } catch (e2) {
+      $('go').disabled = false;
+      setSt('شروع AR ناموفق', 1);
+      warn('شروع سشن ناموفق بود.<br>' + esc(e2.message));
+      return;
+    }
+  }
+
+  arS.addEventListener('end', onEnd);
+
+  arS.addEventListener('reset', () => {
+    if (P.length > 0) {
+      flash('⚠️ مرکز سیستم تغییر کرد — نقاط پاک شدند');
+      clear();
+    }
+  });
+
+  rend.xr.setReferenceSpaceType('local');
+  try { await rend.xr.setSession(arS); }
+  catch { warn('اتصال به renderer ناموفق'); try { arS.end(); } catch(_) {} return; }
+
+  document.body.classList.add('ar');
+  $('start').style.display = 'none';
+  $('m').style.display = 'block';
+  $('go').disabled = false;
+
+  let vs;
+  try { vs = await arS.requestReferenceSpace('viewer'); }
+  catch { warn('reference space ناموفق'); arS.end(); return; }
+
+  try { hits = await arS.requestHitTestSource({ space: vs, entityTypes: ['plane'] }); return; } catch(_) {}
+  try { hits = await arS.requestHitTestSource({ space: vs }); return; } catch(_) {}
+  warn('Hit-Test در دسترس نیست.<br>ARCore را به‌روز کنید.');
+  arS.end();
+}
+
+function onEnd() {
+  hits = null; lastN = null; arS = null; lastT = 0;
+  lastOvQ = null;
+  document.body.classList.remove('ar');
+  $('m').style.display = 'none';
+  if (P.length >= 2) showSummary();
+  else { clear(); $('start').style.display = 'flex'; $('go').textContent = 'شروع AR'; }
+}
+
+/* ---------- Point selection ---------- */
+function onSelect() {
+  const now = performance.now();
+
+  /* FIX: اگر کاربر همین الان روی یک دکمه/پنل زده، select را نادیده بگیر */
+  if (now < uiLockUntil) return;
+
+  if (now - lastT < DEB || !reticle?.visible) return;
+  const p = V().setFromMatrixPosition(reticle.matrix);
+
+  if (S.surf !== 'auto' && lastN) {
+    const wantH = S.surf === 'floor';
+    if (wantH !== (Math.abs(lastN.y) > SURF)) {
+      return flash(`⚠️ این نقطه روی سطح ${wantH ? 'افقی' : 'عمودی'} نیست`);
+    }
+  }
+  if (P.length && p.distanceTo(P[P.length - 1]) < MIND) return flash('⚠️ نقطه خیلی نزدیک');
+  if (P.length >= MAXP) return flash(`⚠️ حداکثر ${MAXP} نقطه`);
+
+  lastT = now;
+  P.push(p.clone());
+
+  triggerReticleFeedback();
+
+  const sp = numberSprite(P.length);
+  sp.position.copy(p);
+  scene.add(sp);
+  pS.push(sp);
+
+  rebuild(); upUi();
+}
+
+function triggerReticleFeedback() {
+  pulseT = 220;
+}
+
+function undo() {
+  if (!P.length) return;
+  P.pop();
+  const sp = pS.pop();
+  if (sp) { scene.remove(sp); disposeS(sp); }
+  rebuild(); upUi();
+}
+
+function clear() {
+  P.length = 0;
+  pS.forEach(s => { scene.remove(s); disposeS(s); }); pS.length = 0;
+  lS.forEach(s => { scene.remove(s); disposeS(s); }); lS.length = 0;
+  if (aS) { scene.remove(aS); disposeS(aS); aS = null; }
+  linePool.forEach(m => m.visible = false);
+  if (reticle) reticle.visible = false;
+  upUi();
+}
+
+/* ---------- UI update ---------- */
+function upUi() {
+  const n = P.length;
+  $('undo').disabled = n === 0;
+  $('clr').disabled = n === 0;
+  $('sav').disabled = n < 2;
+
+  if (n === 0) info('دوربین را به سمت <b>زمین</b> یا <b>دیوار</b> بگیرید و ضربه بزنید');
+  else if (n === 1) info('✅ نقطهٔ ۱ ثبت شد — برای فاصله نقطهٔ ۲ را بزنید');
+  else info(`📐 ${n} نقطه — برای ادامه ضربه بزنید`);
+
+  let h = `<div class="r"><span>نقاط:</span><span>${n}</span></div>`;
+  if (n === 2) h += `<div class="r"><span>فاصله:</span><span>${fmt(P[0].distanceTo(P[1]), 'd')}</span></div>`;
+  else if (n >= 3) {
+    let per = 0;
+    for (let i = 0; i < n; i++) per += P[i].distanceTo(P[(i + 1) % n]);
+    h += `<div class="r"><span>محیط:</span><span>${fmt(per, 'd')}</span></div>`;
+    h += `<div class="r"><span>مساحت:</span><span>${fmt(area(P), 'a')}</span></div>`;
+    h += `<div class="r"><span>آخرین زاویه:</span><span>${angle(P[n - 2], P[n - 1], P[0]).toFixed(1)}°</span></div>`;
+  }
+  $('m').innerHTML = h;
+}
+
+/* ---------- Render loop ---------- */
+function render(ts, frame) {
+  if (frame && hits && reticle) {
+    const rs = rend.xr.getReferenceSpace();
+    const res = frame.getHitTestResults(hits);
+    if (res.length) {
+      const pose = res[0].getPose(rs);
+      if (pose) {
+        reticle.visible = true;
+        reticle.matrix.fromArray(pose.transform.matrix);
+        const q = new THREE.Quaternion().setFromRotationMatrix(reticle.matrix);
+        lastN = V(0, 1, 0).applyQuaternion(q);
+      } else reticle.visible = false;
+    } else reticle.visible = false;
+  } else if (reticle) reticle.visible = false;
+
+  if (pulseT > 0) {
+    pulseT -= 16;
+    const t = Math.max(0, pulseT / 220);
+    const phase = 1 - t;
+    const sc = 1 + 0.6 * Math.sin(phase * Math.PI);
+    reticle.scale.set(sc, sc, sc);
+    reticleMat.color.setRGB(
+      0.0 + 1.0 * Math.sin(phase * Math.PI),
+      1.0,
+      0.53 - 0.53 * Math.sin(phase * Math.PI)
+    );
+    if (pulseT <= 0) {
+      reticle.scale.set(1, 1, 1);
+      reticleMat.color.setHex(0x00ff88);
+    }
+  }
+
+  if (lS.length >= 2) resolveOverlap();
+
+  rend.render(scene, cam);
+}
+
+const onResize = () => {
+  if (!cam || !rend) return;
+  cam.aspect = innerWidth / innerHeight;
+  cam.updateProjectionMatrix();
+  rend.setSize(innerWidth, innerHeight);
+  lastOvQ = null;
+};
+
+/* ---------- Settings ---------- */
+function openSettings() {
+  setSeg($('segSurf'), S.surf);
+  setSeg($('segUnit'), S.unit);
+  $('calIn').value = S.cal.toFixed(2);
+  $('setPanel').classList.add('on');
+}
+
+function saveSettings() {
+  S.surf = getSeg($('segSurf')) || 'auto';
+  S.unit = getSeg($('segUnit')) || 'metric';
+  S.cal = Math.max(0.5, Math.min(1.5, parseFloat($('calIn').value) || 1));
+  saveS();
+  $('setPanel').classList.remove('on');
+  upUi(); rebuild();
+}
+
+const adjustCal = d => {
+  $('calIn').value = Math.max(0.5, Math.min(1.5, parseFloat($('calIn').value) + d)).toFixed(2);
+};
+
+/* ---------- Saved records ---------- */
+const loadR = () => { try { return JSON.parse(localStorage.getItem('arR') || '[]'); } catch { return []; } };
+const saveR = r => { try { localStorage.setItem('arR', JSON.stringify(r.slice(0, 50))); } catch(_) {} };
+
+function buildRec() {
+  const n = P.length;
+  const r = { date: new Date().toISOString(), count: n, unit: S.unit, cal: S.cal };
+  if (n === 2) r.dist = P[0].distanceTo(P[1]) * S.cal;
+  else if (n >= 3) {
+    let per = 0;
+    for (let i = 0; i < n; i++) per += P[i].distanceTo(P[(i + 1) % n]);
+    r.per = per * S.cal;
+    r.area = area(P) * S.cal ** 2;
+    r.angles = [];
+    for (let i = 0; i < n; i++) r.angles.push(angle(P[(i - 1 + n) % n], P[i], P[(i + 1) % n]));
+  }
+  return r;
+}
+
+const fmtR = (v, kind, unit) => {
+  if (unit === 'imp') return kind === 'a' ? (v / 0.092903).toFixed(2) + ' ft²' : (v / 0.3048).toFixed(2) + ' ft';
+  if (kind === 'a') return v < 1 ? (v * 1e4).toFixed(0) + ' cm²' : v.toFixed(2) + ' m²';
+  return v < 1 ? (v * 100).toFixed(1) + ' cm' : v.toFixed(2) + ' m';
+};
+
+function saveCurrent() {
+  if (P.length < 2) return;
+  const l = loadR(); l.unshift(buildRec()); saveR(l);
+  flash('✅ ذخیره شد');
+}
+
+function openSaved() {
+  const list = loadR();
+  const el = $('savList');
+  el.innerHTML = list.length ? list.map((r, i) => `
+    <div class="sItem">
+      <div class="h"><span>${new Date(r.date).toLocaleDateString('fa-IR')}</span><span>${r.count} نقطه</span></div>
+      <div class="v">${
+        r.dist != null ? `فاصله: <b>${fmtR(r.dist, 'd', r.unit)}</b>` : ''
+      }${
+        r.area != null ? ` &nbsp; مساحت: <b>${fmtR(r.area, 'a', r.unit)}</b>` : ''
+      }</div>
+      <button class="d" data-i="${i}">حذف</button>
+    </div>`).join('') : '<p style="text-align:center;opacity:.6">هنوز چیزی ذخیره نشده</p>';
+  el.querySelectorAll('.d').forEach(b => b.addEventListener('click', e => {
+    const l = loadR(); l.splice(+e.target.dataset.i, 1); saveR(l); openSaved();
+  }));
+  $('savPanel').classList.add('on');
+}
+
+/* ---------- Summary ---------- */
+function showSummary() {
+  const r = buildRec();
+  const rows = [`<div class="r"><span>تعداد نقاط</span><span>${r.count}</span></div>`];
+  if (r.dist != null) rows.push(`<div class="r big"><span>فاصله</span><b>${fmtR(r.dist, 'd', r.unit)}</b></div>`);
+  if (r.per != null)  rows.push(`<div class="r big"><span>محیط</span><b>${fmtR(r.per, 'd', r.unit)}</b></div>`);
+  if (r.area != null) rows.push(`<div class="r big"><span>مساحت</span><b>${fmtR(r.area, 'a', r.unit)}</b></div>`);
+  if (r.angles?.length) {
+    const avg = r.angles.reduce((s, a) => s + a, 0) / r.angles.length;
+    rows.push(`<div class="r"><span>میانگین زوایا</span><span>${avg.toFixed(1)}°</span></div>`);
+  }
+  rows.push(`<div class="dt">${new Date(r.date).toLocaleString('fa-IR')}</div>`);
+  $('sumCard').innerHTML = rows.join('');
+  $('sum').classList.add('on');
+  $('start').style.display = 'none';
+}
+
+/* ---------- Wire ---------- */
+function wire() {
+  $('go').addEventListener('click', startAR);
+  $('undo').addEventListener('click', undo);
+  $('clr').addEventListener('click', () => { if (P.length && confirm('همه پاک شوند؟')) { clear(); upUi(); } });
+  $('sav').addEventListener('click', saveCurrent);
+  $('done').addEventListener('click', () => arS?.end());
+  $('setBtn').addEventListener('click', openSettings);
+  $('opSet').addEventListener('click', openSettings);
+  $('opSav').addEventListener('click', openSaved);
+  $('setSave').addEventListener('click', saveSettings);
+  $('setCancel').addEventListener('click', () => $('setPanel').classList.remove('on'));
+  $('savClose').addEventListener('click', () => $('savPanel').classList.remove('on'));
+  $('savClr').addEventListener('click', () => { if (confirm('همه پاک شوند؟')) { saveR([]); openSaved(); } });
+  $('calM').addEventListener('click', () => adjustCal(-0.01));
+  $('calP').addEventListener('click', () => adjustCal(0.01));
+  $('segSurf').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) setSeg($('segSurf'), b.dataset.v); });
+  $('segUnit').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) setSeg($('segUnit'), b.dataset.v); });
+  $('sumSave').addEventListener('click', () => {
+    const l = loadR(); l.unshift(buildRec()); saveR(l);
+    $('sum').classList.remove('on'); clear();
+    $('start').style.display = 'flex'; $('go').textContent = 'شروع دوباره';
+    setSt('ذخیره شد');
+  });
+  $('sumNew').addEventListener('click', () => { $('sum').classList.remove('on'); clear(); startAR(); });
+
+  /* FIX: هر لمس روی UI، select XR را برای ۷۰۰ms قفل میکند
+     این کار باعث میشود دکمههای ذخیره/واگرد/پاک/تنظیمات یک نقطه اضافه نکنند */
+  ['pointerdown', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, e => {
+      const el = e.target.closest('button, input, .panel, #setBtn');
+      if (el) lockSelect(700);
+    }, { capture: true, passive: true });
+  });
+
+  addEventListener('resize', onResize);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && arS) {
+      console.log('visibility lost; session will end');
+    }
+  });
+}
+
+/* ---------- Boot ---------- */
+async function boot() {
+  wire();
+  if (!navigator.xr) {
+    setSt('WebXR پشتیبانی نمی‌شود', 1);
+    return warn('مرورگر از WebXR پشتیبانی نمی‌کند.<br>از <b>Chrome اندروید</b> + <b>ARCore</b> استفاده کنید.');
+  }
+  let sup = false;
+  try { sup = await navigator.xr.isSessionSupported('immersive-ar'); } catch(_) {}
+  if (!sup) {
+    setSt('AR پشتیبانی نمی‌شود', 1);
+    return warn('گوشی شما AR را پشتیبانی نمی‌کند.<br>به <b>Google Play Services for AR</b> نیاز دارید.');
+  }
+  try { THREE = await loadThree(); }
+  catch (e) {
+    setSt('بارگذاری ناموفق', 1);
+    return warn('بارگذاری Three.js ناموفق بود.<br><small>' + esc(e.message) + '</small>');
+  }
+  initThree();
+  upUi();
+  $('go').disabled = false;
+  $('go').textContent = 'شروع AR';
+  setSt('آماده');
+}
+
+boot().catch(e => { setSt('راه‌اندازی ناموفق', 1); warn('خطا: ' + esc(e.message)); });
+</script>
+</body>
+</html>
