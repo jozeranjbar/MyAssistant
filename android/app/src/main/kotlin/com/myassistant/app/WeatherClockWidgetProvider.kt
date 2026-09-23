@@ -61,10 +61,34 @@ class WeatherClockWidgetProvider : AppWidgetProvider() {
                 set(Calendar.MILLISECOND, 0)
             }.timeInMillis
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextMinute, pendingIntent)
-            } else {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextMinute, pendingIntent)
+            // از اندروید ۱۲ (API 31) به بعد، setExactAndAllowWhileIdle بدون
+            // مجوزِ «Alarms & reminders» (که کاربر باید دستی از تنظیمات بدهد)
+            // یک SecurityException پرتاب می‌کند و کل برنامه/ویجت کرش می‌کند.
+            // این دقیقاً همان چیزی است که باعث می‌شد روی گوشی‌های جدید (اندروید
+            // ۱۲ به بالا) که هنوز این مجوز داده نشده، افزودن/بروزرسانیِ ویجت
+            // باعث کرش شود. اینجا ابتدا مجوز چک می‌شود و در نبودش، به یک آلارمِ
+            // غیردقیق (که مجوز نمی‌خواهد و هرگز کرش نمی‌کند) سقوط می‌کنیم؛ فقط
+            // ممکن است تیکِ ساعتِ ویجت با چند دقیقه تاخیر برسد، نه بیشتر.
+            try {
+                val canExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+                        alarmManager.canScheduleExactAlarms()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && canExact) {
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextMinute, pendingIntent)
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.set(AlarmManager.RTC_WAKEUP, nextMinute, pendingIntent)
+                } else {
+                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextMinute, pendingIntent)
+                }
+            } catch (e: SecurityException) {
+                // شبکه‌ی محافظِ نهایی: بعضی OEMها (شیائومی/هواوی/...) حتی با
+                // مجوز داده‌شده هم گاهی این استثنا را می‌دهند؛ در این حالت هم
+                // آلارمِ غیردقیق جایگزین می‌شود تا برنامه کرش نکند.
+                try {
+                    alarmManager.set(AlarmManager.RTC_WAKEUP, nextMinute, pendingIntent)
+                } catch (e2: SecurityException) {
+                    // اگر حتی این هم رد شد، صرفاً از این تیک صرف‌نظر می‌کنیم؛
+                    // ویجت با تیکِ بعدی (onUpdate دوره‌ای سیستم) دوباره تلاش می‌کند.
+                }
             }
         }
 
