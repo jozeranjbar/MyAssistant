@@ -3,6 +3,7 @@ import 'weather_service.dart';
 import 'location_storage_service.dart';
 import 'reminder_storage_service.dart';
 import 'widget_service.dart';
+import 'wake_alarm_service.dart';
 import '../models/weather_data.dart';
 
 const String kWeatherRefreshTask = 'weather_refresh_task';
@@ -58,6 +59,17 @@ Future<void> _refreshAllWeatherInBackground() async {
     weather: firstWeather,
     reminders: reminders,
   );
+
+  // زنگِ بیدارباش را هم در همین اجرای دوره‌ای دوباره schedule می‌کنیم؛ این
+  // یک شبکه‌ی محافظِ خودترمیم‌شونده است: اگر Time Zone گوشی عوض شود یا
+  // ساعت/تاریخِ سیستم دستی تغییر کند (که هیچ‌کدام به‌تنهایی باعثِ
+  // re-schedule شدنِ اعلانِ زمان‌بندی‌شده نمی‌شوند)، حداکثر تا ۳۰ دقیقه‌ی
+  // بعد، بدونِ نیاز به باز کردنِ برنامه توسطِ کاربر، دوباره با زمانِ درست
+  // تنظیم می‌شود. خطای احتمالی نادیده گرفته می‌شود تا بروزرسانیِ آب‌وهوا/
+  // ویجت (که مهم‌تر است) هیچ‌وقت به‌خاطرِ این بخش شکست نخورد.
+  try {
+    await WakeAlarmService().reschedule();
+  } catch (_) {}
 }
 
 class BackgroundService {
