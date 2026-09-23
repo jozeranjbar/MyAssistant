@@ -244,7 +244,6 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('مشاهده تقویم سال و تنظیمات 🗓️'),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -255,7 +254,7 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
             Tab(text: 'تقویم سال'),
             Tab(text: 'مناسبت‌ها'),
             Tab(text: 'قطب‌نما'),
-            Tab(text: 'اندازه‌گیری'),
+            Tab(text: 'اندازه‌گیر'),
             Tab(text: 'تبدیل تاریخ'),
           ],
         ),

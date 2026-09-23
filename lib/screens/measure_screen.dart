@@ -110,7 +110,7 @@ class _MeasureScreenState extends State<MeasureScreen> {
                       const Text('📐', style: TextStyle(fontSize: 26)),
                       const SizedBox(width: 10),
                       const Expanded(
-                        child: Text('متر هوشمند AR', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        child: Text('اندازه‌گیری هوشمند', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       ),
                     ],
                   ),
@@ -167,12 +167,6 @@ class _MeasureScreenState extends State<MeasureScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'ابزار مستقیم در Chrome باز می‌شود.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11.5, color: Colors.indigo.shade300),
             ),
           ],
         ),

@@ -242,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             icon: Icons.settings,
                             borderColor: const Color(0xFFF6EDFA),
                             elevated: true,
-                            label: 'تنظیمات و مشاهده تقویم سال',
+                            label: 'تقویم، قطب‌نما، اندازه‌گیر',
                             onTap: () async {
                               await Navigator.of(context).push(
                                 MaterialPageRoute(builder: (_) => const CalendarScreen()),
