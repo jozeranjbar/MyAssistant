@@ -11,52 +11,52 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  cupertino_icons: ^1.0.6
+  cupertino_icons: 1.0.6
 
   # شبکه و اتصال اینترنت
-  http: ^1.2.1
-  connectivity_plus: ^6.0.3
+  http: 1.2.1
+  connectivity_plus: 6.0.3
 
   # ذخیره‌سازی دائمی (لوکیشن‌ها، کش آب‌وهوا، یادآوری‌ها)
-  shared_preferences: ^2.2.3
+  shared_preferences: 2.2.3
 
   # اعلان‌های محلی (کار می‌کنند حتی وقتی برنامه بسته است)
-  flutter_local_notifications: ^17.2.2
-  timezone: ^0.9.4
+  flutter_local_notifications: 17.2.2
+  timezone: 0.9.4
 
   # اجرای پس‌زمینه برای بروزرسانی آب‌وهوا / یادآوری بعد از ری‌استارت
-  workmanager: ^0.5.2
+  workmanager: 0.5.2
 
   # تقویم شمسی و میلادی
-  shamsi_date: ^1.1.1
+  shamsi_date: 1.1.1
 
   # تقویم قمری (هجری)
-  hijri: ^3.0.0
+  hijri: 3.0.0
 
   # فرمت اعداد فارسی
-  intl: ^0.19.0
+  intl: 0.19.0
 
   # باز کردن لینک ایمیل و کانال تلگرام
-  url_launcher: ^6.3.0
+  url_launcher: 6.3.0
 
   # ویجت صفحه اصلی گوشی
-  home_widget: ^0.6.0
+  home_widget: 0.6.0
 
   # اشتراک‌گذاری فایل پشتیبان و تصویر نمودار (نمودار ساز)
-  share_plus: ^7.2.2
-  path_provider: ^2.1.3
+  share_plus: 7.2.2
+  path_provider: 2.1.3
 
   # قطب‌نما: خواندن سنسورهای مغناطیس‌سنج/شتاب‌سنج دستگاه (کاملاً آفلاین)
-  flutter_compass: ^0.8.1
+  flutter_compass: 0.8.1
 
   # موقعیت جغرافیایی (طول/عرض) برای صفحه‌ی قطب‌نما
-  geolocator: ^13.0.1
+  geolocator: 13.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
-  flutter_launcher_icons: ^0.13.1
+  flutter_lints: 4.0.0
+  flutter_launcher_icons: 0.13.1
 
 flutter:
   uses-material-design: true
