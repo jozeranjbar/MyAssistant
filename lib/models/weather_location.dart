@@ -25,11 +25,15 @@ class WeatherLocation {
       };
 
   factory WeatherLocation.fromJson(Map<String, dynamic> json) => WeatherLocation(
-        id: json['id'],
-        name: json['name'],
-        latitude: (json['latitude'] as num).toDouble(),
-        longitude: (json['longitude'] as num).toDouble(),
-        source: json['source'] ?? 'manual',
-        province: json['province'],
+        // به‌جای فرض قطعی روی نوعِ دقیقِ هر فیلد (که با دیتای بازیابی‌شده از
+        // گوشیِ قبلی یا نسخه‌ی قدیمی‌تر برنامه ممکن است جور در نیاید و کل
+        // اپ را کرش کند)، همه‌جا با as? خوانده می‌شود و مقدار پیش‌فرضِ امن
+        // جایگزین می‌شود.
+        id: json['id'] as String? ?? '',
+        name: json['name'] as String? ?? '',
+        latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
+        longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
+        source: json['source'] as String? ?? 'manual',
+        province: json['province'] as String?,
       );
 }
