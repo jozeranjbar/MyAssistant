@@ -34,6 +34,11 @@ class _CompassScreenState extends State<CompassScreen> {
   bool _isOnline = false;
   bool _locationLoading = false;
   String? _locationError;
+  // وقتی مشکل با یک تنظیمِ سیستمی قابل‌حل باشد (GPS خاموش یا مجوزِ رد شده
+  // برای همیشه)، این مقدار مشخص می‌کند کدام صفحه‌ی تنظیمات باید باز شود؛
+  // برای بقیه‌ی خطاها (تایم‌اوت، خطای ناشناخته) null می‌ماند و فقط دکمه‌ی
+  // «تلاش دوباره» نشان داده می‌شود.
+  _LocationSettingsAction? _locationSettingsAction;
   Position? _position;
 
   // جهتِ قبله (نسبت به شمالِ جغرافیایی)، فقط وقتی کاربر دکمه‌ی «نمایش جهتِ
@@ -105,12 +110,14 @@ class _CompassScreenState extends State<CompassScreen> {
     setState(() {
       _locationLoading = true;
       _locationError = null;
+      _locationSettingsAction = null;
     });
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         setState(() {
           _locationError = 'سرویسِ موقعیت مکانی گوشی خاموش است. آن را از تنظیمات گوشی روشن کنید.';
+          _locationSettingsAction = _LocationSettingsAction.openLocationSettings;
           _locationLoading = false;
         });
         return;
@@ -129,7 +136,8 @@ class _CompassScreenState extends State<CompassScreen> {
       if (permission == LocationPermission.deniedForever) {
         setState(() {
           _locationError =
-              'دسترسی به موقعیت مکانی رد شده. از تنظیمات گوشی فعالش کنید.';
+              'دسترسی به موقعیت مکانی رد شده. از تنظیمات برنامه فعالش کنید.';
+          _locationSettingsAction = _LocationSettingsAction.openAppSettings;
           _locationLoading = false;
         });
         return;
@@ -181,6 +189,23 @@ class _CompassScreenState extends State<CompassScreen> {
     _compassSub?.cancel();
     _connectivitySub?.cancel();
     super.dispose();
+  }
+
+  /// باز کردنِ صفحه‌ی تنظیماتِ مناسب (تنظیماتِ خودِ برنامه برای مجوزِ
+  /// رد‌شده‌ی همیشگی، یا تنظیماتِ سیستمیِ موقعیت مکانی برای GPS خاموش).
+  /// بدون این دکمه، کاربر باید خودش مسیرِ تنظیماتِ گوشی را پیدا کند که
+  /// روی برندهای مختلف اسم/مسیرش فرق دارد.
+  Future<void> _openSettingsForCurrentError() async {
+    switch (_locationSettingsAction) {
+      case _LocationSettingsAction.openAppSettings:
+        await Geolocator.openAppSettings();
+        break;
+      case _LocationSettingsAction.openLocationSettings:
+        await Geolocator.openLocationSettings();
+        break;
+      case null:
+        break;
+    }
   }
 
   /// مختصاتِ خانه‌ی کعبه در مکه.
@@ -468,6 +493,30 @@ class _CompassScreenState extends State<CompassScreen> {
               Text(_locationError!, style: const TextStyle(fontSize: 13, color: Colors.redAccent)),
               const SizedBox(height: 10),
             ],
+            // وقتی مشکل با یک تنظیمِ سیستمی قابل‌حل است (GPS خاموش یا مجوزِ
+            // رد‌شده‌ی همیشگی)، به‌جایِ اینکه کاربر خودش دنبالِ مسیرِ تنظیماتِ
+            // گوشی بگردد، دکمه‌ای می‌دهیم که مستقیم همان صفحه را باز می‌کند.
+            if (_locationSettingsAction != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _openSettingsForCurrentError,
+                    icon: const Icon(Icons.settings, size: 18),
+                    label: Text(
+                      _locationSettingsAction == _LocationSettingsAction.openAppSettings
+                          ? 'باز کردن تنظیمات برنامه'
+                          : 'باز کردن تنظیمات موقعیت مکانی',
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.indigo,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ),
+              ),
             if (_position == null || _locationError != null)
               SizedBox(
                 width: double.infinity,
@@ -717,6 +766,15 @@ class _CompassDialPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _CompassDialPainter oldDelegate) =>
       oldDelegate.qiblaBearingDeg != qiblaBearingDeg;
+}
+
+/// کدام صفحه‌ی تنظیماتِ سیستمی باید برای رفعِ خطای فعلی پیشنهاد شود.
+enum _LocationSettingsAction {
+  /// تنظیماتِ خودِ برنامه (برای مجوزِ رد‌شده‌ی همیشگی — deniedForever).
+  openAppSettings,
+
+  /// تنظیماتِ سیستمیِ موقعیت مکانی (برای وقتی GPS/Location Service خاموش است).
+  openLocationSettings,
 }
 
 /// نشانگر ثابت مثلثی که همیشه رو به بالا (جهت روبه‌رو) اشاره می‌کند.
