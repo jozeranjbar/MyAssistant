@@ -4,12 +4,11 @@ import android.appwidget.AppWidgetManager
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
-import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import java.io.File
 
 class MainActivity : FlutterActivity() {
     private val pinChannel = "com.myassistant.app/widget_pin"
@@ -28,17 +27,17 @@ class MainActivity : FlutterActivity() {
         }
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, browserChannel).setMethodCallHandler { call, result ->
-            if (call.method == "openHtmlInBrowser") {
-                val path = call.argument<String>("path")
-                if (path.isNullOrEmpty()) {
-                    result.error("NO_PATH", "مسیر فایل ارسال نشده است", null)
+            if (call.method == "openUrlInBrowser") {
+                val url = call.argument<String>("url")
+                if (url.isNullOrEmpty()) {
+                    result.error("NO_URL", "آدرس ارسال نشده است", null)
                     return@setMethodCallHandler
                 }
-                val opened = openHtmlInBrowser(path)
+                val opened = openUrlInBrowser(url)
                 if (opened) {
                     result.success(null)
                 } else {
-                    result.error("NO_BROWSER", "هیچ مرورگری برای باز کردن فایل پیدا نشد", null)
+                    result.error("NO_BROWSER", "هیچ مرورگری برای باز کردن آدرس پیدا نشد", null)
                 }
             } else {
                 result.notImplemented()
@@ -47,20 +46,16 @@ class MainActivity : FlutterActivity() {
     }
 
     /**
-     * فایل HTML محلی را با ACTION_VIEW (نه Share) از طریق FileProvider باز می‌کند
-     * تا به‌جای WebView داخلی، خودِ مرورگر (ترجیحاً Chrome) آن را اجرا کند —
-     * چون WebXR/immersive-ar فقط داخل یک مرورگر واقعی کار می‌کند.
+     * آدرس (اینجا آدرس سرور محلی http://127.0.0.1:port/...) را با
+     * ACTION_VIEW باز می‌کند تا به‌جای WebView داخلی، خودِ مرورگر
+     * (ترجیحاً Chrome) آن را اجرا کند — چون WebXR/immersive-ar فقط
+     * داخل یک مرورگر واقعی و روی Secure Context کار می‌کند.
      */
-    private fun openHtmlInBrowser(path: String): Boolean {
-        val file = File(path)
-        if (!file.exists()) return false
-
-        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+    private fun openUrlInBrowser(url: String): Boolean {
+        val uri = Uri.parse(url)
 
         // ابتدا تلاش برای باز کردن مستقیم با Chrome
-        val chromeIntent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, "text/html")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val chromeIntent = Intent(Intent.ACTION_VIEW, uri).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             setPackage("com.android.chrome")
         }
@@ -71,9 +66,7 @@ class MainActivity : FlutterActivity() {
             // Chrome نصب نیست؛ به مرورگر پیش‌فرض/انتخاب کاربر برمی‌گردیم
         }
 
-        val genericIntent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, "text/html")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val genericIntent = Intent(Intent.ACTION_VIEW, uri).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         return try {
