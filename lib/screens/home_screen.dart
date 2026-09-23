@@ -71,28 +71,56 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadEverything() async {
-    final locations = await _locationStorage.loadLocations();
-    // بارگذاری فوری از کش (برای نمایش سریع/آفلاین)
-    for (final loc in locations) {
-      _weatherByLocation[loc.id] = await _locationStorage.getCachedWeather(loc.id);
+    // این تابع اولین چیزی است که با باز شدنِ برنامه اجرا می‌شود. قبلاً هیچ
+    // try/catch‌ای دورش نبود؛ پس اگر بارگذاریِ هر کدام از این داده‌ها (مثلاً
+    // به‌خاطرِ دیتای بازیابی‌شده از گوشیِ قبلی هنگام تعویض گوشی) خطا می‌داد،
+    // کل صفحه برای همیشه روی حالتِ «در حالِ بارگذاری» می‌ماند یا برنامه کرش
+    // می‌کرد. حالا حتی در بدترین حالت هم صفحه با مقادیرِ پیش‌فرض/خالی باز
+    // می‌شود، نه اینکه کاربر با یک صفحه‌ی خاکستریِ بی‌پایان یا کرش مواجه شود.
+    List<WeatherLocation> locations = [];
+    List<Reminder> reminders = [];
+    try {
+      locations = await _locationStorage.loadLocations();
+      // بارگذاری فوری از کش (برای نمایش سریع/آفلاین)
+      for (final loc in locations) {
+        try {
+          _weatherByLocation[loc.id] = await _locationStorage.getCachedWeather(loc.id);
+        } catch (_) {
+          // کشِ خرابِ یک شهر نباید مانع نمایشِ بقیه‌ی شهرها شود
+        }
+      }
+      reminders = await _reminderStorage.loadReminders();
+      final wakeAlarm = await _wakeAlarmService.load();
+      final todayEvents = await _eventsService.getEventsForJalali(_today);
+      final chartData = await _chartStorage.load();
+      if (!mounted) return;
+      setState(() {
+        _locations = locations;
+        _activeReminderCount = reminders.where((r) => r.isActive).length;
+        _wakeAlarmEnabled = wakeAlarm.enabled;
+        _wakeAlarmTimeLabel = wakeAlarm.timeLabel;
+        _todayEvents = todayEvents;
+        _chartVariables = chartData.variables;
+        _chartPeople = chartData.individuals;
+        _loading = false;
+      });
+    } catch (_) {
+      // یکی از بخش‌ها با خطای غیرمنتظره مواجه شد؛ صفحه با هر چیزی که تا
+      // همین‌جا موفق به بارگذاری شده بود ادامه پیدا می‌کند، به‌جای گیر کردن.
+      if (!mounted) return;
+      setState(() {
+        _locations = locations;
+        _loading = false;
+      });
     }
-    final reminders = await _reminderStorage.loadReminders();
-    final wakeAlarm = await _wakeAlarmService.load();
-    final todayEvents = await _eventsService.getEventsForJalali(_today);
-    final chartData = await _chartStorage.load();
-    setState(() {
-      _locations = locations;
-      _activeReminderCount = reminders.where((r) => r.isActive).length;
-      _wakeAlarmEnabled = wakeAlarm.enabled;
-      _wakeAlarmTimeLabel = wakeAlarm.timeLabel;
-      _todayEvents = todayEvents;
-      _chartVariables = chartData.variables;
-      _chartPeople = chartData.individuals;
-      _loading = false;
-    });
-    await _refreshAllWeather();
-    await _updateWidget(reminders);
-    await _maybePromptAddWidget();
+    try {
+      await _refreshAllWeather();
+      await _updateWidget(reminders);
+      await _maybePromptAddWidget();
+    } catch (_) {
+      // این سه مورد صرفاً تکمیلی هستند؛ شکست‌شان نباید صفحه‌ی اصلی را که
+      // بالا با موفقیت ساخته شد، خراب کند.
+    }
   }
 
   Future<void> _updateWidget(List<Reminder> reminders) async {
