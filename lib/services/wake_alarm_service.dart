@@ -159,26 +159,45 @@ class WakeAlarmService {
     final scheduleMode =
         canExact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle;
 
-    await _plugin.zonedSchedule(
-      notificationId,
-      '⏰ وقتِ بیدار شدنه',
-      'زنگِ بیدارباشِ شما به صدا در آمد',
-      scheduledDate,
-      details,
-      androidScheduleMode: scheduleMode,
-      matchDateTimeComponents: DateTimeComponents.time,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-    );
-    await _plugin.zonedSchedule(
-      notificationIdEcho,
-      '⏰ وقتِ بیدار شدنه',
-      'زنگِ بیدارباشِ شما به صدا در آمد',
-      scheduledDateEcho,
-      details,
-      androidScheduleMode: scheduleMode,
-      matchDateTimeComponents: DateTimeComponents.time,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-    );
+    // قبل از هر schedule جدید، هر دو اعلانِ قبلی (اصلی + تکرارِ صدا) صریحاً
+    // لغو می‌شوند. قبلاً این کار انجام نمی‌شد و اگر مثلاً کاربر چند بار پشتِ
+    // سرِ هم ساعت یا صدا را عوض می‌کرد، یا اگر همین متد بعد از تغییرِ
+    // Time Zone دوباره صدا زده می‌شد (نگاه کنید به reschedule() و
+    // background_service.dart)، ریسکِ باقی‌ماندنِ یک زمان‌بندیِ قدیمی/یتیم
+    // با کانال یا صدای اشتباه وجود داشت. لغوِ صریح، این وضعیت را غیرممکن
+    // می‌کند: همیشه دقیقاً یک نسخه‌ی تازه از هر دو اعلان فعال است.
+    await _plugin.cancel(notificationId);
+    await _plugin.cancel(notificationIdEcho);
+
+    // زمان‌بندیِ اعلان‌ها نباید کلِ برنامه یا صفحه‌ی تنظیمات را کرش بدهد؛
+    // بعضی OEMها (مثلاً شیائومی/هواوی) حتی وقتی مجوزِ Alarms&Reminders داده
+    // شده، گاهی هنگامِ زمان‌بندیِ اعلانِ Alarm-category استثنا می‌دهند.
+    try {
+      await _plugin.zonedSchedule(
+        notificationId,
+        '⏰ وقتِ بیدار شدنه',
+        'زنگِ بیدارباشِ شما به صدا در آمد',
+        scheduledDate,
+        details,
+        androidScheduleMode: scheduleMode,
+        matchDateTimeComponents: DateTimeComponents.time,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
+      await _plugin.zonedSchedule(
+        notificationIdEcho,
+        '⏰ وقتِ بیدار شدنه',
+        'زنگِ بیدارباشِ شما به صدا در آمد',
+        scheduledDateEcho,
+        details,
+        androidScheduleMode: scheduleMode,
+        matchDateTimeComponents: DateTimeComponents.time,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (_) {
+      // اگر زمان‌بندی به هر دلیلی (مثلاً محدودیتِ خاصِ یک OEM) شکست بخورد،
+      // حداقل ذخیره‌ی تنظیمات (save/_persist در صفحه) کرش نمی‌کند؛
+      // reschedule() دوره‌ای در background_service دوباره تلاش خواهد کرد.
+    }
   }
 
   /// پخشِ آزمایشیِ یکی از صداها، ۳ ثانیه دیگر، تا کاربر قبل از انتخابِ
