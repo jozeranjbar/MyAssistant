@@ -67,18 +67,63 @@ class ReminderStorageService {
     return jsonEncode(backup);
   }
 
-  /// بازیابی از متن JSON پشتیبان (جایگزین کامل لیست فعلی می‌شود)
-  Future<bool> importBackupJson(String jsonStr) async {
+  /// بازیابی از متن JSON پشتیبان.
+  ///
+  /// قبلاً این تابع همیشه کل لیستِ فعلیِ یادآوری‌ها را با محتوای فایلِ
+  /// پشتیبان جایگزین می‌کرد؛ یعنی اگر کاربر ۲۰ یادآوری داشت و یک فایلِ
+  /// پشتیبانِ قدیمی‌تر با ۵ یادآوری وارد می‌کرد، آن ۲۰ مورد برای همیشه از
+  /// بین می‌رفت. حالا به‌صورت پیش‌فرض [BackupImportMode.merge] استفاده
+  /// می‌شود: یادآوری‌های فایلِ پشتیبان با لیستِ فعلی ادغام می‌شوند؛ اگر
+  /// شناسه‌ای در هر دو طرف تکراری باشد، نسخه‌ی داخلِ فایلِ پشتیبان جایگزینِ
+  /// همان یک مورد می‌شود (به‌عنوانِ بروزرسانی)، نه اینکه کل لیست پاک شود.
+  /// در صورتِ نیاز به رفتارِ قبلی (جایگزینیِ کامل)، mode را برابر
+  /// [BackupImportMode.replace] قرار دهید.
+  Future<bool> importBackupJson(
+    String jsonStr, {
+    BackupImportMode mode = BackupImportMode.merge,
+  }) async {
     try {
       final data = jsonDecode(jsonStr);
       if (data is! Map || data['reminders'] is! List) return false;
-      final list = (data['reminders'] as List)
-          .map((e) => Reminder.fromJson(e as Map<String, dynamic>))
-          .toList();
-      await _saveAll(list);
+      final imported = <Reminder>[];
+      for (final e in data['reminders'] as List) {
+        try {
+          imported.add(Reminder.fromJson(e as Map<String, dynamic>));
+        } catch (_) {
+          // یک آیتمِ خرابِ داخلِ فایلِ پشتیبان نباید کل بازیابی را متوقف کند
+        }
+      }
+
+      if (mode == BackupImportMode.replace) {
+        await _saveAll(imported);
+        return true;
+      }
+
+      final current = await loadReminders();
+      final merged = [...current];
+      for (final r in imported) {
+        final index = merged.indexWhere((e) => e.id == r.id);
+        if (index == -1) {
+          merged.add(r);
+        } else {
+          // شناسه‌ی تکراری: نسخه‌ی فایلِ پشتیبان به‌عنوانِ بروزرسانی در نظر
+          // گرفته می‌شود، نه یک موردِ کاملاً جدا.
+          merged[index] = r;
+        }
+      }
+      await _saveAll(merged);
       return true;
     } catch (_) {
       return false;
     }
   }
+}
+
+/// نحوه‌ی برخورد با یادآوری‌های فعلی هنگامِ وارد کردنِ یک فایلِ پشتیبان.
+enum BackupImportMode {
+  /// یادآوری‌های فایلِ پشتیبان به لیستِ فعلی اضافه/ادغام می‌شوند (پیش‌فرضِ امن).
+  merge,
+
+  /// لیستِ فعلی کاملاً پاک و با محتوای فایلِ پشتیبان جایگزین می‌شود.
+  replace,
 }
