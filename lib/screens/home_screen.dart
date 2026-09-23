@@ -26,6 +26,16 @@ import '../utils/persian_numbers.dart';
 // رنگ قهوه‌ای برای نام شهرها
 const _kBrownCity = Color(0xFF6D4C29);
 
+// حداقلِ فاصله‌ی زمانی بین دو درخواستِ شبکه‌ایِ متوالی برای یک شهرِ واحد.
+// قبلاً هر بار که این صفحه باز می‌شد (یا حتی وقتی کاربر فقط بینِ صفحه‌ها
+// جابه‌جا می‌شد و برمی‌گشت)، برای *همه‌ی* شهرهای ذخیره‌شده یک درخواستِ کاملِ
+// جدید به Open-Meteo زده می‌شد؛ برای ۴ شهر یعنی ۴ درخواستِ نسبتاً سنگین
+// (شاملِ current+daily+hourly برای ۱۱ روز) در عرضِ چند ثانیه. حالا اگر
+// دیتای کش‌شده‌ی یک شهر جدیدتر از این مقدار باشد، از همان کش استفاده
+// می‌شود و درخواستِ شبکه زده نمی‌شود؛ مگر اینکه کاربر صریحاً Pull-to-refresh
+// کند (force: true در _refreshAllWeather).
+const Duration _kWeatherCacheTtl = Duration(minutes: 10);
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -145,13 +155,23 @@ class _HomeScreenState extends State<HomeScreen> {
     await WidgetService.requestPinWidget();
   }
 
-  Future<void> _refreshAllWeather() async {
+  /// [force] وقتی true باشد (مثلاً Pull-to-refresh)، کشِ فعلی نادیده گرفته
+  /// می‌شود و همیشه یک درخواستِ شبکه‌ای تازه زده می‌شود. در غیرِ این‌صورت،
+  /// اگر آخرین دیتای همان شهر جدیدتر از [_kWeatherCacheTtl] باشد، اصلاً
+  /// درخواستی زده نمی‌شود (نگاه کنید به توضیحِ بالای _kWeatherCacheTtl).
+  Future<void> _refreshAllWeather({bool force = false}) async {
     final connectivity = await Connectivity().checkConnectivity();
     final hasInternet = !connectivity.contains(ConnectivityResult.none);
 
     for (final loc in _locations) {
       if (!hasInternet) {
         continue;
+      }
+      if (!force) {
+        final cached = _weatherByLocation[loc.id];
+        if (cached != null && DateTime.now().difference(cached.updatedAt) < _kWeatherCacheTtl) {
+          continue;
+        }
       }
       try {
         final data = await _weatherService.fetchWeather(
@@ -230,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: _refreshAllWeather,
+              onRefresh: () => _refreshAllWeather(force: true),
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [
