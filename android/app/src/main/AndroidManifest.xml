@@ -75,6 +75,17 @@
                 android:resource="@xml/weather_clock_widget_info" />
         </receiver>
 
+        <!-- FileProvider برای باز کردن فایل HTML اندازه‌گیری در مرورگر خارجی -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
     </application>
 
     <!-- برای اندروید ۱۱+ نیاز به اعلام صریح queries برای برخی intent ها -->
@@ -90,6 +101,12 @@
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" />
+        </intent>
+        <!-- برای باز کردن ابزار اندازه‌گیری AR در Chrome -->
+        <package android:name="com.android.chrome" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="content" android:mimeType="text/html" />
         </intent>
     </queries>
 </manifest>
