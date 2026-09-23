@@ -1,1 +1,5 @@
-x
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- getTemporaryDirectory() در فلاتر معادل پوشه‌ی کش اپلیکیشن است -->
+    <cache-path name="measure" path="measure/" />
+</paths>
