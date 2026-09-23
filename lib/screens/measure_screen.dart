@@ -1,20 +1,17 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show rootBundle, PlatformException, MethodChannel;
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 /// صفحه‌ی «اندازه‌گیری»: ابزار «متر هوشمند AR» که با دوربین گوشی فاصله،
 /// محیط، مساحت و زاویه اندازه می‌گیرد.
 ///
 /// این ابزار مبتنی بر WebXR (`navigator.xr` + سشن `immersive-ar`) است که
 /// فقط داخل خودِ مرورگر Chrome (به همراه ARCore) کار می‌کند — WebView
-/// جاسازی‌شده‌ی اندروید (که کامپوننت‌های وب فلاتر از آن استفاده می‌کنند)
-/// از AR غوطه‌ور پشتیبانی نمی‌کند. به همین دلیل، این صفحه به‌جای نمایش
-/// مستقیمِ HTML داخل اپ، فایل را در مسیری ثابت داخل حافظه‌ی اپ آماده کرده
-/// و با «باز کردن با...» به یک مرورگر واقعی (Chrome) می‌سپارد تا AR واقعاً
-/// کار کند.
+/// جاسازی‌شده‌ی اندروید از AR غوطه‌ور پشتیبانی نمی‌کند. به همین دلیل، این
+/// صفحه فایل را در مسیری ثابت داخل حافظه‌ی اپ آماده کرده و از طریق یک
+/// Intent بومی از نوع VIEW (نه Share) مستقیماً به Chrome می‌سپارد.
 ///
 /// نکته درباره‌ی ذخیره‌سازی: چون مسیر فایل همیشه یکسان نگه داشته می‌شود،
 /// از دیدِ Chrome همیشه «همان فایل» باز می‌شود، پس `localStorage` خودِ
@@ -29,6 +26,8 @@ class MeasureScreen extends StatefulWidget {
 }
 
 class _MeasureScreenState extends State<MeasureScreen> {
+  static const MethodChannel _channel = MethodChannel('com.myassistant.app/open_in_browser');
+
   bool _opening = false;
   String? _error;
 
@@ -57,11 +56,10 @@ class _MeasureScreenState extends State<MeasureScreen> {
     });
     try {
       final file = await _prepareFile();
-      await Share.shareXFiles(
-        [XFile(file.path, mimeType: 'text/html', name: 'measure.html')],
-        subject: 'اندازه‌گیری AR',
-      );
+      await _channel.invokeMethod('openHtmlInBrowser', {'path': file.path});
+    } on PlatformException {
       if (!mounted) return;
+      setState(() => _error = 'مرورگری برای باز کردن ابزار پیدا نشد. لطفاً Chrome را نصب کنید.');
     } catch (_) {
       if (!mounted) return;
       setState(() => _error = 'باز کردن ابزار اندازه‌گیری با خطا مواجه شد. دوباره تلاش کنید.');
@@ -119,7 +117,7 @@ class _MeasureScreenState extends State<MeasureScreen> {
                         Text('ℹ️ ', style: TextStyle(fontSize: 14)),
                         Expanded(
                           child: Text(
-                            'این قابلیت به AR واقعی نیاز دارد که فقط داخل مرورگر Chrome کار می‌کند (نه داخل اپ). با زدن دکمه‌ی زیر، ابزار در Chrome باز می‌شود.',
+                            'این قابلیت به AR واقعی نیاز دارد که فقط داخل مرورگر Chrome کار می‌کند (نه داخل اپ). با زدن دکمه‌ی زیر، ابزار مستقیم در Chrome باز می‌شود.',
                             style: TextStyle(fontSize: 12.5, height: 1.8, color: Colors.black87),
                           ),
                         ),
@@ -144,8 +142,8 @@ class _MeasureScreenState extends State<MeasureScreen> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Icon(Icons.open_in_browser, size: 18),
-                label: Text(_opening ? 'در حال آماده‌سازی...' : 'باز کردن ابزار اندازه‌گیری'),
+                    : const Icon(Icons.straighten, size: 18),
+                label: Text(_opening ? 'در حال آماده‌سازی...' : 'شروع اندازه‌گیری'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
                   foregroundColor: Colors.white,
@@ -156,7 +154,7 @@ class _MeasureScreenState extends State<MeasureScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'با زدن دکمه، لیست برنامه‌ها باز می‌شود — Chrome را انتخاب کن.',
+              'ابزار مستقیم در Chrome باز می‌شود.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 11.5, color: Colors.indigo.shade300),
             ),
