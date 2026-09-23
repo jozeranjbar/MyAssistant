@@ -1,23 +1,26 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle, PlatformException, MethodChannel;
-import 'package:path_provider/path_provider.dart';
 
 /// صفحه‌ی «اندازه‌گیری»: ابزار «متر هوشمند AR» که با دوربین گوشی فاصله،
 /// محیط، مساحت و زاویه اندازه می‌گیرد.
 ///
 /// این ابزار مبتنی بر WebXR (`navigator.xr` + سشن `immersive-ar`) است که
-/// فقط داخل خودِ مرورگر Chrome (به همراه ARCore) کار می‌کند — WebView
-/// جاسازی‌شده‌ی اندروید از AR غوطه‌ور پشتیبانی نمی‌کند. به همین دلیل، این
-/// صفحه فایل را در مسیری ثابت داخل حافظه‌ی اپ آماده کرده و از طریق یک
-/// Intent بومی از نوع VIEW (نه Share) مستقیماً به Chrome می‌سپارد.
+/// فقط داخل یک Secure Context کار می‌کند. آدرس‌های `content://` (که از
+/// FileProvider می‌آیند) از نگاه Chrome سکیور حساب نمی‌شوند و باعث خطای
+/// «session configuration is not supported» می‌شوند.
 ///
-/// نکته درباره‌ی ذخیره‌سازی: چون مسیر فایل همیشه یکسان نگه داشته می‌شود،
-/// از دیدِ Chrome همیشه «همان فایل» باز می‌شود، پس `localStorage` خودِ
-/// صفحه (تنظیمات کالیبراسیون و اندازه‌گیری‌های ذخیره‌شده) بین بازکردن‌های
-/// مختلف حفظ می‌ماند. این داده‌ها داخل فضای ذخیره‌سازیِ Chrome می‌مانند،
-/// نه داخل حافظه‌ی اپ MyAssistant.
+/// راه‌حل: یک سرور HTTP محلی و بسیار سبک روی `127.0.0.1` داخل خودِ اپ بالا
+/// می‌آید و فایل را سرو می‌کند. آدرس‌های loopback همیشه Secure Context
+/// محسوب می‌شوند، حتی بدون HTTPS — پس دوربین/WebXR به‌درستی کار می‌کند.
+///
+/// نکته درباره‌ی ذخیره‌سازی: چون پورت سرور در طول یک اجرای اپ ثابت
+/// می‌ماند، هر بار که دکمه زده شود همان آدرس باز می‌شود و `localStorage`
+/// صفحه (تنظیمات کالیبراسیون و اندازه‌گیری‌های ذخیره‌شده) حفظ می‌ماند —
+/// تا وقتی اپ کاملاً بسته شود. این داده‌ها داخل فضای ذخیره‌سازیِ Chrome
+/// می‌مانند، نه داخل حافظه‌ی اپ MyAssistant.
 class MeasureScreen extends StatefulWidget {
   const MeasureScreen({super.key});
 
@@ -27,26 +30,39 @@ class MeasureScreen extends StatefulWidget {
 
 class _MeasureScreenState extends State<MeasureScreen> {
   static const MethodChannel _channel = MethodChannel('com.myassistant.app/open_in_browser');
+  static const int _preferredPort = 47681;
+
+  // نگه‌داشتن سرور و آدرس آن در سطح استاتیک تا در باز کردن‌های بعدی
+  // (در همان اجرای اپ) دوباره ساخته نشود و آدرس ثابت بماند.
+  static HttpServer? _server;
+  static Uri? _serverUrl;
+  static Uint8List? _htmlBytes;
 
   bool _opening = false;
   String? _error;
 
-  /// فایل HTML را از asset اپ به یک مسیرِ ثابت (نه یک نام موقت/تصادفی)
-  /// داخل پوشه‌ی کش اپ کپی می‌کند. مسیر همیشه یکسان است تا Chrome همیشه
-  /// همان «سایت» را ببیند و localStorage صفحه حفظ شود.
-  Future<File> _prepareFile() async {
-    final cacheDir = await getTemporaryDirectory();
-    final measureDir = Directory('${cacheDir.path}/measure');
-    if (!await measureDir.exists()) {
-      await measureDir.create(recursive: true);
+  Future<Uri> _ensureServerRunning() async {
+    if (_server != null && _serverUrl != null) return _serverUrl!;
+
+    _htmlBytes ??= (await rootBundle.load('assets/measure.html')).buffer.asUint8List();
+
+    HttpServer server;
+    try {
+      server = await HttpServer.bind(InternetAddress.loopbackIPv4, _preferredPort);
+    } catch (_) {
+      // اگر پورت پیش‌فرض مشغول بود، سیستم‌عامل خودش یک پورت آزاد بدهد.
+      server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     }
-    final file = File('${measureDir.path}/measure.html');
-    final bytes = await rootBundle.load('assets/measure.html');
-    // هر بار بازنویسی می‌شود تا اگر سیستم‌عامل کش را پاک کرده باشد،
-    // فایل دوباره در همان مسیر ساخته شود (مسیر ثابت می‌ماند، فقط
-    // localStorage همان لحظه از دست می‌رود).
-    await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
-    return file;
+
+    server.listen((HttpRequest request) {
+      request.response.headers.contentType = ContentType('text', 'html', charset: 'utf-8');
+      request.response.add(_htmlBytes!);
+      request.response.close();
+    });
+
+    _server = server;
+    _serverUrl = Uri.parse('http://127.0.0.1:${server.port}/measure.html');
+    return _serverUrl!;
   }
 
   Future<void> _openInBrowser() async {
@@ -55,8 +71,8 @@ class _MeasureScreenState extends State<MeasureScreen> {
       _error = null;
     });
     try {
-      final file = await _prepareFile();
-      await _channel.invokeMethod('openHtmlInBrowser', {'path': file.path});
+      final url = await _ensureServerRunning();
+      await _channel.invokeMethod('openUrlInBrowser', {'url': url.toString()});
     } on PlatformException {
       if (!mounted) return;
       setState(() => _error = 'مرورگری برای باز کردن ابزار پیدا نشد. لطفاً Chrome را نصب کنید.');
