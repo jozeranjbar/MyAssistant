@@ -473,7 +473,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
       _showSnack('ابتدا یک متغیر انتخاب یا اضافه کنید.');
       return;
     }
-    final picked = await showJalaliDatePicker(context);
+    final picked = await showJalaliDatePicker(context, typableYear: true);
     if (picked == null) return;
     final dateStr = _formatJalali(picked);
     final added = _data.addDateToCurrent(dateStr);
@@ -490,7 +490,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     final rows = _data.currentRows;
     final row = rows[rowIndex];
     final initial = _parseJalaliOrNull(row.date) ?? Jalali.now();
-    final picked = await showJalaliDatePicker(context, initial: initial);
+    final picked = await showJalaliDatePicker(context, initial: initial, typableYear: true);
     if (picked == null) return;
     final newDate = _formatJalali(picked);
     final duplicate = rows.any((r) => r != row && r.date == newDate);
@@ -1121,12 +1121,8 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
       ),
       body: Stack(
         children: [
+          // کشیدنِ انگشت به چپ/راست دیگر باعث بازگشت به صفحه‌ی اصلی نمی‌شود.
           GestureDetector(
-            onHorizontalDragEnd: (details) {
-              if ((details.primaryVelocity ?? 0).abs() > 200) {
-                Navigator.of(context).maybePop();
-              }
-            },
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(10),

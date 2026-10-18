@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import '../data/iranian_holidays.dart';
 import '../utils/persian_numbers.dart';
+import '../widgets/year_combo_field.dart';
 
 /// صفحه‌ی «تبدیل تاریخ»: با دو کلید بین «شمسی ← میلادی» و «میلادی ← شمسی»
 /// جابه‌جا می‌شود؛ با انتخاب تاریخ از فیلدهای کشویی، نتیجه‌ی تبدیل بلافاصله
@@ -133,15 +134,12 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: DropdownButtonFormField<int>(
-                isExpanded: true,
+              child: YearComboField(
+                value: _jYear,
                 decoration: _pillDecoration(),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange.shade800, height: 1.4),
-                value: _jYear,
-                items: List.generate(30, (i) => _jYear - 15 + i)
-                    .map((y) => DropdownMenuItem(value: y, child: Text(toPersianDigits(y.toString()))))
-                    .toList(),
-                onChanged: (v) => setState(() => _jYear = v!),
+                minYear: 1, maxYear: 3000,
+                onChanged: (v) => setState(() => _jYear = v),
               ),
             ),
           ],
@@ -196,15 +194,12 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: DropdownButtonFormField<int>(
-                isExpanded: true,
+              child: YearComboField(
+                value: _gYear,
                 decoration: _pillDecoration(),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange.shade800, height: 1.4),
-                value: _gYear,
-                items: List.generate(30, (i) => _gYear - 15 + i)
-                    .map((y) => DropdownMenuItem(value: y, child: Text(toPersianDigits(y.toString()))))
-                    .toList(),
-                onChanged: (v) => setState(() => _gYear = v!),
+                minYear: 1000, maxYear: 3000,
+                onChanged: (v) => setState(() => _gYear = v),
               ),
             ),
           ],

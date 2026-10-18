@@ -7,6 +7,7 @@ import '../data/iranian_holidays.dart';
 import '../utils/persian_numbers.dart';
 import 'date_converter_screen.dart';
 import 'compass_screen.dart';
+import '../widgets/year_combo_field.dart';
 import 'measure_screen.dart';
 
 /// اطلاعات تعطیلی یک روز مشخص شمسی (بررسی جمعه، تعطیلات شمسی و قمری)
@@ -38,7 +39,10 @@ _HolidayInfo _checkHoliday(Jalali jDate, HijriCalendar hijri) {
 
 /// انتخاب‌گر تاریخ شمسی ساده (سه فهرست کشویی روز/ماه/سال) به‌جای تقویم
 /// میلادی پیش‌فرض فلاتر.
-Future<Jalali?> showJalaliDatePicker(BuildContext context, {Jalali? initial}) {
+///
+/// اگر [typableYear] true باشد، «سال» علاوه بر فهرست کشویی، با کیبورد هم
+/// قابل تایپ است (برای واردکردن سال‌های دور از سال جاری).
+Future<Jalali?> showJalaliDatePicker(BuildContext context, {Jalali? initial, bool typableYear = false}) {
   final now = initial ?? Jalali.now();
   int selectedYear = now.year;
   int selectedMonth = now.month;
@@ -151,6 +155,14 @@ Future<Jalali?> showJalaliDatePicker(BuildContext context, {Jalali? initial}) {
                           children: [
                             Text('سال', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade800, fontSize: 15)),
                             const SizedBox(height: 6),
+                            if (typableYear)
+                              YearComboField(
+                                value: selectedYear,
+                                decoration: pickerDecoration(),
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange.shade800, height: 1.4),
+                                onChanged: (v) => setModalState(() => selectedYear = v),
+                              )
+                            else
                             DropdownButtonFormField<int>(
                               isExpanded: true,
                               decoration: pickerDecoration(),

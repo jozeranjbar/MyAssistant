@@ -201,6 +201,13 @@ class _HomeScreenState extends State<HomeScreen> {
     await _loadEverything();
   }
 
+  Future<void> _openChartMaker() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
+    );
+    await _loadEverything();
+  }
+
   Future<void> _openTenDayForecast(WeatherLocation loc) async {
     final data = _weatherByLocation[loc.id];
     if (data == null) {
@@ -498,6 +505,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _ChartSummaryBox(
                             variables: _chartVariables,
                             people: _chartPeople,
+                            onTap: _openChartMaker,
                           ),
                           const SizedBox(height: 8),
                           _NavButton(
@@ -505,12 +513,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderColor: const Color(0xFFF6EDFA),
                             elevated: true,
                             label: 'صفحه نمودار',
-                            onTap: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const ChartMakerScreen()),
-                              );
-                              await _loadEverything();
-                            },
+                            onTap: _openChartMaker,
                           ),
                         ],
                       ),
@@ -570,24 +573,28 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-/// نمایشِ غیرقابل‌کلیکِ خلاصه‌ی «نمودار ساز»: ردیف اول نام متغیرها (نمودارها)
-/// و ردیف دوم نام افراد اضافه‌شده. برخلاف [_NavButton]، این ویجت لینک نیست.
+/// خلاصه‌ی «نمودار ساز»: ردیف اول نام متغیرها (نمودارها) و ردیف دوم نام افراد
+/// اضافه‌شده. لمس این مستطیلِ سبز هم مثل دکمه‌ی «صفحه نمودار» به صفحه‌ی
+/// نمودار ساز می‌رود.
 class _ChartSummaryBox extends StatelessWidget {
   final List<String> variables;
   final List<String> people;
+  final VoidCallback onTap;
 
-  const _ChartSummaryBox({required this.variables, required this.people});
+  const _ChartSummaryBox({required this.variables, required this.people, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final fg = Colors.green.shade900;
-    return Container(
+    return Material(
+      color: Colors.green.shade50,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.green.shade50,
-        borderRadius: BorderRadius.circular(12),
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -610,6 +617,8 @@ class _ChartSummaryBox extends StatelessWidget {
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }
