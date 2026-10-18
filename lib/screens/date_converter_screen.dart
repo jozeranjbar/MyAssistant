@@ -95,7 +95,7 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
     if (_jDay > daysInMonth) _jDay = daysInMonth;
     final gregorian = Jalali(_jYear, _jMonth, _jDay).toDateTime();
     final resultText =
-        '${toPersianDigits(gregorian.day.toString())} ${gregorianMonthNamesFa[gregorian.month - 1]} ${toPersianDigits(gregorian.year.toString())}';
+        '${toPersianDigits(gregorian.day.toString())} ${gregorianMonthNamesFa[gregorian.month - 1]} (${toPersianDigits(gregorian.month.toString())}) ${toPersianDigits(gregorian.year.toString())}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -127,7 +127,7 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.pink, height: 1.4),
                 value: _jMonth,
                 items: List.generate(12, (i) => i + 1)
-                    .map((m) => DropdownMenuItem(value: m, child: Text(Jalali(_jYear, m, 1).formatter.mN)))
+                    .map((m) => DropdownMenuItem(value: m, child: Text('${Jalali(_jYear, m, 1).formatter.mN} (${toPersianDigits(m.toString())})')))
                     .toList(),
                 onChanged: (v) => setState(() => _jMonth = v!),
               ),
@@ -155,7 +155,7 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
     if (_gDay > daysInMonth) _gDay = daysInMonth;
     final jalali = Jalali.fromDateTime(DateTime(_gYear, _gMonth, _gDay));
     final resultText =
-        '${toPersianDigits(jalali.day.toString())} ${jalali.formatter.mN} ${toPersianDigits(jalali.year.toString())}';
+        '${toPersianDigits(jalali.day.toString())} ${jalali.formatter.mN} (${toPersianDigits(jalali.month.toString())}) ${toPersianDigits(jalali.year.toString())}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -187,7 +187,7 @@ class _DateConverterScreenState extends State<DateConverterScreen> {
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.pink, height: 1.4),
                 value: _gMonth,
                 items: List.generate(12, (i) => i + 1)
-                    .map((m) => DropdownMenuItem(value: m, child: Text(gregorianMonthNamesFa[m - 1])))
+                    .map((m) => DropdownMenuItem(value: m, child: Text('${gregorianMonthNamesFa[m - 1]} (${toPersianDigits(m.toString())})')))
                     .toList(),
                 onChanged: (v) => setState(() => _gMonth = v!),
               ),
