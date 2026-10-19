@@ -251,6 +251,9 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
     await _load();
     if (saved.isActive) {
       try {
+        // اعلان‌های قبلیِ این یادآوری (مثلاً از برنامه‌ی چندروزه‌ی قبلی) پاک
+        // شوند تا اعلانِ تکراریِ قدیمی باقی نماند.
+        await _notifications.cancelReminder(saved.id);
         await _notifications.scheduleReminder(saved);
       } catch (e) {
         if (mounted) _showSnack('خطا در زمان‌بندی یادآوری: $e');
@@ -423,7 +426,10 @@ class _ReminderCard extends StatelessWidget {
                 SizedBox(
                   width: 62,
                   child: Text(
-                    toPersianDigits(reminder.timeLabel),
+                    toPersianDigits(reminder.repeatType == RepeatType.cycle
+                        ? Reminder.formatMinutesOfDay(
+                            (reminder.nextOccurrence().hour * 60) + reminder.nextOccurrence().minute)
+                        : reminder.timeLabel),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                   ),
@@ -449,6 +455,13 @@ class _ReminderCard extends StatelessWidget {
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(_repeatLabelFa(reminder), style: TextStyle(fontSize: 11, color: color)),
                           ),
+                          if (reminder.repeatType == RepeatType.cycle && reminder.cycleMinutes.isNotEmpty)
+                            Text(
+                              toPersianDigits(reminder.cycleSummary),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 11, color: color.withOpacity(0.8)),
+                            ),
                         ],
                       ),
                     ),
@@ -507,6 +520,13 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
   late bool _soundEnabled;
   late bool _vibrationEnabled;
 
+  // برنامه‌ی چندروزه (RepeatType.cycle)
+  late final TextEditingController _cycleDaysController;
+  late List<int> _cycleMinutes; // ساعتِ هر روز، به‌صورت دقیقه از نیمه‌شب
+  late int _cycleTodayDay; // امروز روزِ چندمِ برنامه است (از ۱)
+  static const int _minCycleDays = 2;
+  static const int _maxCycleDays = 14;
+
   bool get _isMed => widget.category == ReminderCategory.medication;
   Color get _color => _isMed ? const Color(0xFF1D4ED8) : const Color(0xFF20C997);
 
@@ -521,6 +541,15 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     _repeatType = e?.repeatType ?? RepeatType.daily;
     _soundEnabled = e?.soundEnabled ?? true;
     _vibrationEnabled = e?.vibrationEnabled ?? true;
+
+    if (e != null && e.repeatType == RepeatType.cycle && e.cycleMinutes.isNotEmpty) {
+      _cycleMinutes = List<int>.from(e.cycleMinutes);
+      _cycleTodayDay = e.cycleDayNumberFor(DateTime.now());
+    } else {
+      _cycleMinutes = List<int>.filled(4, _time.hour * 60 + _time.minute);
+      _cycleTodayDay = 1;
+    }
+    _cycleDaysController = TextEditingController(text: _cycleMinutes.length.toString());
   }
 
   @override
@@ -528,6 +557,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     _nameController.dispose();
     _doseOrNoteController.dispose();
     _intervalController.dispose();
+    _cycleDaysController.dispose();
     super.dispose();
   }
 
@@ -536,12 +566,104 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     if (picked != null) setState(() => _time = picked);
   }
 
+  void _onCycleDaysChanged(String text) {
+    final n = int.tryParse(normalizeDigitsToAscii(text.trim()));
+    if (n == null || n < _minCycleDays || n > _maxCycleDays) return;
+    setState(() {
+      final fill = _cycleMinutes.isNotEmpty ? _cycleMinutes.last : _time.hour * 60 + _time.minute;
+      if (n > _cycleMinutes.length) {
+        _cycleMinutes = [..._cycleMinutes, ...List<int>.filled(n - _cycleMinutes.length, fill)];
+      } else if (n < _cycleMinutes.length) {
+        _cycleMinutes = _cycleMinutes.sublist(0, n);
+      }
+      if (_cycleTodayDay > n) _cycleTodayDay = n;
+    });
+  }
+
+  Future<void> _pickCycleTime(int index) async {
+    final m = _cycleMinutes[index];
+    final picked = await showBigHourTimePicker(context, initial: TimeOfDay(hour: m ~/ 60, minute: m % 60));
+    if (picked != null) setState(() => _cycleMinutes[index] = picked.hour * 60 + picked.minute);
+  }
+
+  Widget _buildCycleSection() {
+    const accent = Color(0xFFF06595);
+    final n = _cycleMinutes.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _FieldLabel(text: 'تعداد روزهای برنامه (بعد از روز آخر، دوباره از روز اول شروع می‌شود)', color: accent),
+        _StyledTextField(
+          controller: _cycleDaysController,
+          hint: 'مثلاً ۴',
+          fillColor: accent,
+          keyboardType: TextInputType.number,
+          onChanged: _onCycleDaysChanged,
+        ),
+        const SizedBox(height: 14),
+        _FieldLabel(text: 'ساعت یادآوری در هر روز', color: const Color(0xFF9775FA)),
+        for (var i = 0; i < n; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Material(
+              color: const Color(0xFF9775FA).withOpacity(0.12),
+              borderRadius: BorderRadius.circular(14),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => _pickCycleTime(i),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Text(toPersianDigits('روز ${i + 1}'),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      const Spacer(),
+                      const Icon(Icons.access_time, color: Color(0xFF9775FA), size: 24),
+                      const SizedBox(width: 8),
+                      Text(
+                        toPersianDigits(_displayHourMinute(
+                            TimeOfDay(hour: _cycleMinutes[i] ~/ 60, minute: _cycleMinutes[i] % 60))),
+                        style: const TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFF9775FA)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        const SizedBox(height: 6),
+        _FieldLabel(text: 'امروز روزِ چندمِ برنامه است؟', color: const Color(0xFF15AABF)),
+        DropdownButtonFormField<int>(
+          value: _cycleTodayDay.clamp(1, n),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFF15AABF).withOpacity(0.12),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+          ),
+          items: [
+            for (var d = 1; d <= n; d++)
+              DropdownMenuItem(value: d, child: Text(toPersianDigits('روز $d'))),
+          ],
+          onChanged: (v) => setState(() => _cycleTodayDay = v ?? 1),
+        ),
+      ],
+    );
+  }
+
   void _save() {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       _showSnack('لطفاً عنوان را وارد کنید');
       return;
     }
+    final isCycle = _repeatType == RepeatType.cycle;
+    if (isCycle && (_cycleMinutes.length < _minCycleDays || _cycleMinutes.length > _maxCycleDays)) {
+      _showSnack('تعداد روزهای برنامه باید بین ${toPersianDigits(_minCycleDays.toString())} تا ${toPersianDigits(_maxCycleDays.toString())} باشد');
+      return;
+    }
+    final now = DateTime.now();
     final needsInterval = _repeatType == RepeatType.everyXDays || _repeatType == RepeatType.everyXHours;
     final interval = int.tryParse(_intervalController.text.trim());
     if (needsInterval && (interval == null || interval <= 0)) {
@@ -556,10 +678,12 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
       title: name,
       dose: _isMed ? _doseOrNoteController.text.trim() : (existing?.dose ?? ''),
       note: !_isMed ? _doseOrNoteController.text.trim() : (existing?.note ?? ''),
-      hour: _time.hour,
-      minute: _time.minute,
+      hour: isCycle ? _cycleMinutes.first ~/ 60 : _time.hour,
+      minute: isCycle ? _cycleMinutes.first % 60 : _time.minute,
       repeatType: _repeatType,
       repeatInterval: needsInterval ? interval : null,
+      cycleMinutes: isCycle ? List<int>.from(_cycleMinutes) : <int>[],
+      cycleStart: isCycle ? DateTime(now.year, now.month, now.day - (_cycleTodayDay - 1)) : null,
       isActive: existing?.isActive ?? true,
       createdAt: existing?.createdAt,
       lastFiredAt: existing?.lastFiredAt,
@@ -577,6 +701,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
   @override
   Widget build(BuildContext context) {
     final needsInterval = _repeatType == RepeatType.everyXDays || _repeatType == RepeatType.everyXHours;
+    final isCycle = _repeatType == RepeatType.cycle;
 
     return Padding(
       // هم ارتفاعِ کیبورد (وقتی باز است) هم ناحیه‌ی امنِ پایین گوشی (نوار
@@ -657,7 +782,9 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
                 ),
               ],
               const SizedBox(height: 14),
-
+              if (isCycle)
+                _buildCycleSection()
+              else ...[
               _FieldLabel(text: 'ساعت یادآوری', color: const Color(0xFF9775FA)),
               Material(
                 color: const Color(0xFF9775FA).withOpacity(0.12),
@@ -682,6 +809,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
                   ),
                 ),
               ),
+              ],
               const SizedBox(height: 18),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -816,6 +944,7 @@ class _StyledTextField extends StatelessWidget {
   final Color fillColor;
   final int maxLines;
   final TextInputType? keyboardType;
+  final ValueChanged<String>? onChanged;
 
   const _StyledTextField({
     required this.controller,
@@ -823,6 +952,7 @@ class _StyledTextField extends StatelessWidget {
     required this.fillColor,
     this.maxLines = 1,
     this.keyboardType,
+    this.onChanged,
   });
 
   @override
@@ -831,6 +961,7 @@ class _StyledTextField extends StatelessWidget {
       controller: controller,
       maxLines: maxLines,
       keyboardType: keyboardType,
+      onChanged: onChanged,
       textAlign: TextAlign.right,
       decoration: InputDecoration(
         hintText: hint,
