@@ -88,18 +88,28 @@ class NotificationService {
     return '$categoryLabel (${parts.join(' - ')})';
   }
 
-  String _bodyFor(Reminder r) {
+  String _bodyFor(Reminder r, [DateTime? when]) {
+    String text;
     if (r.category == ReminderCategory.medication) {
-      return r.dose.isNotEmpty ? r.dose : 'زمان مصرف دارو رسید';
+      text = r.dose.isNotEmpty ? r.dose : 'زمان مصرف دارو رسید';
+    } else {
+      text = r.note.isNotEmpty ? r.note : 'یادآوری فرا رسید';
     }
-    return r.note.isNotEmpty ? r.note : 'یادآوری فرا رسید';
+    if (r.repeatType == RepeatType.cycle && when != null && r.cycleMinutes.isNotEmpty) {
+      text = 'روز ${r.cycleDayNumberFor(when)} از ${r.cycleMinutes.length} برنامه — $text';
+    }
+    return text;
   }
+
+  /// برای برنامه‌ی چندروزه چند اعلانِ پشت‌سرهم زمان‌بندی می‌شود؛ شناسه‌ی
+  /// اعلانِ k‌ام برابر `id + k` است. [_maxSlots] حداکثر تعداد این اعلان‌هاست.
+  static const int _maxSlots = 30;
 
   Future<void> scheduleReminder(Reminder reminder) async {
     if (!reminder.isActive) return;
     await init();
 
-    final scheduledDate = tz.TZDateTime.from(reminder.nextOccurrence(), tz.local);
+    final occurrences = reminder.upcomingOccurrences(maxCount: _maxSlots);
 
     final androidDetails = AndroidNotificationDetails(
       _channelId(reminder),
@@ -128,22 +138,28 @@ class NotificationService {
         ? AndroidScheduleMode.exactAllowWhileIdle
         : AndroidScheduleMode.inexactAllowWhileIdle;
 
-    await _plugin.zonedSchedule(
-      reminder.id,
-      reminder.title,
-      _bodyFor(reminder),
-      scheduledDate,
-      details,
-      androidScheduleMode: scheduleMode,
-      matchDateTimeComponents: reminder.repeatType == RepeatType.daily ? DateTimeComponents.time : null,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-    );
+    for (var k = 0; k < occurrences.length; k++) {
+      await _plugin.zonedSchedule(
+        reminder.id + k,
+        reminder.title,
+        _bodyFor(reminder, occurrences[k]),
+        tz.TZDateTime.from(occurrences[k], tz.local),
+        details,
+        androidScheduleMode: scheduleMode,
+        matchDateTimeComponents: reminder.repeatType == RepeatType.daily ? DateTimeComponents.time : null,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    }
   }
 
   Future<void> cancelReminder(int id) async {
     await init();
     await _plugin.cancel(id);
+    // اعلان‌های اضافیِ برنامه‌ی چندروزه (id+1 تا id+_maxSlots)
+    for (var k = 1; k < _maxSlots; k++) {
+      await _plugin.cancel(id + k);
+    }
   }
 
   /// یک اعلانِ آزمایشی، ۵ ثانیه دیگر، با صدا و لرزش کامل شلیک می‌کند. برای
