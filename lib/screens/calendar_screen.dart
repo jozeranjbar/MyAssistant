@@ -306,7 +306,10 @@ class _YearCalendarView extends StatelessWidget {
       slivers: [
         SliverList(
           delegate: SliverChildListDelegate([
-            ...pastMonths.map((m) => _MonthBlock(year: today.year, month: m, today: today)),
+            // در اسلایورِ بالای `center` اولین آیتم کنارِ ماه جاری قرار می‌گیرد؛
+            // پس ترتیب باید معکوس باشد (شهریور، مرداد، ... فروردین) تا با
+            // اسکرول به بالا اول ماهِ قبل دیده شود.
+            ...pastMonths.reversed.map((m) => _MonthBlock(year: today.year, month: m, today: today)),
           ]),
         ),
         SliverList(
