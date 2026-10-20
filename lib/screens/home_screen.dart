@@ -56,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final Map<String, String?> _errorByLocation = {};
   bool _loading = true;
   int _activeReminderCount = 0;
+  String _nextReminderLabel = '';
   bool _wakeAlarmEnabled = false;
   String _wakeAlarmTimeLabel = '';
   List<CalendarEvent> _todayEvents = [];
@@ -74,10 +75,38 @@ class _HomeScreenState extends State<HomeScreen> {
   /// می‌شود؛ با خاموش‌کردنش از این خط حذف می‌شود.
   String get _reminderSummaryLabel {
     final parts = <String>[];
-    if (_activeReminderCount > 0) parts.add('$_activeReminderCount یادآوری فعال');
+    if (_activeReminderCount > 0) {
+      parts.add(_nextReminderLabel.isNotEmpty ? _nextReminderLabel : '$_activeReminderCount یادآوری فعال');
+    }
     if (_wakeAlarmEnabled) parts.add('زنگ بیداری $_wakeAlarmTimeLabel');
     if (parts.isEmpty) return 'هیچ اعلانی ثبت نشده';
     return parts.join('  •  ');
+  }
+
+  /// نزدیک‌ترین یادآوریِ فعال، به شکل «امپرازول : ساعت ۱۳» (اگر چند یادآوری
+  /// فعال باشد، تعداد بقیه هم کنارش می‌آید). دقیقه فقط وقتی صفر نباشد نشان
+  /// داده می‌شود.
+  String _buildNextReminderLabel(List<Reminder> reminders) {
+    final active = reminders.where((r) => r.isActive).toList();
+    if (active.isEmpty) return '';
+    final now = DateTime.now();
+    Reminder? best;
+    DateTime? bestTime;
+    for (final r in active) {
+      final t = r.nextOccurrence(from: now);
+      if (bestTime == null || t.isBefore(bestTime)) {
+        best = r;
+        bestTime = t;
+      }
+    }
+    final h = bestTime!.hour;
+    final m = bestTime.minute;
+    final time = m == 0 ? '$h' : '$h:${m.toString().padLeft(2, '0')}';
+    var label = toPersianDigits('${best!.title} : ساعت $time');
+    if (active.length > 1) {
+      label += toPersianDigits(' (+${active.length - 1} مورد دیگر)');
+    }
+    return label;
   }
 
   Future<void> _loadEverything() async {
@@ -107,6 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _locations = locations;
         _activeReminderCount = reminders.where((r) => r.isActive).length;
+        _nextReminderLabel = _buildNextReminderLabel(reminders);
         _wakeAlarmEnabled = wakeAlarm.enabled;
         _wakeAlarmTimeLabel = wakeAlarm.timeLabel;
         _todayEvents = todayEvents;
