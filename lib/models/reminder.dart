@@ -142,6 +142,15 @@ class Reminder {
     return ((diff % n) + n) % n + 1;
   }
 
+  /// ساعتِ نوبتِ «امروز» در برنامه‌ی چندروزه (حتی اگر ساعتش گذشته باشد)؛ برای
+  /// نمایش روی کارت و صفحه‌ی اصلی. برای انواعِ غیرچرخه‌ای null است.
+  DateTime? cycleTodaySlot({DateTime? now}) {
+    if (repeatType != RepeatType.cycle || cycleMinutes.isEmpty) return null;
+    final base = now ?? DateTime.now();
+    final m = cycleMinutes[cycleDayNumberFor(base) - 1];
+    return DateTime(base.year, base.month, base.day, m ~/ 60, m % 60);
+  }
+
   /// چند وقوعِ بعدیِ این یادآوری (به ترتیب زمان). برای انواع غیرچرخه‌ای فقط
   /// یک مورد برمی‌گرداند؛ برای [RepeatType.cycle] تا [maxCount] مورد در
   /// [horizonDays] روزِ آینده، تا چند روز پشت‌سرهم همه‌شان یک‌جا زمان‌بندی
