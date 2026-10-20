@@ -87,7 +87,7 @@ class WeatherCard extends StatelessWidget {
                       if (data!.todayForecast != null)
                         TextSpan(
                           text:
-                              ' (${toPersianDigits(data!.todayForecast!.minTemp.round().toString())}° تا ${toPersianDigits(data!.todayForecast!.maxTemp.round().toString())}°)',
+                              ' (${toPersianDigits(data!.todayForecast!.minTemp.round().toString())} تا ${toPersianDigits(data!.todayForecast!.maxTemp.round().toString())} درجه)',
                           style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.normal),
                         ),
                     ],
