@@ -151,6 +151,19 @@ class Reminder {
     return DateTime(base.year, base.month, base.day, m ~/ 60, m % 60);
   }
 
+  /// وقوعِ «در انتظار» برای نمایش در صفحه‌ی اصلی و ویجت: زمانی که هنوز نرسیده
+  /// یا حداکثر [grace] از آن گذشته است و تا پایانِ امروز می‌افتد. بعد از
+  /// گذشتنِ [grace] (پیش‌فرض ۲ ساعت) از وقتِ مقرر، null برمی‌گردد یعنی
+  /// اعلان از نمایش برداشته می‌شود.
+  DateTime? pendingOccurrence({DateTime? now, Duration grace = const Duration(hours: 2)}) {
+    final base = now ?? DateTime.now();
+    final endOfToday = DateTime(base.year, base.month, base.day + 1);
+    final DateTime t = cycleTodaySlot(now: base) ?? nextOccurrence(from: base.subtract(grace));
+    if (base.difference(t) > grace) return null;
+    if (!t.isBefore(endOfToday)) return null;
+    return t;
+  }
+
   /// چند وقوعِ بعدیِ این یادآوری (به ترتیب زمان). برای انواع غیرچرخه‌ای فقط
   /// یک مورد برمی‌گرداند؛ برای [RepeatType.cycle] تا [maxCount] مورد در
   /// [horizonDays] روزِ آینده، تا چند روز پشت‌سرهم همه‌شان یک‌جا زمان‌بندی
