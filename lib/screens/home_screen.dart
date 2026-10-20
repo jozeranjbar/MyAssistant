@@ -113,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final h = shown.hour;
     final m = shown.minute;
     final time = m == 0 ? '$h' : '$h:${m.toString().padLeft(2, '0')}';
-    var label = toPersianDigits('${best!.title} : $time');
+    var label = toPersianDigits('${best!.title} : ساعت $time');
     if (active.length > 1) {
       label += toPersianDigits(' (+${active.length - 1} مورد دیگر)');
     }
