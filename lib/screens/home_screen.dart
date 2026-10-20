@@ -76,10 +76,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget get _reminderSummaryRich {
     final base = TextStyle(color: Colors.green.shade900);
     final spans = <InlineSpan>[];
-    if (_activeReminderCount > 0) {
+    if (_nextReminderLabel.isNotEmpty) {
       // نامِ دارو و ساعتِ آن: قرمز و درشت‌تر
       spans.add(TextSpan(
-        text: _nextReminderLabel.isNotEmpty ? _nextReminderLabel : '$_activeReminderCount یادآوری فعال',
+        text: _nextReminderLabel,
         style: const TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold),
       ));
     }
@@ -87,7 +87,9 @@ class _HomeScreenState extends State<HomeScreen> {
       if (spans.isNotEmpty) spans.add(const TextSpan(text: '  •  '));
       spans.add(TextSpan(text: 'زنگ بیداری $_wakeAlarmTimeLabel'));
     }
-    if (spans.isEmpty) spans.add(const TextSpan(text: 'هیچ اعلانی ثبت نشده'));
+    if (spans.isEmpty) {
+      spans.add(TextSpan(text: _activeReminderCount > 0 ? 'اعلانی برای ادامه‌ی امروز نیست' : 'هیچ اعلانی ثبت نشده'));
+    }
     return Text.rich(TextSpan(style: base, children: spans));
   }
 
@@ -95,27 +97,24 @@ class _HomeScreenState extends State<HomeScreen> {
   /// فعال باشد، تعداد بقیه هم کنارش می‌آید). دقیقه فقط وقتی صفر نباشد نشان
   /// داده می‌شود.
   String _buildNextReminderLabel(List<Reminder> reminders) {
-    final active = reminders.where((r) => r.isActive).toList();
-    if (active.isEmpty) return '';
     final now = DateTime.now();
-    Reminder? best;
-    DateTime? bestTime;
-    for (final r in active) {
-      final t = r.nextOccurrence(from: now);
-      if (bestTime == null || t.isBefore(bestTime)) {
-        best = r;
-        bestTime = t;
-      }
+    // فقط یادآوری‌های فعالی که امروز هستند و هنوز ۲ ساعت از وقتشان نگذشته؛
+    // بعد از ۲ ساعت از نمایش برداشته می‌شوند.
+    final pending = <MapEntry<Reminder, DateTime>>[];
+    for (final r in reminders) {
+      if (!r.isActive) continue;
+      final t = r.pendingOccurrence(now: now);
+      if (t != null) pending.add(MapEntry(r, t));
     }
-    // برای برنامه‌ی چندروزه، ساعتِ نوبتِ «امروز» نشان داده می‌شود (حتی اگر
-    // گذشته باشد)، نه نوبتِ فردا.
-    final shown = best!.cycleTodaySlot(now: now) ?? bestTime!;
-    final h = shown.hour;
-    final m = shown.minute;
+    if (pending.isEmpty) return '';
+    pending.sort((x, y) => x.value.compareTo(y.value));
+    final best = pending.first;
+    final h = best.value.hour;
+    final m = best.value.minute;
     final time = m == 0 ? '$h' : '$h:${m.toString().padLeft(2, '0')}';
-    var label = toPersianDigits('${best!.title} : ساعت $time');
-    if (active.length > 1) {
-      label += toPersianDigits(' (+${active.length - 1} مورد دیگر)');
+    var label = toPersianDigits('${best.key.title} : ساعت $time');
+    if (pending.length > 1) {
+      label += toPersianDigits(' (+${pending.length - 1} مورد دیگر)');
     }
     return label;
   }
