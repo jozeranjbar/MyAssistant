@@ -73,14 +73,22 @@ class _HomeScreenState extends State<HomeScreen> {
   /// خلاصه‌ی بالای بخش «یادآوری»: تعداد یادآوری‌های فعال و (اگر روشن باشد)
   /// ساعتِ زنگِ بیدارباش. تا وقتی بیدارباش روشن است، همیشه اینجا دیده
   /// می‌شود؛ با خاموش‌کردنش از این خط حذف می‌شود.
-  String get _reminderSummaryLabel {
-    final parts = <String>[];
+  Widget get _reminderSummaryRich {
+    final base = TextStyle(color: Colors.green.shade900);
+    final spans = <InlineSpan>[];
     if (_activeReminderCount > 0) {
-      parts.add(_nextReminderLabel.isNotEmpty ? _nextReminderLabel : '$_activeReminderCount یادآوری فعال');
+      // نامِ دارو و ساعتِ آن: قرمز و درشت‌تر
+      spans.add(TextSpan(
+        text: _nextReminderLabel.isNotEmpty ? _nextReminderLabel : '$_activeReminderCount یادآوری فعال',
+        style: const TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold),
+      ));
     }
-    if (_wakeAlarmEnabled) parts.add('زنگ بیداری $_wakeAlarmTimeLabel');
-    if (parts.isEmpty) return 'هیچ اعلانی ثبت نشده';
-    return parts.join('  •  ');
+    if (_wakeAlarmEnabled) {
+      if (spans.isNotEmpty) spans.add(const TextSpan(text: '  •  '));
+      spans.add(TextSpan(text: 'زنگ بیداری $_wakeAlarmTimeLabel'));
+    }
+    if (spans.isEmpty) spans.add(const TextSpan(text: 'هیچ اعلانی ثبت نشده'));
+    return Text.rich(TextSpan(style: base, children: spans));
   }
 
   /// نزدیک‌ترین یادآوریِ فعال، به شکل «امپرازول : ساعت ۱۳» (اگر چند یادآوری
@@ -99,10 +107,13 @@ class _HomeScreenState extends State<HomeScreen> {
         bestTime = t;
       }
     }
-    final h = bestTime!.hour;
-    final m = bestTime.minute;
+    // برای برنامه‌ی چندروزه، ساعتِ نوبتِ «امروز» نشان داده می‌شود (حتی اگر
+    // گذشته باشد)، نه نوبتِ فردا.
+    final shown = best!.cycleTodaySlot(now: now) ?? bestTime!;
+    final h = shown.hour;
+    final m = shown.minute;
     final time = m == 0 ? '$h' : '$h:${m.toString().padLeft(2, '0')}';
-    var label = toPersianDigits('${best!.title} : ساعت $time');
+    var label = toPersianDigits('${best!.title} : $time');
     if (active.length > 1) {
       label += toPersianDigits(' (+${active.length - 1} مورد دیگر)');
     }
@@ -365,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _NavButton(
                             emoji: '🔔',
                             emoji2: '💊',
-                            label: _reminderSummaryLabel,
+                            richLabel: _reminderSummaryRich,
                             backgroundColor: Colors.green.shade50,
                             foregroundColor: Colors.green.shade900,
                             onTap: () async {

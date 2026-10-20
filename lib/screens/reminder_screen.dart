@@ -236,6 +236,10 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
     final saved = await showModalBottomSheet<Reminder>(
       context: context,
       isScrollControlled: true,
+      // پنجره فقط با «ذخیره» یا «انصراف» بسته شود؛ لمس بیرون از پنجره یا
+      // کشیدنِ آن به پایین، آن را نمی‌بندد.
+      isDismissible: false,
+      enableDrag: false,
       backgroundColor: Colors.transparent,
       builder: (_) => _ReminderEditSheet(category: category, existing: existing),
     );
@@ -426,9 +430,9 @@ class _ReminderCard extends StatelessWidget {
                 SizedBox(
                   width: 62,
                   child: Text(
-                    toPersianDigits(reminder.repeatType == RepeatType.cycle
+                    toPersianDigits(reminder.cycleTodaySlot() != null
                         ? Reminder.formatMinutesOfDay(
-                            (reminder.nextOccurrence().hour * 60) + reminder.nextOccurrence().minute)
+                            reminder.cycleTodaySlot()!.hour * 60 + reminder.cycleTodaySlot()!.minute)
                         : reminder.timeLabel),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
@@ -537,7 +541,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     _nameController = TextEditingController(text: e?.title ?? '');
     _doseOrNoteController = TextEditingController(text: _isMed ? (e?.dose ?? '') : (e?.note ?? ''));
     _intervalController = TextEditingController(text: e?.repeatInterval?.toString() ?? '');
-    _time = TimeOfDay(hour: e?.hour ?? 16, minute: e?.minute ?? 30);
+    _time = TimeOfDay(hour: e?.hour ?? 16, minute: e?.minute ?? 0);
     _repeatType = e?.repeatType ?? RepeatType.daily;
     _soundEnabled = e?.soundEnabled ?? true;
     _vibrationEnabled = e?.vibrationEnabled ?? true;
@@ -703,7 +707,10 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     final needsInterval = _repeatType == RepeatType.everyXDays || _repeatType == RepeatType.everyXHours;
     final isCycle = _repeatType == RepeatType.cycle;
 
-    return Padding(
+    return PopScope(
+      // دکمه‌ی برگشتِ گوشی هم پنجره را نمی‌بندد؛ فقط «ذخیره»/«انصراف».
+      canPop: false,
+      child: Padding(
       // هم ارتفاعِ کیبورد (وقتی باز است) هم ناحیه‌ی امنِ پایین گوشی (نوار
       // حرکتی در گوشی‌های جدید) و هم یک فاصله‌ی اضافه (که این پنجره را چند
       // خط بالاتر از لبه‌ی پایین صفحه نگه می‌دارد) در نظر گرفته می‌شود.
@@ -920,6 +927,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
         ),
       ),
       ),
+    ),
     );
   }
 }
