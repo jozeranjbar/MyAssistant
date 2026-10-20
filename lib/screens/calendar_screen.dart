@@ -287,16 +287,8 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
 
 /// ------------------ نمای تقویم سال (۱۲ ماه) ------------------
 
-class _YearCalendarView extends StatefulWidget {
+class _YearCalendarView extends StatelessWidget {
   const _YearCalendarView();
-
-  @override
-  State<_YearCalendarView> createState() => _YearCalendarViewState();
-}
-
-class _YearCalendarViewState extends State<_YearCalendarView> {
-  /// آیا ماه‌های گذشته‌ی سال (از اول سال تا ماه قبل) نمایش داده شوند؟
-  bool _showPastMonths = false;
 
   @override
   Widget build(BuildContext context) {
@@ -304,57 +296,34 @@ class _YearCalendarViewState extends State<_YearCalendarView> {
     final pastMonths = List.generate(today.month - 1, (i) => i + 1);
     // ماه جاری اولِ فهرست است و ماه‌های بعدی به ترتیب پشت‌سرش می‌آیند.
     final currentAndNext = List.generate(12 - today.month + 1, (i) => today.month + i);
-    final firstPast = Jalali(today.year, 1, 1).formatter.mN;
-    final lastPast = pastMonths.isEmpty ? '' : Jalali(today.year, pastMonths.last, 1).formatter.mN;
+    const centerKey = ValueKey('current-month-sliver');
 
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
-      children: [
-        if (pastMonths.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: Material(
-              color: Colors.amber.shade300,
-              elevation: 2,
-              borderRadius: BorderRadius.circular(12),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => setState(() => _showPastMonths = !_showPastMonths),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _showPastMonths
-                              ? 'پنهان کردن ماه‌های گذشته'
-                              : pastMonths.length == 1
-                                  ? 'نمایش ماه گذشته ($firstPast)'
-                                  : 'نمایش ماه‌های گذشته ($firstPast تا $lastPast)',
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5D4300)),
-                        ),
-                      ),
-                      Icon(
-                        _showPastMonths ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                        color: const Color(0xFF5D4300),
-                      ),
-                    ],
-                  ),
-                ),
+    // `center` باعث می‌شود صفحه با ماه جاری در بالا باز شود؛ ماه‌های گذشته
+    // بالای آن هستند و با اسکرول به بالا دیده می‌شوند، ماه‌های بعدی با اسکرول
+    // به پایین.
+    return CustomScrollView(
+      center: centerKey,
+      slivers: [
+        SliverList(
+          delegate: SliverChildListDelegate([
+            ...pastMonths.map((m) => _MonthBlock(year: today.year, month: m, today: today)),
+          ]),
+        ),
+        SliverList(
+          key: centerKey,
+          delegate: SliverChildListDelegate([
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Text(
+                'برای دیدن جزئیات هر روز ، روی آن بزنید',
+                style: TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w600),
               ),
             ),
-          ),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Text(
-            'برای دیدن جزئیات هر روز ، روی آن بزنید',
-            style: TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w600),
-          ),
+            const SizedBox(height: 8),
+            ...currentAndNext.map((m) => _MonthBlock(year: today.year, month: m, today: today)),
+            const SizedBox(height: 24),
+          ]),
         ),
-        const SizedBox(height: 8),
-        if (_showPastMonths)
-          ...pastMonths.map((m) => _MonthBlock(year: today.year, month: m, today: today)),
-        ...currentAndNext.map((m) => _MonthBlock(year: today.year, month: m, today: today)),
       ],
     );
   }

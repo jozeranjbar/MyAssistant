@@ -284,8 +284,8 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
           labelColor: const Color(0xFF1B5E20),
           unselectedLabelColor: const Color(0xFF1B5E20).withOpacity(0.55),
           tabs: const [
-            Tab(text: '⏰ زنگ بیداری'),
             Tab(text: '💊 داروها'),
+            Tab(text: '⏰ زنگ بیداری'),
             Tab(text: '📝 یادآوری‌های روزمره'),
           ],
         ),
@@ -293,7 +293,6 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
       body: TabBarView(
         controller: _tabController,
         children: [
-          const WakeAlarmScreen(),
           _ReminderList(
             reminders: _medReminders,
             color: medColor,
@@ -305,6 +304,7 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
             onToggle: _toggleActive,
             onDelete: _quickDelete,
           ),
+          const WakeAlarmScreen(),
           _ReminderList(
             reminders: _dailyReminders,
             color: dailyColor,
