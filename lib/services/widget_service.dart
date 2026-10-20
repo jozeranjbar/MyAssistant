@@ -54,8 +54,9 @@ class WidgetService {
       final hijri = HijriCalendar.fromDate(gDate);
       final dateHijri = '${hijri.hDay} ${hijriMonthNamesFa[hijri.hMonth - 1]}';
 
-      // تعداد یادآوری‌های فعال (هر دو دسته‌ی دارو و روزمره)
-      final activeCount = reminders.where((r) => r.isActive).length;
+      // تعداد یادآوری‌های فعالِ امروز که هنوز نرسیده‌اند یا کمتر از ۲ ساعت
+      // از وقتشان گذشته است (هر دو دسته‌ی دارو و روزمره)
+      final activeCount = reminders.where((r) => r.isActive && r.pendingOccurrence() != null).length;
       final reminderText = '$activeCount یادآوری';
 
       final hour = gDate.hour;
