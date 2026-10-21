@@ -76,12 +76,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget get _reminderSummaryRich {
     final base = TextStyle(color: Colors.green.shade900);
     final spans = <InlineSpan>[];
-    // همه‌ی یادآوری‌های در انتظار، پشت‌سرهم و با «،» جدا می‌شوند؛ اولی (نزدیک‌ترین
-    // زمان) قرمز و بقیه صورتی هستند.
+    // همه‌ی یادآوری‌های در انتظار، پشت‌سرهم و با « - » جدا می‌شوند؛ اولی (نزدیک‌ترین
+    // زمان) قرمز و بقیه صورتیِ کمرنگ هستند.
     for (var i = 0; i < _pendingLabels.length; i++) {
-      final color = i == 0 ? Colors.red : Colors.pink.shade300;
+      final color = i == 0 ? Colors.red : Colors.pink.shade200;
       final style = TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold);
-      if (i > 0) spans.add(TextSpan(text: ' ، ', style: style));
+      if (i > 0) spans.add(TextSpan(text: ' - ', style: style));
       spans.add(TextSpan(text: _pendingLabels[i], style: style));
     }
     if (_wakeAlarmEnabled) {

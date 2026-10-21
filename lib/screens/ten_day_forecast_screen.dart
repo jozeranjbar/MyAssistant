@@ -1,3 +1,4 @@
+import '../widgets/temp_range.dart';
 import 'package:flutter/material.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import '../models/weather_location.dart';
@@ -81,8 +82,9 @@ class TenDayForecastScreen extends StatelessWidget {
                               Text(WeatherData.descriptionForCode(f.weatherCode), style: const TextStyle(fontSize: 18)),
                             ],
                           ),
-                          Text(
-                            '${toPersianDigits(f.minTemp.round().toString())}°/${toPersianDigits(f.maxTemp.round().toString())}°',
+                          TempRange(
+                            min: f.minTemp,
+                            max: f.maxTemp,
                             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.brown.shade700),
                           ),
                           _DayStatChip(
