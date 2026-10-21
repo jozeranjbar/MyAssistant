@@ -233,14 +233,12 @@ class _ReminderScreenState extends State<ReminderScreen> with SingleTickerProvid
   }
 
   Future<void> _openAddOrEdit(ReminderCategory category, {Reminder? existing}) async {
-    final saved = await showModalBottomSheet<Reminder>(
+    // پنجره‌ی کوچکِ افزودن/ویرایش بالاترین نقطه‌ی صفحه قرار می‌گیرد (نه پایین
+    // یا وسط). فقط با «ذخیره» یا «انصراف» بسته می‌شود؛ لمس بیرون از پنجره آن
+    // را نمی‌بندد.
+    final saved = await showDialog<Reminder>(
       context: context,
-      isScrollControlled: true,
-      // پنجره فقط با «ذخیره» یا «انصراف» بسته شود؛ لمس بیرون از پنجره یا
-      // کشیدنِ آن به پایین، آن را نمی‌بندد.
-      isDismissible: false,
-      enableDrag: false,
-      backgroundColor: Colors.transparent,
+      barrierDismissible: false,
       builder: (_) => _ReminderEditSheet(category: category, existing: existing),
     );
     if (saved == null) return;
@@ -710,22 +708,24 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     return PopScope(
       // دکمه‌ی برگشتِ گوشی هم پنجره را نمی‌بندد؛ فقط «ذخیره»/«انصراف».
       canPop: false,
+      child: Align(
+      // پنجره بالای صفحه می‌نشیند و تا جای ممکن از پایین فاصله دارد.
+      alignment: Alignment.topCenter,
       child: Padding(
-      // هم ارتفاعِ کیبورد (وقتی باز است) هم ناحیه‌ی امنِ پایین گوشی (نوار
-      // حرکتی در گوشی‌های جدید) و هم یک فاصله‌ی اضافه (که این پنجره را چند
-      // خط بالاتر از لبه‌ی پایین صفحه نگه می‌دارد) در نظر گرفته می‌شود.
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 40,
-      ),
+      // وقتی کیبورد باز است، پایینِ پنجره بالای کیبورد می‌ماند.
+      padding: EdgeInsets.fromLTRB(10, 8, 10, MediaQuery.of(context).viewInsets.bottom + 8),
       child: ConstrainedBox(
-        // محدود کردن حداکثر ارتفاع پنجره تا کمی کوچک‌تر و جمع‌وجورتر از تمام
-        // ارتفاع صفحه باشد؛ اگر محتوا بیشتر جا نگرفت، خودش به‌صورت داخلی
-        // اسکرول می‌شود (چون از قبل داخل SingleChildScrollView است).
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFFE3F9EA),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        // اگر محتوا از ارتفاعِ در دسترس بیشتر شد، داخلِ پنجره اسکرول می‌شود
+        // (چون از قبل داخل SingleChildScrollView است).
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom - 80,
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFE3F9EA),
+            borderRadius: BorderRadius.circular(22),
           ),
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
           child: SingleChildScrollView(
@@ -926,6 +926,8 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
           ),
         ),
       ),
+    ),
+      ),
       ),
     ),
     );
@@ -971,8 +973,11 @@ class _StyledTextField extends StatelessWidget {
       keyboardType: keyboardType,
       onChanged: onChanged,
       textAlign: TextAlign.right,
+      // متنی که کاربر می‌نویسد سیاه و پررنگ است؛ راهنما (hint) خاکستریِ کمرنگ.
+      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.normal),
         filled: true,
         fillColor: fillColor.withOpacity(0.12),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),

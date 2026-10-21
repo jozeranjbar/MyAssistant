@@ -56,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final Map<String, String?> _errorByLocation = {};
   bool _loading = true;
   int _activeReminderCount = 0;
-  String _nextReminderLabel = '';
+  List<String> _pendingLabels = [];
   bool _wakeAlarmEnabled = false;
   String _wakeAlarmTimeLabel = '';
   List<CalendarEvent> _todayEvents = [];
@@ -76,12 +76,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget get _reminderSummaryRich {
     final base = TextStyle(color: Colors.green.shade900);
     final spans = <InlineSpan>[];
-    if (_nextReminderLabel.isNotEmpty) {
-      // نامِ دارو و ساعتِ آن: قرمز و درشت‌تر
-      spans.add(TextSpan(
-        text: _nextReminderLabel,
-        style: const TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold),
-      ));
+    // همه‌ی یادآوری‌های در انتظار، پشت‌سرهم و با «،» جدا می‌شوند؛ اولی (نزدیک‌ترین
+    // زمان) قرمز و بقیه صورتی هستند.
+    for (var i = 0; i < _pendingLabels.length; i++) {
+      final color = i == 0 ? Colors.red : Colors.pink.shade300;
+      final style = TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold);
+      if (i > 0) spans.add(TextSpan(text: ' ، ', style: style));
+      spans.add(TextSpan(text: _pendingLabels[i], style: style));
     }
     if (_wakeAlarmEnabled) {
       if (spans.isNotEmpty) spans.add(const TextSpan(text: '  •  '));
@@ -93,10 +94,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return Text.rich(TextSpan(style: base, children: spans));
   }
 
-  /// نزدیک‌ترین یادآوریِ فعال، به شکل «امپرازول : ساعت ۱۳» (اگر چند یادآوری
-  /// فعال باشد، تعداد بقیه هم کنارش می‌آید). دقیقه فقط وقتی صفر نباشد نشان
-  /// داده می‌شود.
-  String _buildNextReminderLabel(List<Reminder> reminders) {
+  /// متنِ همه‌ی یادآوری‌های در انتظار، به ترتیب زمان، به شکل
+  /// «امپرازول : ساعت ۱۸». دقیقه فقط وقتی صفر نباشد نشان داده می‌شود.
+  List<String> _buildPendingReminderLabels(List<Reminder> reminders) {
     final now = DateTime.now();
     // فقط یادآوری‌های فعالی که امروز هستند و هنوز ۲ ساعت از وقتشان نگذشته؛
     // بعد از ۲ ساعت از نمایش برداشته می‌شوند.
@@ -106,17 +106,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final t = r.pendingOccurrence(now: now);
       if (t != null) pending.add(MapEntry(r, t));
     }
-    if (pending.isEmpty) return '';
     pending.sort((x, y) => x.value.compareTo(y.value));
-    final best = pending.first;
-    final h = best.value.hour;
-    final m = best.value.minute;
-    final time = m == 0 ? '$h' : '$h:${m.toString().padLeft(2, '0')}';
-    var label = toPersianDigits('${best.key.title} : ساعت $time');
-    if (pending.length > 1) {
-      label += toPersianDigits(' (+${pending.length - 1} مورد دیگر)');
-    }
-    return label;
+    return pending.map((e) {
+      // مثل انتخاب‌گرِ ساعت در برنامه، نیمه‌شب «۲۴» نوشته می‌شود
+      final h = e.value.hour == 0 ? 24 : e.value.hour;
+      final m = e.value.minute;
+      final time = m == 0 ? '$h' : '$h:${m.toString().padLeft(2, '0')}';
+      return toPersianDigits('${e.key.title} : ساعت $time');
+    }).toList();
   }
 
   Future<void> _loadEverything() async {
@@ -146,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _locations = locations;
         _activeReminderCount = reminders.where((r) => r.isActive).length;
-        _nextReminderLabel = _buildNextReminderLabel(reminders);
+        _pendingLabels = _buildPendingReminderLabels(reminders);
         _wakeAlarmEnabled = wakeAlarm.enabled;
         _wakeAlarmTimeLabel = wakeAlarm.timeLabel;
         _todayEvents = todayEvents;
