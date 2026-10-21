@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import '../models/reminder.dart';
+import '../utils/persian_numbers.dart';
 import 'wake_alarm_service.dart';
 
 /// وقتی دکمه‌ی «قطع زنگ» روی اعلانِ بیدارباش زده شود (چه با برنامه‌ی باز، چه
@@ -88,15 +89,24 @@ class NotificationService {
     return '$categoryLabel (${parts.join(' - ')})';
   }
 
+  /// ساعتِ نمایشی مثل انتخاب‌گرِ ساعتِ برنامه (نیمه‌شب = ۲۴)
+  String _timeText(DateTime t) {
+    final h = t.hour == 0 ? 24 : t.hour;
+    return toPersianDigits('$h:${t.minute.toString().padLeft(2, '0')}');
+  }
+
   String _bodyFor(Reminder r, [DateTime? when]) {
+    final time = when ?? r.nextOccurrence();
     String text;
     if (r.category == ReminderCategory.medication) {
-      text = r.dose.isNotEmpty ? r.dose : 'زمان مصرف دارو رسید';
+      text = 'زمان مصرف ${r.title} — ساعت ${_timeText(time)}';
+      if (r.dose.isNotEmpty) text += ' (${r.dose})';
     } else {
-      text = r.note.isNotEmpty ? r.note : 'یادآوری فرا رسید';
+      text = 'ساعت ${_timeText(time)}';
+      if (r.note.isNotEmpty) text += ' — ${r.note}';
     }
     if (r.repeatType == RepeatType.cycle && when != null && r.cycleMinutes.isNotEmpty) {
-      text = 'روز ${r.cycleDayNumberFor(when)} از ${r.cycleMinutes.length} برنامه — $text';
+      text = 'روز ${toPersianDigits(r.cycleDayNumberFor(when).toString())} از ${toPersianDigits(r.cycleMinutes.length.toString())} برنامه — $text';
     }
     return text;
   }
