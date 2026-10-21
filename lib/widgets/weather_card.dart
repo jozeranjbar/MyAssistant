@@ -4,6 +4,7 @@ import 'package:shamsi_date/shamsi_date.dart';
 import '../models/weather_location.dart';
 import '../models/weather_data.dart';
 import '../utils/persian_numbers.dart';
+import 'temp_range.dart';
 
 class WeatherCard extends StatelessWidget {
   final WeatherLocation location;
@@ -84,12 +85,19 @@ class WeatherCard extends StatelessWidget {
                         text: '${toPersianDigits(data!.temperature.round().toString())}°',
                         style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.blue),
                       ),
-                      if (data!.todayForecast != null)
-                        TextSpan(
-                          text:
-                              ' (${toPersianDigits(data!.todayForecast!.minTemp.round().toString())} درجه تا ${toPersianDigits(data!.todayForecast!.maxTemp.round().toString())} درجه)',
-                          style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.normal),
+                      if (data!.todayForecast != null) ...[
+                        const TextSpan(text: ' '),
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.baseline,
+                          baseline: TextBaseline.alphabetic,
+                          child: TempRange(
+                            min: data!.todayForecast!.minTemp,
+                            max: data!.todayForecast!.maxTemp,
+                            parentheses: true,
+                            style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.normal),
+                          ),
                         ),
+                      ],
                     ],
                   ),
                 ),
