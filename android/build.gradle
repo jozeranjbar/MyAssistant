@@ -1,44 +1,96 @@
-buildscript {
-    ext.kotlin_version = '1.9.22'
-    repositories {
-        google()
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.3.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
     }
 }
 
-// برخی پکیج‌های قدیمی‌تر (مثل geolocator_android) هنوز به‌شکل قدیمی از یک
-// متغیر سراسری به‌نام «flutter» (شامل نسخه‌های SDK) استفاده می‌کنند. در
-// ساختار جدید Gradle این پروژه (که با dev.flutter.flutter-gradle-plugin
-// بارگذاری می‌شود) این متغیر به‌صورت خودکار ساخته نمی‌شود، پس این‌جا با همان
-// مقادیرِ app/build.gradle به‌صورت دستی تعریفش می‌کنیم تا چنین پکیج‌هایی هم
-// درست build شوند.
-rootProject.ext.flutter = [
-    compileSdkVersion: 34,
-    minSdkVersion: 23,
-    targetSdkVersion: 34,
-    ndkVersion: "25.1.8937393",
-]
-
-rootProject.buildDir = '../build'
-subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
-    project.evaluationDependsOn(':app')
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
 }
 
-tasks.register("clean", Delete) {
-    delete rootProject.buildDir
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
+android {
+    namespace "com.myassistant.app"
+    compileSdk 34
+    ndkVersion "25.1.8937393"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    defaultConfig {
+        applicationId "com.myassistant.app"
+        minSdkVersion 23
+        targetSdkVersion 34
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+        multiDexEnabled true
+    }
+
+    // کلیدِ امضای ثابت: فایل android/debug.keystore داخل پروژه. مسیرش مستقیم و
+    // صریح داده شده تا به محلِ پوشه‌ی کاربرِ سیستم (HOME) وابسته نباشد و هر بار
+    // دقیقاً با همین کلید امضا شود (لازمِ نصبِ «به‌روزرسانی» روی نسخه‌ی قبلی).
+    signingConfigs {
+        debug {
+            def fixedKeystore = file("${rootProject.projectDir}/debug.keystore")
+            if (fixedKeystore.exists()) {
+                storeFile fixedKeystore
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+flutter {
+    source '../..'
+}
+
+// اجبار به استفاده از یک نسخه‌ی مشخص از چند کتابخانه که بین پکیج‌های مختلف
+// (home_widget و workmanager) با نسخه‌های متفاوت تداخل «کلاس تکراری» دارند.
+configurations.all {
+    resolutionStrategy {
+        force 'com.android.tools:desugar_jdk_libs:2.0.4'
+        force 'androidx.work:work-runtime:2.8.1'
+        force 'androidx.work:work-runtime-ktx:2.8.1'
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation 'androidx.multidex:multidex:2.0.1'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 }
