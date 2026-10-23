@@ -105,9 +105,6 @@ class NotificationService {
       text = 'ساعت ${_timeText(time)}';
       if (r.note.isNotEmpty) text += ' — ${r.note}';
     }
-    if (r.repeatType == RepeatType.cycle && when != null && r.cycleMinutes.isNotEmpty) {
-      text = 'روز ${toPersianDigits(r.cycleDayNumberFor(when).toString())} از ${toPersianDigits(r.cycleMinutes.length.toString())} برنامه — $text';
-    }
     return text;
   }
 
