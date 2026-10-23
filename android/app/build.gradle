@@ -50,6 +50,21 @@ android {
         multiDexEnabled true
     }
 
+    // کلیدِ امضای ثابت: فایل android/debug.keystore داخل پروژه. مسیرش مستقیم و
+    // صریح داده شده تا به محلِ پوشه‌ی کاربرِ سیستم (HOME) وابسته نباشد و هر بار
+    // دقیقاً با همین کلید امضا شود (لازمِ نصبِ «به‌روزرسانی» روی نسخه‌ی قبلی).
+    signingConfigs {
+        debug {
+            def fixedKeystore = file("${rootProject.projectDir}/debug.keystore")
+            if (fixedKeystore.exists()) {
+                storeFile fixedKeystore
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
+        }
+    }
+
     buildTypes {
         release {
             signingConfig signingConfigs.debug
