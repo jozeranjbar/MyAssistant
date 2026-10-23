@@ -11,7 +11,6 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  cupertino_icons: ^1.0.6
 
   # شبکه و اتصال اینترنت
   http: ^1.2.1
@@ -55,7 +54,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
   flutter_launcher_icons: ^0.13.1
 
 flutter:
