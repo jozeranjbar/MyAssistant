@@ -39,8 +39,20 @@ jobs:
       - name: Analyze project (non-blocking)
         run: flutter analyze || true
 
+      # کلیدِ امضای ثابت (فایل android/debug.keystore داخل پروژه): بدونِ این
+      # مرحله، هر اجرای GitHub یک کلیدِ debugِ تازه می‌سازد و گوشی نسخه‌ی جدید
+      # را به‌عنوان «برنامه‌ی متفاوت/متداخل» رد می‌کند.
+      - name: Use fixed signing key
+        run: |
+          mkdir -p ~/.android
+          if [ -f android/debug.keystore ]; then
+            cp android/debug.keystore ~/.android/debug.keystore
+          else
+            echo "::warning::android/debug.keystore not found; APK will be signed with a random key."
+          fi
+
       - name: Build release APK
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --split-per-abi --build-number=${{ github.run_number }}
 
       - name: Rename APK (arm64-v8a only) with version + commit info
         run: |
