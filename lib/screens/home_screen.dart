@@ -108,10 +108,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     pending.sort((x, y) => x.value.compareTo(y.value));
     return pending.map((e) {
-      // مثل انتخاب‌گرِ ساعت در برنامه، نیمه‌شب «۲۴» نوشته می‌شود
-      final h = e.value.hour == 0 ? 24 : e.value.hour;
+      // ساعت‌ها ۰۰ تا ۲۳ هستند؛ دقیقه فقط وقتی صفر نباشد نوشته می‌شود
+      final h = e.value.hour;
       final m = e.value.minute;
-      final time = m == 0 ? '$h' : '$h:${m.toString().padLeft(2, '0')}';
+      final time = m == 0
+          ? (h == 0 ? '00' : '$h')
+          : '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
       return toPersianDigits('${e.key.title} : ساعت $time');
     }).toList();
   }

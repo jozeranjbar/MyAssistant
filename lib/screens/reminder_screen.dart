@@ -6,11 +6,9 @@ import '../services/notification_service.dart';
 import '../utils/persian_numbers.dart';
 import 'wake_alarm_screen.dart';
 
-/// برای نمایش: اگر ساعت صفر (نیمه‌شب) باشد به‌جای «۰۰»، «۲۴» نشان داده
-/// می‌شود؛ چون شمارشِ ساعت‌ها در این انتخاب‌گر از ۱ تا ۲۴ است، نه ۰ تا ۲۳.
+/// برای نمایش: ساعت‌ها از ۰۰ تا ۲۳ هستند؛ مثلاً نیم‌ساعت بعد از نیمه‌شب «۰۰:۳۰».
 String _displayHourMinute(TimeOfDay t) {
-  final displayHour = t.hour == 0 ? 24 : t.hour;
-  return '${displayHour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+  return '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 }
 
 /// انتخاب‌گرِ بزرگِ ساعتِ یادآوری: دو فیلد کشویی با فونتِ درشت — «ساعت»
@@ -18,7 +16,7 @@ String _displayHourMinute(TimeOfDay t) {
 /// شروع می‌شود، اینجا شمارشِ ساعت از «۱» تا «۲۴» است و «۲۴» معادلِ نیمه‌شب
 /// (ساعتِ صفرِ داخلی) است.
 Future<TimeOfDay?> showBigHourTimePicker(BuildContext context, {required TimeOfDay initial}) {
-  int selectedHour = initial.hour == 0 ? 24 : initial.hour;
+  int selectedHour = initial.hour;
   int selectedMinute = initial.minute;
 
   InputDecoration pickerDecoration() => InputDecoration(
@@ -80,7 +78,7 @@ Future<TimeOfDay?> showBigHourTimePicker(BuildContext context, {required TimeOfD
                                 style: const TextStyle(
                                     fontSize: 30, fontWeight: FontWeight.bold, color: Colors.deepPurple, height: 1.4),
                                 value: selectedHour,
-                                items: List.generate(24, (i) => i + 1)
+                                items: List.generate(24, (i) => i)
                                     .map((h) => DropdownMenuItem(
                                         value: h, child: Text(toPersianDigits(h.toString().padLeft(2, '0')))))
                                     .toList(),
@@ -126,8 +124,7 @@ Future<TimeOfDay?> showBigHourTimePicker(BuildContext context, {required TimeOfD
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
-                              final storedHour = selectedHour == 24 ? 0 : selectedHour;
-                              Navigator.pop(dialogContext, TimeOfDay(hour: storedHour, minute: selectedMinute));
+                              Navigator.pop(dialogContext, TimeOfDay(hour: selectedHour, minute: selectedMinute));
                             },
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white),
                             child: const Text('تأیید', style: TextStyle(fontSize: 16)),
