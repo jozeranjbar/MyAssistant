@@ -54,6 +54,13 @@ jobs:
       - name: Build release APK
         run: flutter build apk --release --split-per-abi --build-number=${{ github.run_number }}
 
+      # اثرانگشتِ امضای APK را در لاگ چاپ می‌کند. اگر دو اجرا اثرانگشتِ SHA-256
+      # یکسان داشته باشند، گوشی نسخه‌ی جدید را روی قبلی نصب می‌کند.
+      - name: Show APK signing certificate
+        run: |
+          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | tail -1)
+          "$APKSIGNER" verify --print-certs build/app/outputs/flutter-apk/app-arm64-v8a-release.apk | grep -i "SHA-256" || true
+
       - name: Rename APK (arm64-v8a only) with version + commit info
         run: |
           mkdir -p output
