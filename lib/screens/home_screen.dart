@@ -785,7 +785,7 @@ class _TodayCalendarCard extends StatelessWidget {
                 ...events.map((e) => Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
-                        '${e.isPublic ? '•' : '★'} ${e.title}',
+                        e.isPublic ? e.title : '★ ${e.title}',
                         style: TextStyle(
                           color: Colors.green.shade900,
                           fontSize: 13,
