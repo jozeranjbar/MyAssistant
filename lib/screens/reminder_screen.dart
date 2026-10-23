@@ -993,6 +993,11 @@ class _RepeatTypeSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<RepeatType>(
       value: value,
+      dropdownColor: const Color(0xFFCDF5E4),
+      borderRadius: BorderRadius.circular(14),
+      style: const TextStyle(
+          fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF0B6B4F)),
+      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF20C997)),
       decoration: InputDecoration(
         filled: true,
         fillColor: const Color(0xFF20C997).withOpacity(0.12),
