@@ -89,9 +89,9 @@ class NotificationService {
     return '$categoryLabel (${parts.join(' - ')})';
   }
 
-  /// ساعتِ نمایشی مثل انتخاب‌گرِ ساعتِ برنامه (نیمه‌شب = ۲۴)
+  /// ساعتِ نمایشی مثل انتخاب‌گرِ ساعتِ برنامه (۰۰ تا ۲۳)
   String _timeText(DateTime t) {
-    final h = t.hour == 0 ? 24 : t.hour;
+    final h = t.hour.toString().padLeft(2, '0');
     return toPersianDigits('$h:${t.minute.toString().padLeft(2, '0')}');
   }
 
