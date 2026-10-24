@@ -523,6 +523,13 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
   late final TextEditingController _cycleDaysController;
   late List<int> _cycleMinutes; // ساعتِ هر روز، به‌صورت دقیقه از نیمه‌شب
   late int _cycleTodayDay; // امروز روزِ چندمِ برنامه است (از ۱)
+
+  // زمان شروعِ «هر چند روز یک‌بار»: ۰ = امروز، ۱ = یک روز دیگر، ... و
+  // [_keepStart] یعنی «ادامه‌ی برنامه‌ی فعلی» (فقط هنگام ویرایش، تا با هر بار
+  // ذخیره، شروعِ برنامه به امروز برنگردد).
+  static const int _keepStart = -1;
+  static const int _maxStartOffsetDays = 14;
+  late int _startOffsetDays;
   static const int _minCycleDays = 2;
   static const int _maxCycleDays = 14;
 
@@ -540,6 +547,14 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     _repeatType = e?.repeatType ?? RepeatType.daily;
     _soundEnabled = e?.soundEnabled ?? true;
     _vibrationEnabled = e?.vibrationEnabled ?? true;
+
+    _startOffsetDays = 0;
+    if (e != null && e.repeatType == RepeatType.everyXDays) {
+      final today = DateTime.now();
+      final startDay = DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day);
+      final diff = startDay.difference(DateTime(today.year, today.month, today.day)).inDays;
+      _startOffsetDays = diff > 0 ? (diff > _maxStartOffsetDays ? _maxStartOffsetDays : diff) : _keepStart;
+    }
 
     if (e != null && e.repeatType == RepeatType.cycle && e.cycleMinutes.isNotEmpty) {
       _cycleMinutes = List<int>.from(e.cycleMinutes);
@@ -664,7 +679,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     }
     final now = DateTime.now();
     final needsInterval = _repeatType == RepeatType.everyXDays || _repeatType == RepeatType.everyXHours;
-    final interval = int.tryParse(_intervalController.text.trim());
+    final interval = int.tryParse(normalizeDigitsToAscii(_intervalController.text.trim()));
     if (needsInterval && (interval == null || interval <= 0)) {
       _showSnack('لطفاً عدد تکرار معتبر (بزرگ‌تر از صفر) وارد کنید');
       return;
@@ -684,7 +699,11 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
       cycleMinutes: isCycle ? List<int>.from(_cycleMinutes) : <int>[],
       cycleStart: isCycle ? DateTime(now.year, now.month, now.day - (_cycleTodayDay - 1)) : null,
       isActive: existing?.isActive ?? true,
-      createdAt: existing?.createdAt,
+      // شروعِ «هر چند روز یک‌بار» همان createdAt است (مبنای شمارش)؛ با گزینه‌ی
+      // «زمان شروع» به امروز یا چند روز دیگر منتقل می‌شود.
+      createdAt: (_repeatType == RepeatType.everyXDays && _startOffsetDays != _keepStart)
+          ? DateTime(now.year, now.month, now.day + _startOffsetDays)
+          : existing?.createdAt,
       lastFiredAt: existing?.lastFiredAt,
       soundEnabled: _soundEnabled,
       vibrationEnabled: _vibrationEnabled,
@@ -784,6 +803,33 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
                   fillColor: const Color(0xFFF06595),
                   keyboardType: TextInputType.number,
                 ),
+                if (_repeatType == RepeatType.everyXDays) ...[
+                  const SizedBox(height: 14),
+                  _FieldLabel(text: 'زمان شروع', color: const Color(0xFF15AABF)),
+                  DropdownButtonFormField<int>(
+                    value: _startOffsetDays,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: const Color(0xFF15AABF).withOpacity(0.12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+                    ),
+                    items: [
+                      if (_startOffsetDays == _keepStart)
+                        const DropdownMenuItem(value: _keepStart, child: Text('ادامه‌ی برنامه‌ی فعلی')),
+                      for (var d = 0; d <= _maxStartOffsetDays; d++)
+                        DropdownMenuItem(
+                          value: d,
+                          child: Text(d == 0
+                              ? 'امروز'
+                              : d == 1
+                                  ? 'یک روز دیگر'
+                                  : toPersianDigits('$d روز دیگر')),
+                        ),
+                    ],
+                    onChanged: (v) => setState(() => _startOffsetDays = v ?? 0),
+                  ),
+                ],
               ],
               const SizedBox(height: 14),
               if (isCycle)
