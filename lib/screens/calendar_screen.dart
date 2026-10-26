@@ -3,6 +3,7 @@ import 'package:shamsi_date/shamsi_date.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import '../services/events_service.dart';
+import '../services/calendar_update_service.dart';
 import '../data/iranian_holidays.dart';
 import '../utils/persian_numbers.dart';
 import 'date_converter_screen.dart';
@@ -28,10 +29,19 @@ _HolidayInfo _checkHoliday(Jalali jDate, HijriCalendar hijri) {
   for (final h in solarHolidays) {
     if (h.month == jDate.month && h.day == jDate.day) titles.add(h.title);
   }
-  for (final h in lunarHolidays) {
-    if (h.month == hijri.hMonth && h.day == hijri.hDay) {
-      titles.add(h.title);
-      hasLunar = true;
+  // اگر برای این سال، تاریخِ رسمی دانلود شده باشد (بروزرسانی تقویم)، همان
+  // استفاده می‌شود؛ وگرنه محاسبه‌ی نجومیِ تقویم هجری.
+  final official = CalendarUpdateService.holidaysForYear(jDate.year);
+  if (official != null) {
+    for (final h in official) {
+      if (h.month == jDate.month && h.day == jDate.day) titles.add(h.title);
+    }
+  } else {
+    for (final h in lunarHolidays) {
+      if (h.month == hijri.hMonth && h.day == hijri.hDay) {
+        titles.add(h.title);
+        hasLunar = true;
+      }
     }
   }
   return _HolidayInfo(titles.isNotEmpty, titles, hasLunar);
@@ -299,6 +309,14 @@ class _YearCalendarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // با هر بروزرسانیِ موفقِ تقویم، ماه‌ها دوباره ساخته می‌شوند
+    return ValueListenableBuilder<int>(
+      valueListenable: CalendarUpdateService.revision,
+      builder: (context, _, __) => _buildCalendar(context),
+    );
+  }
+
+  Widget _buildCalendar(BuildContext context) {
     final today = Jalali.now();
 
     // سالِ آینده: هر ۱۲ ماه از فروردین، بالای صفحه.
