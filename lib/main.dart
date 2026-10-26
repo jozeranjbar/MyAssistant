@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/notification_service.dart';
 import 'services/reminder_storage_service.dart';
 import 'services/wake_alarm_service.dart';
+import 'services/calendar_update_service.dart';
 import 'services/background_service.dart';
 import 'screens/home_screen.dart';
 
@@ -58,7 +59,24 @@ Future<void> main() async {
     debugPrint('خطا در بازتنظیمِ زنگِ بیدارباش: $e');
   }
 
+  // آخرین تعطیلاتِ رسمیِ دانلودشده (اگر قبلاً بروزرسانی شده باشد)
+  await CalendarUpdateService.loadCached();
+
+  String? launchPayload;
+  try {
+    // اعلان‌های اول و پانزدهمِ اسفند برای بروزرسانیِ تقویم
+    await NotificationService().scheduleCalendarUpdateReminders();
+    launchPayload = await NotificationService().launchPayload();
+  } catch (e) {
+    debugPrint('خطا در اعلان‌های بروزرسانی تقویم: $e');
+  }
+
   runApp(const MyAssistantApp());
+
+  // برنامه با زدن روی اعلانِ «بروزرسانی تقویم» از حالتِ بسته باز شده است
+  if (launchPayload == CalendarUpdateService.payload) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => CalendarUpdateService.updateWithFeedback());
+  }
 }
 
 class MyAssistantApp extends StatelessWidget {
@@ -69,6 +87,7 @@ class MyAssistantApp extends StatelessWidget {
     return MaterialApp(
       title: 'MyAssistant',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: CalendarUpdateService.messengerKey,
       locale: const Locale('fa', 'IR'),
       supportedLocales: const [Locale('fa', 'IR'), Locale('en', 'US')],
       localizationsDelegates: const [
