@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/notification_service.dart';
 import 'services/reminder_storage_service.dart';
@@ -69,34 +67,6 @@ Future<void> main() async {
     // اعلان‌های اول و پانزدهمِ اسفند برای بروزرسانیِ تقویم
     await NotificationService().scheduleCalendarUpdateReminders();
     launchPayload = await NotificationService().launchPayload();
-
-    // ===== فقط برای تست: همان اعلانِ بروزرسانی تقویم، یک دقیقه بعد از باز شدن برنامه =====
-    // بعد از تست، فایل main.dart اصلی را دوباره جایگزین کنید تا این بخش حذف شود.
-    final testPlugin = FlutterLocalNotificationsPlugin();
-    final androidImpl = testPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    final canExact = await androidImpl?.canScheduleExactNotifications() ?? true;
-    await testPlugin.zonedSchedule(
-      2100000099,
-      'بروزرسانی تقویم (تست)',
-      'برای تست روی این اعلان بزنید.',
-      tz.TZDateTime.now(tz.local).add(const Duration(minutes: 1)),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'calendar_update_channel',
-          'بروزرسانی تقویم',
-          channelDescription: 'یادآوری بروزرسانی تعطیلات رسمی تقویم',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      payload: CalendarUpdateService.payload,
-      androidScheduleMode:
-          canExact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-    );
-    // ===== پایانِ بخش تست =====
   } catch (e) {
     debugPrint('خطا در اعلان‌های بروزرسانی تقویم: $e');
   }
