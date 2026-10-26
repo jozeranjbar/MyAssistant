@@ -243,7 +243,7 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -254,6 +254,9 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    // سالِ جاری و سالِ بعد از روی تاریخ امروز محاسبه می‌شود؛ پس با شروعِ هر سال
+    // شمسی، خودکار یکی به هر دو برچسب اضافه می‌شود.
+    final thisYear = Jalali.now().year;
     return Scaffold(
       appBar: AppBar(
         bottom: TabBar(
@@ -262,8 +265,9 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
           indicatorColor: Colors.purple,
           labelColor: Colors.purple,
           unselectedLabelColor: Colors.purple.withOpacity(0.55),
-          tabs: const [
-            Tab(text: 'تقویم سال'),
+          tabs: [
+            Tab(text: 'تقویم سال ${toPersianDigits(thisYear.toString())}'),
+            Tab(text: 'تقویم سال ${toPersianDigits((thisYear + 1).toString())}'),
             Tab(text: 'مناسبت‌ها'),
             Tab(text: 'قطب‌نما'),
             Tab(text: 'اندازه‌گیر'),
@@ -274,7 +278,8 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
       body: TabBarView(
         controller: _tabController,
         children: [
-          const _YearCalendarView(),
+          _YearCalendarView(year: thisYear),
+          _YearCalendarView(year: thisYear + 1),
           _EventsListView(eventsService: _eventsService),
           const CompassScreen(),
           const MeasureScreen(),
@@ -288,11 +293,32 @@ class _CalendarScreenState extends State<CalendarScreen> with SingleTickerProvid
 /// ------------------ نمای تقویم سال (۱۲ ماه) ------------------
 
 class _YearCalendarView extends StatelessWidget {
-  const _YearCalendarView();
+  /// سالِ شمسیِ نمایش‌داده‌شده (سالِ جاری یا سالِ بعد)
+  final int year;
+  const _YearCalendarView({required this.year});
 
   @override
   Widget build(BuildContext context) {
     final today = Jalali.now();
+
+    // سالِ آینده: هر ۱۲ ماه از فروردین، بالای صفحه.
+    if (year != today.year) {
+      return ListView(
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text(
+              'برای دیدن جزئیات هر روز ، روی آن بزنید',
+              style: TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...List.generate(12, (i) => _MonthBlock(year: year, month: i + 1, today: today)),
+          const SizedBox(height: 24),
+        ],
+      );
+    }
+
     final pastMonths = List.generate(today.month - 1, (i) => i + 1);
     // ماه جاری اولِ فهرست است و ماه‌های بعدی به ترتیب پشت‌سرش می‌آیند.
     final currentAndNext = List.generate(12 - today.month + 1, (i) => today.month + i);
