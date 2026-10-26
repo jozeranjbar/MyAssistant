@@ -425,7 +425,9 @@ class _ReminderCard extends StatelessWidget {
                 SizedBox(
                   width: 62,
                   child: Text(
-                    toPersianDigits(reminder.cycleTodaySlot() != null
+                    toPersianDigits(reminder.isCycleDayPaused(DateTime.now())
+                        ? 'توقف'
+                        : reminder.cycleTodaySlot() != null
                         ? Reminder.formatMinutesOfDay(
                             reminder.cycleTodaySlot()!.hour * 60 + reminder.cycleTodaySlot()!.minute)
                         : reminder.timeLabel),
@@ -522,6 +524,7 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
   // برنامه‌ی چندروزه (RepeatType.cycle)
   late final TextEditingController _cycleDaysController;
   late List<int> _cycleMinutes; // ساعتِ هر روز، به‌صورت دقیقه از نیمه‌شب
+  late List<bool> _cyclePaused; // آیا آن روزِ برنامه متوقف است؟ (ساعتش نگه داشته می‌شود)
   late int _cycleTodayDay; // امروز روزِ چندمِ برنامه است (از ۱)
 
   // زمان شروعِ «هر چند روز یک‌بار»: ۰ = امروز، ۱ = یک روز دیگر، ... و
@@ -557,10 +560,14 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     }
 
     if (e != null && e.repeatType == RepeatType.cycle && e.cycleMinutes.isNotEmpty) {
-      _cycleMinutes = List<int>.from(e.cycleMinutes);
+      final fallback = e.cycleMinutes.firstWhere((m) => m != Reminder.pausedDay,
+          orElse: () => _time.hour * 60 + _time.minute);
+      _cyclePaused = e.cycleMinutes.map((m) => m == Reminder.pausedDay).toList();
+      _cycleMinutes = e.cycleMinutes.map((m) => m == Reminder.pausedDay ? fallback : m).toList();
       _cycleTodayDay = e.cycleDayNumberFor(DateTime.now());
     } else {
       _cycleMinutes = List<int>.filled(4, _time.hour * 60 + _time.minute);
+      _cyclePaused = List<bool>.filled(4, false);
       _cycleTodayDay = 1;
     }
     _cycleDaysController = TextEditingController(text: _cycleMinutes.length.toString());
@@ -586,9 +593,11 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
     setState(() {
       final fill = _cycleMinutes.isNotEmpty ? _cycleMinutes.last : _time.hour * 60 + _time.minute;
       if (n > _cycleMinutes.length) {
+        _cyclePaused = [..._cyclePaused, ...List<bool>.filled(n - _cycleMinutes.length, false)];
         _cycleMinutes = [..._cycleMinutes, ...List<int>.filled(n - _cycleMinutes.length, fill)];
       } else if (n < _cycleMinutes.length) {
         _cycleMinutes = _cycleMinutes.sublist(0, n);
+        _cyclePaused = _cyclePaused.sublist(0, n);
       }
       if (_cycleTodayDay > n) _cycleTodayDay = n;
     });
@@ -615,35 +624,73 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
           onChanged: _onCycleDaysChanged,
         ),
         const SizedBox(height: 14),
-        _FieldLabel(text: 'ساعت یادآوری در هر روز', color: const Color(0xFF9775FA)),
+        _FieldLabel(text: 'ساعت یادآوری در هر روز (با دکمه‌ی توقف، آن روز اعلان نمی‌آید و از روز بعد مثل قبل ادامه می‌یابد)', color: const Color(0xFF9775FA)),
         for (var i = 0; i < n; i++)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Material(
-              color: const Color(0xFF9775FA).withOpacity(0.12),
-              borderRadius: BorderRadius.circular(14),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: () => _pickCycleTime(i),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    children: [
-                      Text(toPersianDigits('روز ${i + 1}'),
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                      const Spacer(),
-                      const Icon(Icons.access_time, color: Color(0xFF9775FA), size: 24),
-                      const SizedBox(width: 8),
-                      Text(
-                        toPersianDigits(_displayHourMinute(
-                            TimeOfDay(hour: _cycleMinutes[i] ~/ 60, minute: _cycleMinutes[i] % 60))),
-                        style: const TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFF9775FA)),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Opacity(
+                    opacity: _cyclePaused[i] ? 0.45 : 1,
+                    child: Material(
+                      color: const Color(0xFF9775FA).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(14),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: _cyclePaused[i] ? null : () => _pickCycleTime(i),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          child: Row(
+                            children: [
+                              Text(toPersianDigits('روز ${i + 1}'),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                              const Spacer(),
+                              if (_cyclePaused[i])
+                                const Text('توقف',
+                                    style: TextStyle(
+                                        fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFFE03131)))
+                              else ...[
+                                const Icon(Icons.access_time, color: Color(0xFF9775FA), size: 24),
+                                const SizedBox(width: 8),
+                                Text(
+                                  toPersianDigits(_displayHourMinute(
+                                      TimeOfDay(hour: _cycleMinutes[i] ~/ 60, minute: _cycleMinutes[i] % 60))),
+                                  style: const TextStyle(
+                                      fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFF9775FA)),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                // دکمه‌ی توقف: آن روز اعلان نمی‌آید و روز بعد مثل قبل ادامه دارد
+                Tooltip(
+                  message: _cyclePaused[i] ? 'ازسرگیری این روز' : 'توقف در این روز',
+                  child: Material(
+                    color: _cyclePaused[i]
+                        ? const Color(0xFFE03131)
+                        : const Color(0xFFE03131).withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(14),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () => setState(() => _cyclePaused[i] = !_cyclePaused[i]),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        child: Icon(
+                          _cyclePaused[i] ? Icons.play_arrow_rounded : Icons.pause_circle_outline,
+                          size: 28,
+                          color: _cyclePaused[i] ? Colors.white : const Color(0xFFE03131),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         const SizedBox(height: 6),
@@ -677,6 +724,16 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
       _showSnack('تعداد روزهای برنامه باید بین ${toPersianDigits(_minCycleDays.toString())} تا ${toPersianDigits(_maxCycleDays.toString())} باشد');
       return;
     }
+    if (isCycle && _cyclePaused.every((p) => p)) {
+      _showSnack('حداقل یکی از روزهای برنامه باید فعال باشد');
+      return;
+    }
+    // ساعتِ روزهای متوقف با -۱ ذخیره می‌شود
+    final savedCycle = <int>[
+      for (var i = 0; i < _cycleMinutes.length; i++)
+        _cyclePaused[i] ? Reminder.pausedDay : _cycleMinutes[i],
+    ];
+    final firstActive = savedCycle.firstWhere((m) => m != Reminder.pausedDay, orElse: () => 0);
     final now = DateTime.now();
     final needsInterval = _repeatType == RepeatType.everyXDays || _repeatType == RepeatType.everyXHours;
     final interval = int.tryParse(normalizeDigitsToAscii(_intervalController.text.trim()));
@@ -692,11 +749,11 @@ class _ReminderEditSheetState extends State<_ReminderEditSheet> {
       title: name,
       dose: _isMed ? _doseOrNoteController.text.trim() : (existing?.dose ?? ''),
       note: !_isMed ? _doseOrNoteController.text.trim() : (existing?.note ?? ''),
-      hour: isCycle ? _cycleMinutes.first ~/ 60 : _time.hour,
-      minute: isCycle ? _cycleMinutes.first % 60 : _time.minute,
+      hour: isCycle ? firstActive ~/ 60 : _time.hour,
+      minute: isCycle ? firstActive % 60 : _time.minute,
       repeatType: _repeatType,
       repeatInterval: needsInterval ? interval : null,
-      cycleMinutes: isCycle ? List<int>.from(_cycleMinutes) : <int>[],
+      cycleMinutes: isCycle ? savedCycle : <int>[],
       cycleStart: isCycle ? DateTime(now.year, now.month, now.day - (_cycleTodayDay - 1)) : null,
       isActive: existing?.isActive ?? true,
       // شروعِ «هر چند روز یک‌بار» همان createdAt است (مبنای شمارش)؛ با گزینه‌ی
