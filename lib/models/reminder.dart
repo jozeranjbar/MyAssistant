@@ -93,7 +93,13 @@ class Reminder {
   /// فقط برای [RepeatType.cycle]: ساعتِ هر روزِ برنامه، به‌صورت «دقیقه از
   /// نیمه‌شب» (مثلاً ۰۷:۰۰ → ۴۲۰). طولِ این لیست = تعداد روزهای چرخه است و
   /// چرخه بعد از روزِ آخر دوباره از روزِ اول شروع می‌شود.
+  ///
+  /// مقدارِ [pausedDay] (یعنی -۱) برای یک روز یعنی آن روزِ برنامه «متوقف» است:
+  /// در آن روز اعلانی نمی‌آید و روز بعد، برنامه مثل قبل ادامه پیدا می‌کند.
   List<int> cycleMinutes;
+
+  /// نشانه‌ی «روزِ متوقف» داخل [cycleMinutes]
+  static const int pausedDay = -1;
 
   /// فقط برای [RepeatType.cycle]: تاریخِ «روز اول» چرخه (ساعت ۰۰:۰۰).
   DateTime? cycleStart;
@@ -128,8 +134,15 @@ class Reminder {
   /// متنِ ساعت‌های برنامه‌ی چندروزه، مثل «۰۱:۰۰ ← ۰۷:۰۰ ← ۱۱:۰۰ ← ۱۷:۰۰»
   String get cycleSummary => cycleMinutes.map(formatMinutesOfDay).join(' ← ');
 
-  static String formatMinutesOfDay(int m) =>
-      '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
+  static String formatMinutesOfDay(int m) => m == pausedDay
+      ? 'توقف'
+      : '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
+
+  /// آیا [day] یک روزِ متوقف در برنامه‌ی چندروزه است؟
+  bool isCycleDayPaused(DateTime day) {
+    if (repeatType != RepeatType.cycle || cycleMinutes.isEmpty) return false;
+    return cycleMinutes[cycleDayNumberFor(day) - 1] == pausedDay;
+  }
 
   /// روزِ چندمِ چرخه است [day] (از ۱ شروع می‌شود)
   int cycleDayNumberFor(DateTime day) {
@@ -148,6 +161,7 @@ class Reminder {
     if (repeatType != RepeatType.cycle || cycleMinutes.isEmpty) return null;
     final base = now ?? DateTime.now();
     final m = cycleMinutes[cycleDayNumberFor(base) - 1];
+    if (m == pausedDay) return null; // امروز متوقف است
     return DateTime(base.year, base.month, base.day, m ~/ 60, m % 60);
   }
 
@@ -158,6 +172,7 @@ class Reminder {
   DateTime? pendingOccurrence({DateTime? now, Duration grace = const Duration(hours: 2)}) {
     final base = now ?? DateTime.now();
     final endOfToday = DateTime(base.year, base.month, base.day + 1);
+    if (isCycleDayPaused(base)) return null;
     final DateTime t = cycleTodaySlot(now: base) ?? nextOccurrence(from: base.subtract(grace));
     if (base.difference(t) > grace) return null;
     if (!t.isBefore(endOfToday)) return null;
@@ -177,6 +192,7 @@ class Reminder {
     for (var i = 0; i <= horizonDays && result.length < maxCount; i++) {
       final day = DateTime(base.year, base.month, base.day + i);
       final minutes = cycleMinutes[cycleDayNumberFor(day) - 1];
+      if (minutes == pausedDay) continue; // روزِ متوقف: اعلانی زمان‌بندی نمی‌شود
       final t = DateTime(day.year, day.month, day.day, minutes ~/ 60, minutes % 60);
       if (t.isAfter(base)) result.add(t);
     }
@@ -195,6 +211,7 @@ class Reminder {
         for (var i = 0; i <= cycleMinutes.length + 1; i++) {
           final day = DateTime(base.year, base.month, base.day + i);
           final m = cycleMinutes[cycleDayNumberFor(day) - 1];
+          if (m == pausedDay) continue;
           final t = DateTime(day.year, day.month, day.day, m ~/ 60, m % 60);
           if (t.isAfter(base)) return t;
         }
