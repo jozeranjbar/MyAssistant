@@ -4,7 +4,9 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import '../models/reminder.dart';
 import '../utils/persian_numbers.dart';
+import 'package:shamsi_date/shamsi_date.dart';
 import 'wake_alarm_service.dart';
+import 'calendar_update_service.dart';
 
 /// وقتی دکمه‌ی «قطع زنگ» روی اعلانِ بیدارباش زده شود (چه با برنامه‌ی باز، چه
 /// از پس‌زمینه)، هر دو نوبتِ زنگ (اصلی و تکرار) را کنسل می‌کند تا صدا فوری
@@ -15,6 +17,9 @@ void _handleNotificationResponse(NotificationResponse response) {
     final plugin = FlutterLocalNotificationsPlugin();
     plugin.cancel(WakeAlarmService.notificationId);
     plugin.cancel(WakeAlarmService.notificationIdEcho);
+  } else if (response.payload == CalendarUpdateService.payload) {
+    // زدن روی اعلانِ «بروزرسانی تقویم» (برنامه باز یا در پس‌زمینه است)
+    CalendarUpdateService.updateWithFeedback();
   }
 }
 
@@ -204,6 +209,68 @@ class NotificationService {
           canExact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
+  }
+
+  /// شناسه‌های ثابتِ اعلان‌های «بروزرسانی تقویم» (بالاتر از شناسه‌ی یادآوری‌ها)
+  static const int _calendarUpdateBaseId = 2100000001;
+
+  /// اعلانِ «تقویم را بروزرسانی کنید» را برای اول و پانزدهمِ اسفندِ امسال و
+  /// سالِ بعد (هر کدام که هنوز نیامده)، ساعت ۱۰ صبح زمان‌بندی می‌کند. چون
+  /// تاریخِ میلادیِ اول اسفند هر سال فرق می‌کند، هر بار تاریخ‌ها از نو محاسبه
+  /// می‌شوند (با هر بار باز شدنِ برنامه).
+  Future<void> scheduleCalendarUpdateReminders() async {
+    await init();
+    for (var i = 0; i < 4; i++) {
+      await _plugin.cancel(_calendarUpdateBaseId + i);
+    }
+
+    final now = DateTime.now();
+    final jNow = Jalali.now();
+    final dates = <DateTime>[];
+    for (final y in [jNow.year, jNow.year + 1]) {
+      for (final d in [1, 15]) {
+        final g = Jalali(y, 12, d).toDateTime();
+        final t = DateTime(g.year, g.month, g.day, 10, 0);
+        if (t.isAfter(now)) dates.add(t);
+      }
+    }
+
+    final androidImpl = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    final canExact = await androidImpl?.canScheduleExactNotifications() ?? true;
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'calendar_update_channel',
+        'بروزرسانی تقویم',
+        channelDescription: 'یادآوری بروزرسانی تعطیلات رسمی تقویم',
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+    );
+
+    for (var i = 0; i < dates.length && i < 4; i++) {
+      await _plugin.zonedSchedule(
+        _calendarUpdateBaseId + i,
+        'بروزرسانی تقویم',
+        'تقویم را بروزرسانی کنید؛ برای دریافت تعطیلات رسمی جدید روی این اعلان بزنید.',
+        tz.TZDateTime.from(dates[i], tz.local),
+        details,
+        payload: CalendarUpdateService.payload,
+        androidScheduleMode:
+            canExact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    }
+  }
+
+  /// اگر برنامه با زدن روی یک اعلان از حالتِ کاملاً بسته باز شده باشد،
+  /// payload آن اعلان را برمی‌گرداند (وگرنه null).
+  Future<String?> launchPayload() async {
+    await init();
+    final d = await _plugin.getNotificationAppLaunchDetails();
+    if (d?.didNotificationLaunchApp ?? false) return d?.notificationResponse?.payload;
+    return null;
   }
 
   /// دوباره زمان‌بندی کردن همه یادآوری‌های فعال (بعد از بوت گوشی یا باز شدن برنامه)
