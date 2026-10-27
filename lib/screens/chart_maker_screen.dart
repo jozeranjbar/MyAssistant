@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/chart_board.dart';
 import '../services/chart_storage_service.dart';
@@ -46,6 +47,31 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
   void initState() {
     super.initState();
     _load();
+    _loadShowValues();
+  }
+
+  static const String _showValuesKey = 'chart_show_values';
+  // چراغِ «اعدادِ نقاط»: روشن = عددِ هر نقطه (بدونِ واحدِ «کیلو» و ...) روی نمودار نوشته می‌شود
+  bool _showValues = false;
+
+  Future<void> _loadShowValues() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final v = prefs.getBool(_showValuesKey) ?? false;
+      if (mounted && v != _showValues) {
+        setState(() => _showValues = v);
+        _fsTick.value++;
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _toggleShowValues() async {
+    setState(() => _showValues = !_showValues);
+    _fsTick.value++;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_showValuesKey, _showValues);
+    } catch (_) {}
   }
 
   @override
@@ -752,7 +778,48 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
               ),
             ),
           ),
+        // چراغِ نمایشِ اعدادِ نقاط
+        GestureDetector(
+          onTap: _toggleShowValues,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: _showValues ? const Color(0xFFFFF9C4) : const Color(0xFFDCDCDC),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE2DCCD)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Opacity(opacity: _showValues ? 1 : 0.35, child: const Text('💡', style: TextStyle(fontSize: 14))),
+                const SizedBox(width: 6),
+                const Text('اعداد نقاط',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF183A49))),
+              ],
+            ),
+          ),
+        ),
       ],
+    );
+  }
+
+  /// دکمه‌ی مربعیِ پررنگ (تمام‌صفحه / بستن)
+  Widget _squareIconButton(IconData icon, String tooltip, VoidCallback onPressed) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: const Color(0xFF183A49),
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onPressed,
+          child: SizedBox(
+            width: 42,
+            height: 42,
+            child: Icon(icon, size: 30, color: Colors.white),
+          ),
+        ),
+      ),
     );
   }
 
@@ -778,16 +845,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                     children: [
                       Row(
                         children: [
-                          SizedBox(
-                            width: 44,
-                            height: 40,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              tooltip: 'بستن',
-                              icon: const Icon(Icons.fullscreen_exit, size: 30, color: Color(0xFF183A49)),
-                              onPressed: () => Navigator.of(ctx).pop(),
-                            ),
-                          ),
+                          _squareIconButton(Icons.fullscreen_exit, 'بستن', () => Navigator.of(ctx).pop()),
                           Expanded(
                             child: Text(
                               _data.currentVariable != null
@@ -797,7 +855,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                               textAlign: TextAlign.center,
                             ),
                           ),
-                          const SizedBox(width: 44),
+                          const SizedBox(width: 42),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -817,6 +875,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                                   visibility: _data.visibility,
                                   colorIndices: _data.colorIndices,
                                   scale: scale,
+                                  showValues: _showValues,
                                 ),
                               ),
                       ),
@@ -841,18 +900,9 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
         Row(
           children: [
             // دکمه‌ی نمایشِ تمام‌صفحه
-            SizedBox(
-              width: 40,
-              height: 32,
-              child: hasChart
-                  ? IconButton(
-                      padding: EdgeInsets.zero,
-                      tooltip: 'نمایش تمام‌صفحه',
-                      icon: const Icon(Icons.fullscreen, size: 28, color: Color(0xFF183A49)),
-                      onPressed: _openFullScreenChart,
-                    )
-                  : null,
-            ),
+            hasChart
+                ? _squareIconButton(Icons.fullscreen, 'نمایش تمام‌صفحه', _openFullScreenChart)
+                : const SizedBox(width: 42, height: 42),
             Expanded(
               child: Text(
                 _data.currentVariable != null
@@ -862,7 +912,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                 textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(width: 40),
+            const SizedBox(width: 42),
           ],
         ),
         const SizedBox(height: 6),
@@ -885,6 +935,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                     visibility: _data.visibility,
                     colorIndices: _data.colorIndices,
                     scale: scale,
+                    showValues: _showValues,
                   ),
                 ),
         ),
@@ -1037,7 +1088,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     // متناسب با عرض است.
     const left = 100.0, right = 44.0, bottom = 120.0;
     final n = rows.length;
-    final spacing = n > 1 ? (1000.0 / (n - 1)).clamp(40.0, 110.0).toDouble() : 0.0;
+    final spacing = n > 1 ? (1000.0 / (n - 1)).clamp(_showValues ? 58.0 : 40.0, 110.0).toDouble() : 0.0;
     final plotW = n > 1 ? (n - 1) * spacing : 200.0;
     final width = left + plotW + right;
     final plotH = math.max(480.0, width * 0.5);
@@ -1098,6 +1149,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                 leftPad: left,
                 rightPad: right,
                 spacing: spacing,
+                showValues: _showValues,
               ),
             ),
           ),
@@ -1404,11 +1456,13 @@ class _ZoomableChart extends StatefulWidget {
   final List<bool> visibility;
   final List<int> colorIndices;
   final _ChartScale scale;
+  final bool showValues;
   const _ZoomableChart({
     required this.rows,
     required this.visibility,
     required this.colorIndices,
     required this.scale,
+    this.showValues = false,
   });
 
   @override
@@ -1500,6 +1554,7 @@ class _ZoomableChartState extends State<_ZoomableChart> {
             rows: widget.rows,
             visibility: widget.visibility,
             colorIndices: widget.colorIndices,
+            showValues: widget.showValues,
             x0: _x0,
             wx: _fullXW / _zoom,
             y0: _y0,
@@ -1519,6 +1574,7 @@ class _ZoomChartPainter extends CustomPainter {
   final List<ChartRow> rows;
   final List<bool> visibility;
   final List<int> colorIndices;
+  final bool showValues;
   final double x0, wx, y0, wy;
   final double plotL, plotT, plotW, plotH;
 
@@ -1526,6 +1582,7 @@ class _ZoomChartPainter extends CustomPainter {
     required this.rows,
     required this.visibility,
     required this.colorIndices,
+    required this.showValues,
     required this.x0,
     required this.wx,
     required this.y0,
@@ -1567,6 +1624,10 @@ class _ZoomChartPainter extends CustomPainter {
         Paint()..color = const Color(0xFF9AA8A2)..strokeWidth = 1.2);
 
     // ---- خط‌ها و نقطه‌ها (بریده‌شده به ناحیه‌ی نمودار) ----
+    final pxPerIdx = plotW / wx;
+    // فاصله‌ی عددها: وقتی دور هستید یکی‌درمیان/کمتر، با زوم همه‌ی عددها نوشته می‌شود
+    final labelStride = math.max(1, (34 / pxPerIdx).ceil());
+    int order = 0;
     canvas.save();
     canvas.clipRect(plotRect.inflate(8));
     for (int p = 0; p < visibility.length; p++) {
@@ -1583,9 +1644,13 @@ class _ZoomChartPainter extends CustomPainter {
         ..strokeWidth = 1;
 
       final points = <Offset>[];
+      final rowOf = <int>[];
       for (int r = 0; r < rows.length; r++) {
         final v = p < rows[r].values.length ? parseFaNumber(rows[r].values[p]) : null;
-        if (v != null) points.add(Offset(_px(r.toDouble()), _py(v)));
+        if (v != null) {
+          points.add(Offset(_px(r.toDouble()), _py(v)));
+          rowOf.add(r);
+        }
       }
       for (int i = 0; i < points.length - 1; i++) {
         final a = points[i], b = points[i + 1];
@@ -1599,6 +1664,17 @@ class _ZoomChartPainter extends CustomPainter {
         canvas.drawCircle(pt, 5, dotPaint);
         canvas.drawCircle(pt, 5, borderPaint);
       }
+      if (showValues) {
+        for (int i = 0; i < points.length; i++) {
+          final pt = points[i];
+          if (pt.dx < plotL || pt.dx > plotL + plotW) continue;
+          if (rowOf[i] % labelStride != 0) continue;
+          // نفرِ اول بالای نقطه، نفرِ دوم زیرِ آن، تا روی هم نیفتند
+          _paintValueLabel(canvas, chartValueLabel(rows[rowOf[i]].values[p]), pt, color,
+              above: order.isEven, fontSize: 11);
+        }
+      }
+      order++;
     }
     canvas.restore();
 
@@ -1637,6 +1713,36 @@ class _ZoomChartPainter extends CustomPainter {
 // نقاش نسخه‌ی خروجیِ (کامل و بدون اسکرول) نمودار، برای تبدیل به تصویر PNG
 // =============================================================================
 
+/// فقط بخشِ عددیِ مقدار («۵۲ کیلو» ← «۵۲»؛ «51.65» ← «۵۱٫۶۵»)
+String chartValueLabel(String raw) {
+  final match = RegExp(r'-?\d+(\.\d+)?').firstMatch(normalizeDigits(raw.trim()));
+  if (match == null) return '';
+  return toFaDigits(match.group(0)!).replaceAll('.', '٫');
+}
+
+/// عددِ یک نقطه را با حاشیه‌ی سفید (برای خوانایی روی خطوط) بالا یا پایینِ نقطه می‌کشد
+void _paintValueLabel(Canvas canvas, String text, Offset pt, Color color,
+    {required bool above, required double fontSize}) {
+  if (text.isEmpty) return;
+  TextPainter build(TextStyle style) => TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: TextDirection.rtl,
+      )..layout();
+  final halo = build(TextStyle(
+    fontSize: fontSize,
+    fontWeight: FontWeight.bold,
+    foreground: Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5
+      ..color = Colors.white,
+  ));
+  final fill = build(TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold, color: color));
+  final dx = pt.dx - fill.width / 2;
+  final dy = above ? pt.dy - fill.height - 8 : pt.dy + 8;
+  halo.paint(canvas, Offset(dx, dy));
+  fill.paint(canvas, Offset(dx, dy));
+}
+
 class _ExportChartPainter extends CustomPainter {
   final List<ChartRow> rows;
   final List<int> visibleIndividuals;
@@ -1645,6 +1751,7 @@ class _ExportChartPainter extends CustomPainter {
   final double leftPad;
   final double rightPad;
   final double spacing;
+  final bool showValues;
 
   _ExportChartPainter({
     required this.rows,
@@ -1654,6 +1761,7 @@ class _ExportChartPainter extends CustomPainter {
     required this.leftPad,
     required this.rightPad,
     required this.spacing,
+    required this.showValues,
   });
 
   @override
@@ -1677,7 +1785,8 @@ class _ExportChartPainter extends CustomPainter {
       tp.paint(canvas, Offset(leftPad - tp.width - 10, y - tp.height / 2));
     }
 
-    for (final p in visibleIndividuals) {
+    for (int k = 0; k < visibleIndividuals.length; k++) {
+      final p = visibleIndividuals[k];
       final color = Color(chartColorPalette[colorIndices[p] % chartColorPalette.length]);
       final linePaint = Paint()
         ..color = color
@@ -1689,9 +1798,14 @@ class _ExportChartPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2;
       final points = <Offset>[];
+      final labels = <String>[];
       for (int idx = 0; idx < rows.length; idx++) {
-        final v = p < rows[idx].values.length ? parseFaNumber(rows[idx].values[p]) : null;
-        if (v != null) points.add(Offset(leftPad + idx * (n > 1 ? spacing : 0), valueToY(v)));
+        final raw = p < rows[idx].values.length ? rows[idx].values[p] : '';
+        final v = parseFaNumber(raw);
+        if (v != null) {
+          points.add(Offset(leftPad + idx * (n > 1 ? spacing : 0), valueToY(v)));
+          labels.add(chartValueLabel(raw));
+        }
       }
       for (int i = 0; i < points.length - 1; i++) {
         canvas.drawLine(points[i], points[i + 1], linePaint);
@@ -1699,6 +1813,11 @@ class _ExportChartPainter extends CustomPainter {
       for (final pt in points) {
         canvas.drawCircle(pt, 7, dotPaint);
         canvas.drawCircle(pt, 7, borderPaint);
+      }
+      if (showValues) {
+        for (int i = 0; i < points.length; i++) {
+          _paintValueLabel(canvas, labels[i], points[i], color, above: k.isEven, fontSize: 15);
+        }
       }
     }
   }
