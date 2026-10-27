@@ -755,9 +755,8 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
   Widget _buildChartSection() {
     final rows = _data.currentRows;
     final scale = _scaleForRows(rows);
-    const chartHeight = 200.0;
     const axisWidth = 46.0;
-    const minSpacing = 36.0;
+    const minSpacing = 44.0;
 
     return Column(
       children: [
@@ -778,6 +777,8 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                       style: TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
                 )
               : LayoutBuilder(builder: (context, constraints) {
+                  // نمودار تمامِ ارتفاعِ در دسترس را می‌گیرد (قبلاً ثابت ۲۰۰ بود)
+                  final chartHeight = math.max(200.0, constraints.maxHeight);
                   final viewportWidth = constraints.maxWidth - axisWidth;
                   final n = rows.length;
                   final neededWidth = n > 1 ? (n - 1) * minSpacing + 30 : viewportWidth;
@@ -954,10 +955,15 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     }
     final scale = _scaleForRows(rows);
     final visiblePeople = [for (int i = 0; i < _data.individuals.length; i++) if (_data.visibility[i]) i];
-    const left = 64.0, right = 30.0, spacing = 70.0, bottom = 64.0, plotH = 320.0;
+    // ابعاد طوری انتخاب می‌شود که تصویر نسبتِ «عادی» (نه خیلی پهن) داشته باشد و
+    // در گالری بزرگ و خوانا دیده شود: فاصله‌ی نقطه‌ها متوسط، و ارتفاعِ نمودار
+    // متناسب با عرض است.
+    const left = 100.0, right = 44.0, bottom = 120.0;
     final n = rows.length;
+    final spacing = n > 1 ? (1000.0 / (n - 1)).clamp(40.0, 110.0).toDouble() : 0.0;
     final plotW = n > 1 ? (n - 1) * spacing : 200.0;
     final width = left + plotW + right;
+    final plotH = math.max(480.0, width * 0.5);
 
     return Container(
       width: width,
@@ -977,10 +983,10 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
             child: Text(
               _data.currentVariable != null ? 'نمایش و عدم نمایش نمودار ${_data.currentVariable} هر فرد' : 'نمودار',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF183A49)),
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFF183A49)),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Wrap(
@@ -991,18 +997,18 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                 for (final i in visiblePeople)
                   Row(mainAxisSize: MainAxisSize.min, children: [
                     Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(color: Color(_data.colorOf(i)), borderRadius: BorderRadius.circular(3)),
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(color: Color(_data.colorOf(i)), borderRadius: BorderRadius.circular(4)),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 6),
                     Text(_data.individuals[i],
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF3B2E32))),
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF3B2E32))),
                   ]),
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           SizedBox(
             width: width,
             height: plotH,
@@ -1025,14 +1031,15 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
               children: [
                 for (int idx = 0; idx < rows.length; idx++)
                   Positioned(
-                    left: left + idx * (n > 1 ? spacing : 0) - 40,
-                    top: 6,
-                    width: 80,
+                    left: left + idx * (n > 1 ? spacing : 0) - 100,
+                    top: 8,
+                    width: 100,
                     child: Transform.rotate(
                       angle: -0.6,
                       alignment: Alignment.topRight,
                       child: Text(rows[idx].date,
-                          textAlign: TextAlign.right, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7873))),
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF4A5B57))),
                     ),
                   ),
               ],
@@ -1055,7 +1062,9 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     try {
       final boundary = _exportKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) throw Exception('render-not-ready');
-      final image = await boundary.toImage(pixelRatio: 2);
+      // کیفیتِ بالا، ولی برای نمودارهای خیلی عریض از حدِ توانِ GPU (حدود ۸۰۰۰ پیکسل) رد نشود
+      final pixelRatio = (6000 / boundary.size.width).clamp(1.0, 2.5).toDouble();
+      final image = await boundary.toImage(pixelRatio: pixelRatio);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) throw Exception('no-bytes');
       final bytes = byteData.buffer.asUint8List();
@@ -1374,6 +1383,8 @@ class _LineChartPainter extends CustomPainter {
     final n = rows.length;
     final plotWidth = size.width - innerLeftPad - innerRightPad;
     final xStep = n > 1 ? plotWidth / (n - 1) : 0.0;
+    final showValues = xStep >= 30;
+    int visibleOrder = 0;
 
     final gridPaint = Paint()
       ..color = const Color(0xFFD7DFDA)
@@ -1398,10 +1409,13 @@ class _LineChartPainter extends CustomPainter {
         ..strokeWidth = 1;
 
       final points = <Offset>[];
+      final labels = <String>[];
       for (int r = 0; r < rows.length; r++) {
-        final v = p < rows[r].values.length ? parseFaNumber(rows[r].values[p]) : null;
+        final raw = p < rows[r].values.length ? rows[r].values[p] : '';
+        final v = parseFaNumber(raw);
         if (v != null) {
           points.add(Offset(innerLeftPad + r * xStep, valueToY(v)));
+          labels.add(toFaDigits(raw.trim()));
         }
       }
       for (int i = 0; i < points.length - 1; i++) {
@@ -1411,6 +1425,12 @@ class _LineChartPainter extends CustomPainter {
         canvas.drawCircle(pt, 5, dotPaint);
         canvas.drawCircle(pt, 5, borderPaint);
       }
+      if (showValues) {
+        for (int i = 0; i < points.length; i++) {
+          _paintValueLabel(canvas, labels[i], points[i], color, above: visibleOrder.isEven, fontSize: 11);
+        }
+      }
+      visibleOrder++;
     }
 
     // برچسبِ تاریخِ هر ستون، به‌فارسی و به‌صورت مورب زیرِ محورِ افقی؛ این
@@ -1441,6 +1461,28 @@ class _LineChartPainter extends CustomPainter {
 // =============================================================================
 // نقاش نسخه‌ی خروجیِ (کامل و بدون اسکرول) نمودار، برای تبدیل به تصویر PNG
 // =============================================================================
+
+/// عددِ یک نقطه را با حاشیه‌ی سفید (برای خوانایی روی خطوط) بالا یا پایینِ نقطه می‌کشد
+void _paintValueLabel(Canvas canvas, String text, Offset pt, Color color,
+    {required bool above, required double fontSize}) {
+  TextPainter build(TextStyle style) => TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: TextDirection.rtl,
+      )..layout();
+  final halo = build(TextStyle(
+    fontSize: fontSize,
+    fontWeight: FontWeight.bold,
+    foreground: Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5
+      ..color = Colors.white,
+  ));
+  final fill = build(TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold, color: color));
+  final dx = pt.dx - fill.width / 2;
+  final dy = above ? pt.dy - fill.height - 9 : pt.dy + 9;
+  halo.paint(canvas, Offset(dx, dy));
+  fill.paint(canvas, Offset(dx, dy));
+}
 
 class _ExportChartPainter extends CustomPainter {
   final List<ChartRow> rows;
@@ -1476,34 +1518,47 @@ class _ExportChartPainter extends CustomPainter {
       canvas.drawLine(Offset(leftPad, y), Offset(size.width - rightPad, y), gridPaint);
       final label = _formatAxisValue(tickVal, scale.step);
       final tp = TextPainter(
-        text: TextSpan(text: label, style: const TextStyle(color: Color(0xFF4A5B57), fontWeight: FontWeight.bold, fontSize: 13)),
+        text: TextSpan(text: label, style: const TextStyle(color: Color(0xFF4A5B57), fontWeight: FontWeight.bold, fontSize: 17)),
         textDirection: TextDirection.rtl,
       )..layout();
-      tp.paint(canvas, Offset(leftPad - tp.width - 8, y - tp.height / 2));
+      tp.paint(canvas, Offset(leftPad - tp.width - 10, y - tp.height / 2));
     }
 
-    for (final p in visibleIndividuals) {
+    final showValues = spacing >= 30;
+    for (int k = 0; k < visibleIndividuals.length; k++) {
+      final p = visibleIndividuals[k];
       final color = Color(chartColorPalette[colorIndices[p] % chartColorPalette.length]);
       final linePaint = Paint()
         ..color = color
-        ..strokeWidth = 2.5
+        ..strokeWidth = 3.5
         ..strokeCap = StrokeCap.round;
       final dotPaint = Paint()..color = color;
       final borderPaint = Paint()
         ..color = Colors.white
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5;
+        ..strokeWidth = 2;
       final points = <Offset>[];
+      final labels = <String>[];
       for (int idx = 0; idx < rows.length; idx++) {
-        final v = p < rows[idx].values.length ? parseFaNumber(rows[idx].values[p]) : null;
-        if (v != null) points.add(Offset(leftPad + idx * (n > 1 ? spacing : 0), valueToY(v)));
+        final raw = p < rows[idx].values.length ? rows[idx].values[p] : '';
+        final v = parseFaNumber(raw);
+        if (v != null) {
+          points.add(Offset(leftPad + idx * (n > 1 ? spacing : 0), valueToY(v)));
+          labels.add(toFaDigits(raw.trim()));
+        }
       }
       for (int i = 0; i < points.length - 1; i++) {
         canvas.drawLine(points[i], points[i + 1], linePaint);
       }
       for (final pt in points) {
-        canvas.drawCircle(pt, 5.5, dotPaint);
-        canvas.drawCircle(pt, 5.5, borderPaint);
+        canvas.drawCircle(pt, 7, dotPaint);
+        canvas.drawCircle(pt, 7, borderPaint);
+      }
+      if (showValues) {
+        // عددِ هر نقطه: نفرِ اول بالای نقطه و نفرِ دوم زیرِ آن، تا روی هم نیفتند
+        for (int i = 0; i < points.length; i++) {
+          _paintValueLabel(canvas, labels[i], points[i], color, above: k.isEven, fontSize: 14);
+        }
       }
     }
   }
