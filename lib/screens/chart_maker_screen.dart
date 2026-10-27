@@ -33,6 +33,8 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
   bool _preparingExport = false;
 
   final GlobalKey _exportKey = GlobalKey();
+  // با هر تغییرِ نمایشِ افراد زیاد می‌شود تا صفحه‌ی تمام‌صفحه‌ی نمودار هم تازه شود
+  final ValueNotifier<int> _fsTick = ValueNotifier<int>(0);
   final GlobalKey _variableFieldKey = GlobalKey();
   final GlobalKey _peopleFieldKey = GlobalKey();
   final Map<String, TextEditingController> _valueControllers = {};
@@ -51,6 +53,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     _closeDropdown();
     _resetValueControllers();
     _rowsScrollController.dispose();
+    _fsTick.dispose();
     super.dispose();
   }
 
@@ -728,6 +731,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
           GestureDetector(
             onTap: () {
               setState(() => _data.visibility[i] = !_data.visibility[i]);
+              _fsTick.value++;
               unawaited(_persist());
             },
             child: Container(
@@ -752,64 +756,137 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     );
   }
 
+  /// نمودار را در یک صفحه‌ی تمام‌صفحه باز می‌کند (با همان زوم دوانگشتی)
+  Future<void> _openFullScreenChart() {
+    return Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (ctx) => Scaffold(
+          backgroundColor: const Color(0xFFD9ECF5),
+          body: SafeArea(
+            child: Padding(
+              // فاصله‌ی زیادِ پایین: روی گوشی‌های جدید (نوار حرکتی / گوشه‌های گرد)
+              // قسمتِ پایینِ صفحه بریده یا پنهان می‌شود، پس نمودار بالاتر از آن
+              // تمام می‌شود.
+              padding: EdgeInsets.fromLTRB(10, 6, 10, MediaQuery.of(ctx).padding.bottom + 64),
+              child: ValueListenableBuilder<int>(
+                valueListenable: _fsTick,
+                builder: (context, _, __) {
+                  final rows = _data.currentRows;
+                  final scale = _scaleForRows(rows);
+                  return Column(
+                    children: [
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 44,
+                            height: 40,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              tooltip: 'بستن',
+                              icon: const Icon(Icons.fullscreen_exit, size: 30, color: Color(0xFF183A49)),
+                              onPressed: () => Navigator.of(ctx).pop(),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              _data.currentVariable != null
+                                  ? 'نمایش و عدم نمایش نمودار ${_data.currentVariable} هر فرد'
+                                  : 'نمودار',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF183A49)),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(width: 44),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      _buildLegend(),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'با دو انگشت زوم کنید  •  دوبار ضربه: نمایش کامل',
+                        style: TextStyle(fontSize: 11, color: Color(0xFF5E7782)),
+                      ),
+                      const SizedBox(height: 4),
+                      Expanded(
+                        child: (rows.isEmpty || _data.individuals.isEmpty)
+                            ? const SizedBox.shrink()
+                            : ClipRect(
+                                child: _ZoomableChart(
+                                  rows: rows,
+                                  visibility: _data.visibility,
+                                  colorIndices: _data.colorIndices,
+                                  scale: scale,
+                                ),
+                              ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildChartSection() {
     final rows = _data.currentRows;
     final scale = _scaleForRows(rows);
-    const axisWidth = 46.0;
-    const minSpacing = 44.0;
 
+    final hasChart = rows.isNotEmpty && _data.individuals.isNotEmpty;
     return Column(
       children: [
-        Text(
-          _data.currentVariable != null
-              ? 'نمایش و عدم نمایش نمودار ${_data.currentVariable} هر فرد'
-              : 'هیچ متغیری وجود ندارد',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF183A49)),
-          textAlign: TextAlign.center,
+        Row(
+          children: [
+            // دکمه‌ی نمایشِ تمام‌صفحه
+            SizedBox(
+              width: 40,
+              height: 32,
+              child: hasChart
+                  ? IconButton(
+                      padding: EdgeInsets.zero,
+                      tooltip: 'نمایش تمام‌صفحه',
+                      icon: const Icon(Icons.fullscreen, size: 28, color: Color(0xFF183A49)),
+                      onPressed: _openFullScreenChart,
+                    )
+                  : null,
+            ),
+            Expanded(
+              child: Text(
+                _data.currentVariable != null
+                    ? 'نمایش و عدم نمایش نمودار ${_data.currentVariable} هر فرد'
+                    : 'هیچ متغیری وجود ندارد',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF183A49)),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(width: 40),
+          ],
         ),
         const SizedBox(height: 6),
         _buildLegend(),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
+        const Text(
+          'با دو انگشت زوم کنید  •  دوبار ضربه: نمایش کامل',
+          style: TextStyle(fontSize: 11, color: Color(0xFF5E7782)),
+        ),
+        const SizedBox(height: 2),
         Expanded(
           child: (rows.isEmpty || _data.individuals.isEmpty)
               ? const Center(
                   child: Text('برای رسم نمودار، حداقل یک فرد و یک تاریخ اضافه کنید.',
                       style: TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
                 )
-              : LayoutBuilder(builder: (context, constraints) {
-                  // نمودار تمامِ ارتفاعِ در دسترس را می‌گیرد (قبلاً ثابت ۲۰۰ بود)
-                  final chartHeight = math.max(200.0, constraints.maxHeight);
-                  final viewportWidth = constraints.maxWidth - axisWidth;
-                  final n = rows.length;
-                  final neededWidth = n > 1 ? (n - 1) * minSpacing + 30 : viewportWidth;
-                  final drawWidth = math.max(viewportWidth, neededWidth);
-                  return Row(
-                    children: [
-                      SizedBox(
-                        width: axisWidth,
-                        height: chartHeight,
-                        child: CustomPaint(painter: _AxisPainter(scale: scale)),
-                      ),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: SizedBox(
-                            width: drawWidth,
-                            height: chartHeight,
-                            child: CustomPaint(
-                              painter: _LineChartPainter(
-                                rows: rows,
-                                visibility: _data.visibility,
-                                colorIndices: _data.colorIndices,
-                                scale: scale,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                }),
+              : ClipRect(
+                  child: _ZoomableChart(
+                    rows: rows,
+                    visibility: _data.visibility,
+                    colorIndices: _data.colorIndices,
+                    scale: scale,
+                  ),
+                ),
         ),
       ],
     );
@@ -1314,93 +1391,190 @@ _ChartScale _scaleForRows(List<ChartRow> rows) {
 }
 
 // =============================================================================
-// نقاش محور عمودی (ستون ثابت، خارج از ناحیه‌ی اسکرول‌شونده‌ی نمودار)
+// نمودارِ داخلِ صفحه با زومِ دو‌انگشتی
 // =============================================================================
+//
+// زوم ۱ = کلِ نمودار دیده می‌شود. با دو انگشت (pinch) تا حدِ دیدنِ یک نقطه زوم
+// می‌شود؛ با یک انگشت جابه‌جا می‌شود؛ دوبار ضربه = برگشت به نمایشِ کامل.
+// اندازه‌ی نقطه‌ها و خط‌ها هنگامِ زوم ثابت می‌ماند و محورها هماهنگ با زوم
+// دوباره محاسبه می‌شوند (مثلِ نمودارهای حرفه‌ای).
 
-class _AxisPainter extends CustomPainter {
-  final _ChartScale scale;
-  final double paddingTop;
-  final double paddingBottom;
-
-  _AxisPainter({required this.scale, this.paddingTop = 20, this.paddingBottom = 34});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final drawingHeight = size.height - paddingTop - paddingBottom;
-    double valueToY(double val) => paddingTop + (1 - (val - scale.min) / (scale.max - scale.min)) * drawingHeight;
-    final tickCount = ((scale.max - scale.min) / scale.step).round();
-    String? lastLabel;
-    double? lastY;
-    for (int i = 0; i <= tickCount; i++) {
-      final tickVal = scale.min + i * scale.step;
-      final formatted = _formatAxisValue(tickVal, scale.step);
-      final y = valueToY(tickVal);
-      if (formatted == lastLabel || (lastY != null && (y - lastY).abs() < 20)) continue;
-      lastLabel = formatted;
-      lastY = y;
-      final tp = TextPainter(
-        text: TextSpan(text: formatted, style: const TextStyle(color: Color(0xFF4A5B57), fontWeight: FontWeight.bold, fontSize: 13)),
-        textDirection: TextDirection.rtl,
-      )..layout();
-      tp.paint(canvas, Offset(size.width - tp.width - 4, y - tp.height / 2));
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _AxisPainter oldDelegate) =>
-      oldDelegate.scale.min != scale.min || oldDelegate.scale.max != scale.max || oldDelegate.scale.step != scale.step;
-}
-
-// =============================================================================
-// نقاش نمودار خطی (ناحیه‌ی اسکرول‌شونده‌ی افقی)
-// =============================================================================
-
-class _LineChartPainter extends CustomPainter {
+class _ZoomableChart extends StatefulWidget {
   final List<ChartRow> rows;
   final List<bool> visibility;
   final List<int> colorIndices;
   final _ChartScale scale;
-  final double innerLeftPad;
-  final double innerRightPad;
-  final double paddingTop;
-  final double paddingBottom;
-
-  _LineChartPainter({
+  const _ZoomableChart({
     required this.rows,
     required this.visibility,
     required this.colorIndices,
     required this.scale,
-    this.innerLeftPad = 14,
-    this.innerRightPad = 15,
-    this.paddingTop = 20,
-    this.paddingBottom = 34,
   });
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final drawingHeight = size.height - paddingTop - paddingBottom;
-    double valueToY(double val) => paddingTop + (1 - (val - scale.min) / (scale.max - scale.min)) * drawingHeight;
-    final n = rows.length;
-    final plotWidth = size.width - innerLeftPad - innerRightPad;
-    final xStep = n > 1 ? plotWidth / (n - 1) : 0.0;
-    final showValues = xStep >= 30;
-    int visibleOrder = 0;
+  State<_ZoomableChart> createState() => _ZoomableChartState();
+}
 
+class _ZoomableChartState extends State<_ZoomableChart> {
+  static const double _leftAxis = 46, _rightPad = 14, _topPad = 14, _bottomPad = 46;
+  static const double _xEdge = 0.4; // کمی حاشیه تا نقطه‌های اول و آخر بریده نشوند
+
+  double _zoom = 1;
+  double _x0 = 0; // اندیسِ ستونی که لبه‌ی چپِ نمودار است
+  double _y0 = 0; // مقداری که لبه‌ی پایینِ نمودار است
+  double _startZoom = 1, _focusX = 0, _focusY = 0;
+  double _plotW = 1, _plotH = 1;
+
+  int get _n => widget.rows.length;
+  double get _fullX0 => -_xEdge;
+  double get _fullXW => (_n > 1 ? (_n - 1).toDouble() : 0.0) + 2 * _xEdge;
+  double get _fullY0 => widget.scale.min;
+  double get _fullYW => widget.scale.max - widget.scale.min;
+  double get _maxZoom => math.max(8.0, 2.0 * (_n - 1));
+
+  @override
+  void initState() {
+    super.initState();
+    _resetView();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ZoomableChart old) {
+    super.didUpdateWidget(old);
+    // اگر تعدادِ تاریخ‌ها یا بازه‌ی عددی عوض شد، به نمایشِ کامل برگرد
+    if (old.rows.length != widget.rows.length ||
+        old.scale.min != widget.scale.min ||
+        old.scale.max != widget.scale.max) {
+      _resetView();
+    }
+  }
+
+  void _resetView() {
+    _zoom = 1;
+    _x0 = _fullX0;
+    _y0 = _fullY0;
+  }
+
+  void _clampView() {
+    final wx = _fullXW / _zoom, wy = _fullYW / _zoom;
+    _x0 = _x0.clamp(_fullX0, _fullX0 + _fullXW - wx).toDouble();
+    _y0 = _y0.clamp(_fullY0, _fullY0 + _fullYW - wy).toDouble();
+  }
+
+  Offset _toData(Offset local) {
+    final wx = _fullXW / _zoom, wy = _fullYW / _zoom;
+    final dx = _x0 + (local.dx - _leftAxis) / _plotW * wx;
+    final dy = _y0 + (1 - (local.dy - _topPad) / _plotH) * wy;
+    return Offset(dx, dy);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final size = constraints.biggest;
+      _plotW = math.max(1.0, size.width - _leftAxis - _rightPad);
+      _plotH = math.max(1.0, size.height - _topPad - _bottomPad);
+      _clampView();
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onDoubleTap: () => setState(_resetView),
+        onScaleStart: (d) {
+          _startZoom = _zoom;
+          final p = _toData(d.localFocalPoint);
+          _focusX = p.dx;
+          _focusY = p.dy;
+        },
+        onScaleUpdate: (d) {
+          setState(() {
+            _zoom = (_startZoom * d.scale).clamp(1.0, _maxZoom).toDouble();
+            final wx = _fullXW / _zoom, wy = _fullYW / _zoom;
+            // نقطه‌ی زیرِ انگشت‌ها ثابت می‌ماند (هم برای زوم، هم برای جابه‌جایی)
+            _x0 = _focusX - (d.localFocalPoint.dx - _leftAxis) / _plotW * wx;
+            _y0 = _focusY - (1 - (d.localFocalPoint.dy - _topPad) / _plotH) * wy;
+            _clampView();
+          });
+        },
+        child: CustomPaint(
+          size: size,
+          painter: _ZoomChartPainter(
+            rows: widget.rows,
+            visibility: widget.visibility,
+            colorIndices: widget.colorIndices,
+            x0: _x0,
+            wx: _fullXW / _zoom,
+            y0: _y0,
+            wy: _fullYW / _zoom,
+            plotL: _leftAxis,
+            plotT: _topPad,
+            plotW: _plotW,
+            plotH: _plotH,
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _ZoomChartPainter extends CustomPainter {
+  final List<ChartRow> rows;
+  final List<bool> visibility;
+  final List<int> colorIndices;
+  final double x0, wx, y0, wy;
+  final double plotL, plotT, plotW, plotH;
+
+  _ZoomChartPainter({
+    required this.rows,
+    required this.visibility,
+    required this.colorIndices,
+    required this.x0,
+    required this.wx,
+    required this.y0,
+    required this.wy,
+    required this.plotL,
+    required this.plotT,
+    required this.plotW,
+    required this.plotH,
+  });
+
+  double _px(double i) => plotL + (i - x0) / wx * plotW;
+  double _py(double v) => plotT + (1 - (v - y0) / wy) * plotH;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final plotRect = Rect.fromLTWH(plotL, plotT, plotW, plotH);
+
+    // ---- خط‌های راهنما و عددهای محور عمودی (متناسب با زوم) ----
+    final ns = _computeNiceScale(y0, y0 + wy, 6);
     final gridPaint = Paint()
       ..color = const Color(0xFFD7DFDA)
       ..strokeWidth = 1;
-    final tickCount = ((scale.max - scale.min) / scale.step).round();
+    final tickCount = ((ns.max - ns.min) / ns.step).round();
     for (int i = 0; i <= tickCount; i++) {
-      final y = valueToY(scale.min + i * scale.step);
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+      final v = ns.min + i * ns.step;
+      if (v < y0 - ns.step * 1e-6 || v > y0 + wy + ns.step * 1e-6) continue;
+      final y = _py(v);
+      canvas.drawLine(Offset(plotL, y), Offset(plotL + plotW, y), gridPaint);
+      final tp = TextPainter(
+        text: TextSpan(
+          text: _formatAxisValue(v, ns.step),
+          style: const TextStyle(color: Color(0xFF4A5B57), fontWeight: FontWeight.bold, fontSize: 12),
+        ),
+        textDirection: TextDirection.rtl,
+      )..layout();
+      tp.paint(canvas, Offset(plotL - tp.width - 5, y - tp.height / 2));
     }
+    canvas.drawLine(Offset(plotL, plotT + plotH), Offset(plotL + plotW, plotT + plotH),
+        Paint()..color = const Color(0xFF9AA8A2)..strokeWidth = 1.2);
 
+    // ---- خط‌ها و نقطه‌ها (بریده‌شده به ناحیه‌ی نمودار) ----
+    canvas.save();
+    canvas.clipRect(plotRect.inflate(8));
     for (int p = 0; p < visibility.length; p++) {
       if (!visibility[p]) continue;
       final color = Color(chartColorPalette[colorIndices[p] % chartColorPalette.length]);
       final linePaint = Paint()
         ..color = color
-        ..strokeWidth = 2
+        ..strokeWidth = 2.2
         ..strokeCap = StrokeCap.round;
       final dotPaint = Paint()..color = color;
       final borderPaint = Paint()
@@ -1409,40 +1583,41 @@ class _LineChartPainter extends CustomPainter {
         ..strokeWidth = 1;
 
       final points = <Offset>[];
-      final labels = <String>[];
       for (int r = 0; r < rows.length; r++) {
-        final raw = p < rows[r].values.length ? rows[r].values[p] : '';
-        final v = parseFaNumber(raw);
-        if (v != null) {
-          points.add(Offset(innerLeftPad + r * xStep, valueToY(v)));
-          labels.add(toFaDigits(raw.trim()));
-        }
+        final v = p < rows[r].values.length ? parseFaNumber(rows[r].values[p]) : null;
+        if (v != null) points.add(Offset(_px(r.toDouble()), _py(v)));
       }
       for (int i = 0; i < points.length - 1; i++) {
-        canvas.drawLine(points[i], points[i + 1], linePaint);
+        final a = points[i], b = points[i + 1];
+        if ((a.dx < plotL - 8 && b.dx < plotL - 8) || (a.dx > plotL + plotW + 8 && b.dx > plotL + plotW + 8)) {
+          continue;
+        }
+        canvas.drawLine(a, b, linePaint);
       }
       for (final pt in points) {
+        if (pt.dx < plotL - 8 || pt.dx > plotL + plotW + 8) continue;
         canvas.drawCircle(pt, 5, dotPaint);
         canvas.drawCircle(pt, 5, borderPaint);
       }
-      if (showValues) {
-        for (int i = 0; i < points.length; i++) {
-          _paintValueLabel(canvas, labels[i], points[i], color, above: visibleOrder.isEven, fontSize: 11);
-        }
-      }
-      visibleOrder++;
     }
+    canvas.restore();
 
-    // برچسبِ تاریخِ هر ستون، به‌فارسی و به‌صورت مورب زیرِ محورِ افقی؛ این
-    // بخش قبلاً وجود نداشت و فقط نسخه‌ی خروجی/عکسِ نمودار ([_ExportChartPainter])
-    // تاریخ را نشان می‌داد.
-    final axisY = size.height - paddingBottom + 6;
-    for (int r = 0; r < rows.length; r++) {
-      final x = innerLeftPad + r * xStep;
+    // ---- تاریخ‌های زیرِ محور؛ هرچه بیشتر زوم کنید، تاریخ‌های بیشتری دیده می‌شود ----
+    final pxPerIndex = plotW / wx;
+    final stride = math.max(1, (38 / pxPerIndex).ceil());
+    final first = math.max(0, x0.ceil());
+    final last = math.min(rows.length - 1, (x0 + wx).floor());
+    final axisY = plotT + plotH + 8;
+    for (int r = first; r <= last; r++) {
+      if (r % stride != 0) continue;
+      final x = _px(r.toDouble());
+      if (x < plotL - 4 || x > plotL + plotW + 4) continue;
+      canvas.drawLine(Offset(x, plotT + plotH), Offset(x, plotT + plotH + 4),
+          Paint()..color = const Color(0xFF9AA8A2)..strokeWidth = 1);
       final tp = TextPainter(
         text: TextSpan(
           text: rows[r].date,
-          style: const TextStyle(fontSize: 10, color: Color(0xFF4A5B57), fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 11, color: Color(0xFF4A5B57), fontWeight: FontWeight.w600),
         ),
         textDirection: TextDirection.rtl,
       )..layout();
@@ -1455,34 +1630,12 @@ class _LineChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _LineChartPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _ZoomChartPainter old) => true;
 }
 
 // =============================================================================
 // نقاش نسخه‌ی خروجیِ (کامل و بدون اسکرول) نمودار، برای تبدیل به تصویر PNG
 // =============================================================================
-
-/// عددِ یک نقطه را با حاشیه‌ی سفید (برای خوانایی روی خطوط) بالا یا پایینِ نقطه می‌کشد
-void _paintValueLabel(Canvas canvas, String text, Offset pt, Color color,
-    {required bool above, required double fontSize}) {
-  TextPainter build(TextStyle style) => TextPainter(
-        text: TextSpan(text: text, style: style),
-        textDirection: TextDirection.rtl,
-      )..layout();
-  final halo = build(TextStyle(
-    fontSize: fontSize,
-    fontWeight: FontWeight.bold,
-    foreground: Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.5
-      ..color = Colors.white,
-  ));
-  final fill = build(TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold, color: color));
-  final dx = pt.dx - fill.width / 2;
-  final dy = above ? pt.dy - fill.height - 9 : pt.dy + 9;
-  halo.paint(canvas, Offset(dx, dy));
-  fill.paint(canvas, Offset(dx, dy));
-}
 
 class _ExportChartPainter extends CustomPainter {
   final List<ChartRow> rows;
@@ -1524,9 +1677,7 @@ class _ExportChartPainter extends CustomPainter {
       tp.paint(canvas, Offset(leftPad - tp.width - 10, y - tp.height / 2));
     }
 
-    final showValues = spacing >= 30;
-    for (int k = 0; k < visibleIndividuals.length; k++) {
-      final p = visibleIndividuals[k];
+    for (final p in visibleIndividuals) {
       final color = Color(chartColorPalette[colorIndices[p] % chartColorPalette.length]);
       final linePaint = Paint()
         ..color = color
@@ -1538,14 +1689,9 @@ class _ExportChartPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2;
       final points = <Offset>[];
-      final labels = <String>[];
       for (int idx = 0; idx < rows.length; idx++) {
-        final raw = p < rows[idx].values.length ? rows[idx].values[p] : '';
-        final v = parseFaNumber(raw);
-        if (v != null) {
-          points.add(Offset(leftPad + idx * (n > 1 ? spacing : 0), valueToY(v)));
-          labels.add(toFaDigits(raw.trim()));
-        }
+        final v = p < rows[idx].values.length ? parseFaNumber(rows[idx].values[p]) : null;
+        if (v != null) points.add(Offset(leftPad + idx * (n > 1 ? spacing : 0), valueToY(v)));
       }
       for (int i = 0; i < points.length - 1; i++) {
         canvas.drawLine(points[i], points[i + 1], linePaint);
@@ -1553,12 +1699,6 @@ class _ExportChartPainter extends CustomPainter {
       for (final pt in points) {
         canvas.drawCircle(pt, 7, dotPaint);
         canvas.drawCircle(pt, 7, borderPaint);
-      }
-      if (showValues) {
-        // عددِ هر نقطه: نفرِ اول بالای نقطه و نفرِ دوم زیرِ آن، تا روی هم نیفتند
-        for (int i = 0; i < points.length; i++) {
-          _paintValueLabel(canvas, labels[i], points[i], color, above: k.isEven, fontSize: 14);
-        }
       }
     }
   }
