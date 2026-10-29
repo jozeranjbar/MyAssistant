@@ -89,6 +89,11 @@ class ChartBoardData {
   String? currentVariable;
   Map<String, List<ChartRow>> dataByVariable;
 
+  /// برای هر متغیر، اندیسِ افرادی که «صراحتاً» به آن متغیر اضافه شده‌اند، حتی اگر
+  /// هنوز عددی برایشان ننوشته‌اید (تا ستونشان برای نوشتنِ اولین عدد نمایش داده شود).
+  /// هر فردی که در یک متغیر عدد داشته باشد، خودبه‌خود در همان متغیر نمایش داده می‌شود.
+  Map<String, List<int>> pinnedByVariable;
+
   ChartBoardData({
     List<String>? individuals,
     List<bool>? visibility,
@@ -97,7 +102,9 @@ class ChartBoardData {
     List<String>? variables,
     this.currentVariable,
     Map<String, List<ChartRow>>? dataByVariable,
-  })  : individuals = individuals ?? [],
+    Map<String, List<int>>? pinnedByVariable,
+  })  : pinnedByVariable = pinnedByVariable ?? {},
+        individuals = individuals ?? [],
         visibility = visibility ?? [],
         colorIndices = colorIndices ?? [],
         variables = variables ?? [kDefaultChartVariable],
@@ -125,6 +132,30 @@ class ChartBoardData {
     );
   }
 
+  /// آیا این فرد در این متغیر دست‌کم یک مقدارِ عددی دارد؟
+  bool hasValueIn(String variable, int person) {
+    final rows = dataByVariable[variable];
+    if (rows == null) return false;
+    return rows.any((r) => person < r.values.length && parseFaNumber(r.values[person]) != null);
+  }
+
+  /// آیا این فرد باید در این متغیر نمایش داده شود؟ (عدد دارد، یا صراحتاً اضافه شده)
+  bool isActiveIn(String? variable, int person) {
+    if (variable == null) return false;
+    return (pinnedByVariable[variable]?.contains(person) ?? false) || hasValueIn(variable, person);
+  }
+
+  /// اندیسِ افرادی که در این متغیر نمایش داده می‌شوند (به ترتیبِ فهرستِ افراد)
+  List<int> activePeople(String? variable) =>
+      [for (int i = 0; i < individuals.length; i++) if (isActiveIn(variable, i)) i];
+
+  void pinPerson(String variable, int person) {
+    final list = pinnedByVariable.putIfAbsent(variable, () => []);
+    if (!list.contains(person)) list.add(person);
+  }
+
+  void unpinPerson(String variable, int person) => pinnedByVariable[variable]?.remove(person);
+
   List<ChartRow> get currentRows =>
       currentVariable != null ? (dataByVariable[currentVariable!] ?? const []) : const [];
 
@@ -150,6 +181,13 @@ class ChartBoardData {
     individuals.removeAt(index);
     visibility.removeAt(index);
     colorIndices.removeAt(index);
+    // اندیس‌های بعد از فردِ حذف‌شده یکی کم می‌شوند
+    for (final key in pinnedByVariable.keys.toList()) {
+      pinnedByVariable[key] = [
+        for (final i in pinnedByVariable[key]!)
+          if (i != index) (i > index ? i - 1 : i),
+      ];
+    }
     for (final rows in dataByVariable.values) {
       for (final row in rows) {
         if (index < row.values.length) row.values.removeAt(index);
@@ -166,6 +204,7 @@ class ChartBoardData {
   void removeVariable(String name) {
     variables.remove(name);
     dataByVariable.remove(name);
+    pinnedByVariable.remove(name);
     if (currentVariable == name) {
       currentVariable = variables.isNotEmpty ? variables.first : null;
     }
@@ -191,6 +230,7 @@ class ChartBoardData {
     nextColorIndex = 0;
     variables = List<String>.from(kDefaultChartVariables);
     dataByVariable = {for (final v in kDefaultChartVariables) v: <ChartRow>[]};
+    pinnedByVariable = {};
     currentVariable = kDefaultChartVariables.first;
   }
 
@@ -203,6 +243,7 @@ class ChartBoardData {
         'currentVariable': currentVariable,
         'dataByVariable':
             dataByVariable.map((k, v) => MapEntry(k, v.map((r) => r.toJson()).toList())),
+        'pinned': pinnedByVariable,
       };
 
   factory ChartBoardData.fromJson(Map<String, dynamic> json) {
@@ -256,7 +297,19 @@ class ChartBoardData {
             ? currentVariableRaw.toString()
             : variables.first;
 
-    return ChartBoardData(
+    final pinned = <String, List<int>>{};
+    final rawPinned = json['pinned'];
+    if (rawPinned is Map) {
+      rawPinned.forEach((key, value) {
+        if (!variables.contains(key.toString()) || value is! List) return;
+        pinned[key.toString()] = [
+          for (final e in value)
+            if (e is num && e.toInt() >= 0 && e.toInt() < individuals.length) e.toInt(),
+        ];
+      });
+    }
+
+    final data = ChartBoardData(
       individuals: individuals,
       visibility: visibility,
       colorIndices: colorIndices,
@@ -264,6 +317,17 @@ class ChartBoardData {
       variables: variables,
       currentVariable: currentVariable,
       dataByVariable: dataByVariable,
+      pinnedByVariable: pinned,
     );
+
+    // داده‌های قدیمی (بدون این قابلیت): فردی که در هیچ متغیری عدد ندارد از دید
+    // نمی‌افتد؛ در متغیرِ جاری اضافه می‌شود.
+    if (rawPinned == null) {
+      for (int i = 0; i < individuals.length; i++) {
+        final hasAny = variables.any((v) => data.hasValueIn(v, i));
+        if (!hasAny) data.pinPerson(currentVariable, i);
+      }
+    }
+    return data;
   }
 }
