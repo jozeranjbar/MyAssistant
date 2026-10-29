@@ -1511,8 +1511,12 @@ class _ZoomableChartState extends State<_ZoomableChart> {
 
   void _clampView() {
     final wx = _fullXW / _zoom, wy = _fullYW / _zoom;
-    _x0 = _x0.clamp(_fullX0, _fullX0 + _fullXW - wx).toDouble();
-    _y0 = _y0.clamp(_fullY0, _fullY0 + _fullYW - wy).toDouble();
+    // به‌خاطرِ خطای گردکردنِ اعشاری، حدِ بالا ممکن است ذره‌ای کمتر از حدِ پایین شود
+    // (مثلاً وقتی فقط ۲ تاریخ دارید) و clamp خطا بدهد؛ پس با max محافظت می‌کنیم.
+    final maxX0 = math.max(_fullX0, _fullX0 + _fullXW - wx);
+    final maxY0 = math.max(_fullY0, _fullY0 + _fullYW - wy);
+    _x0 = _x0.clamp(_fullX0, maxX0).toDouble();
+    _y0 = _y0.clamp(_fullY0, maxY0).toDouble();
   }
 
   Offset _toData(Offset local) {
