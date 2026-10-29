@@ -51,6 +51,15 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
     _loadShowValues();
   }
 
+  /// افرادی که در متغیرِ جاری نمایش داده می‌شوند (عدد دارند یا صراحتاً اضافه شده‌اند)
+  List<int> get _activePeople => _data.activePeople(_data.currentVariable);
+
+  /// نمایشِ افراد روی نمودار: چراغِ روشن و حاضر در این متغیر
+  List<bool> get _chartVisibility {
+    final active = _activePeople.toSet();
+    return [for (int i = 0; i < _data.individuals.length; i++) _data.visibility[i] && active.contains(i)];
+  }
+
   static const String _showValuesKey = 'chart_show_values';
   // چراغِ «اعدادِ نقاط»: روشن = عددِ هر نقطه (بدونِ واحدِ «کیلو» و ...) روی نمودار نوشته می‌شود
   bool _showValues = false;
@@ -382,6 +391,15 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text('افراد', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF6B4D2E))),
+                if (_data.currentVariable != null && _data.individuals.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      'تیک = نمایش در متغیر «${_data.currentVariable}»',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 11, color: Color(0xFF8B7355)),
+                    ),
+                  ),
                 const SizedBox(height: 10),
                 for (int i = 0; i < _data.individuals.length; i++)
                   Container(
@@ -394,6 +412,24 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                     ),
                     child: Row(
                       children: [
+                        Checkbox(
+                          value: _data.isActiveIn(_data.currentVariable, i),
+                          visualDensity: VisualDensity.compact,
+                          onChanged: _data.currentVariable == null
+                              ? null
+                              : (v) async {
+                                  final cv = _data.currentVariable!;
+                                  if (v == true) {
+                                    _data.pinPerson(cv, i);
+                                  } else if (_data.hasValueIn(cv, i)) {
+                                    // در این متغیر عدد دارد؛ تا عددهایش پاک نشود نمی‌توان او را برداشت
+                                    _showSnack('«${_data.individuals[i]}» در این متغیر مقدار دارد؛ برای برداشتنش ابتدا مقدارهایش را پاک کنید.');
+                                  } else {
+                                    _data.unpinPerson(cv, i);
+                                  }
+                                  await refresh();
+                                },
+                        ),
                         IconButton(
                           icon: const Icon(Icons.edit, color: Color(0xFF2C6B9E), size: 20),
                           tooltip: 'ویرایش',
@@ -452,6 +488,8 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                       return;
                     }
                     _data.addPerson(name);
+                    final cv = _data.currentVariable;
+                    if (cv != null) _data.pinPerson(cv, _data.individuals.length - 1);
                     await refresh();
                   },
                   icon: const Icon(Icons.person_add),
@@ -608,7 +646,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
               ),
             ),
           ),
-          for (int i = 0; i < _data.individuals.length; i++)
+          for (final i in _activePeople)
             SizedBox(
               width: colWidth,
               child: TextField(
@@ -672,7 +710,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
               ),
             ),
           ),
-          for (int i = 0; i < _data.individuals.length; i++)
+          for (final i in _activePeople)
             SizedBox(
               width: colWidth,
               child: const Center(
@@ -686,7 +724,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
 
   Widget _buildTable() {
     final rows = _data.currentRows;
-    final people = _data.individuals;
+    final people = _activePeople;
     const dateColWidth = 150.0;
     const colWidth = 92.0;
     const rowHeight = 56.0;
@@ -714,8 +752,8 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                   child: Row(
                     children: [
                       _headerCell('تاریخ', dateColWidth, const Color(0xFF183A49)),
-                      for (int i = 0; i < people.length; i++)
-                        _headerCell(people[i], colWidth, Color(_data.colorOf(i))),
+                      for (final i in people)
+                        _headerCell(_data.individuals[i], colWidth, Color(_data.colorOf(i))),
                     ],
                   ),
                 ),
@@ -748,13 +786,14 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
   // ---------------------------------------------------------------------
 
   Widget _buildLegend() {
-    if (_data.individuals.isEmpty) return const SizedBox.shrink();
+    final activePeople = _activePeople;
+    if (activePeople.isEmpty) return const SizedBox.shrink();
     return Wrap(
       spacing: 8,
       runSpacing: 6,
       alignment: WrapAlignment.center,
       children: [
-        for (int i = 0; i < _data.individuals.length; i++)
+        for (final i in activePeople)
           GestureDetector(
             onTap: () {
               setState(() => _data.visibility[i] = !_data.visibility[i]);
@@ -873,7 +912,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                             : ClipRect(
                                 child: _ZoomableChart(
                                   rows: rows,
-                                  visibility: _data.visibility,
+                                  visibility: _chartVisibility,
                                   colorIndices: _data.colorIndices,
                                   scale: scale,
                                   showValues: _showValues,
@@ -933,7 +972,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
               : ClipRect(
                   child: _ZoomableChart(
                     rows: rows,
-                    visibility: _data.visibility,
+                    visibility: _chartVisibility,
                     colorIndices: _data.colorIndices,
                     scale: scale,
                     showValues: _showValues,
@@ -1095,7 +1134,8 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
       return const SizedBox(width: 1, height: 1);
     }
     final scale = _scaleForRows(rows);
-    final visiblePeople = [for (int i = 0; i < _data.individuals.length; i++) if (_data.visibility[i]) i];
+    final activeNow = _activePeople;
+    final visiblePeople = [for (final i in activeNow) if (_data.visibility[i]) i];
     // ابعاد طوری انتخاب می‌شود که تصویر نسبتِ «عادی» (نه خیلی پهن) داشته باشد و
     // در گالری بزرگ و خوانا دیده شود: فاصله‌ی نقطه‌ها متوسط، و ارتفاعِ نمودار
     // متناسب با عرض است.
@@ -1338,6 +1378,15 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildTable(),
+                    if (_data.individuals.isNotEmpty && _activePeople.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 6),
+                        child: Text(
+                          'هنوز فردی در این متغیر نیست؛ از منوی «افراد» تیکِ فرد را بزنید.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12, color: Color(0xFF6B4D2E)),
+                        ),
+                      ),
                     const SizedBox(height: 8),
                     Expanded(
                       child: Container(
