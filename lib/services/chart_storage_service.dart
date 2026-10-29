@@ -25,8 +25,8 @@ class ChartStorageService {
   }
 
   /// خروجی متنی (JSON) برای پشتیبان‌گیری؛ فرمت با تورفتگی برای خوانایی بهتر.
-  String exportBackupJson(ChartBoardData data) =>
-      const JsonEncoder.withIndent('  ').convert(data.toJson());
+  /// فشرده (بدون فاصله و خط جدید): حجمِ متن کمتر و انتقالش از راهِ پیام‌رسان‌ها مطمئن‌تر است.
+  String exportBackupJson(ChartBoardData data) => jsonEncode(data.toJson());
 
   /// بررسی و تبدیل متن JSON پشتیبان به مدل؛ در صورت نامعتبر بودن ساختار، null
   /// برمی‌گرداند (بدون اینکه چیزی در برنامه تغییر کند).
