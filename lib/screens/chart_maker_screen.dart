@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -981,7 +982,7 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
           TextButton(
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: json));
-              _showSnack('متن پشتیبان کپی شد.');
+              _showSnack('متن پشتیبان کپی شد (${toFaDigits(json.length.toString())} کاراکتر).');
             },
             child: const Text('📋 کپی متن'),
           ),
@@ -1010,33 +1011,51 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
 
   Future<void> _showRestoreSheet() async {
     final controller = TextEditingController();
-    String? error;
+    _BackupCheck check = const _BackupCheck(null, '');
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(builder: (ctx, setDialogState) {
+        void recheck() => setDialogState(() => check = _inspectBackup(controller.text, _storage));
         return AlertDialog(
           title: const Text('بازیابی از پشتیبان', textAlign: TextAlign.center),
           content: SizedBox(
             width: 320,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('فایل پشتیبان را از طریق «اشتراک‌گذاری فایل» فرستاده‌اید؟ متن JSON آن را اینجا جای‌گذاری (Paste) کنید:',
-                    style: TextStyle(fontSize: 12)),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: controller,
-                  maxLines: 6,
-                  textDirection: TextDirection.ltr,
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
-                  decoration: const InputDecoration(border: OutlineInputBorder()),
-                ),
-                if (error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(error!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('متن پشتیبان را اینجا جای‌گذاری کنید. اگر متن طولانی است، بهتر است از دکمه‌ی «چسباندن از کلیپ‌بورد» استفاده کنید:',
+                      style: TextStyle(fontSize: 12)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: controller,
+                    maxLines: 6,
+                    onChanged: (_) => recheck(),
+                    textDirection: TextDirection.ltr,
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                    decoration: const InputDecoration(border: OutlineInputBorder()),
                   ),
-              ],
+                  const SizedBox(height: 6),
+                  // چسباندنِ مستقیم از کلیپ‌بوردِ سیستم (بدونِ واسطه‌ی کیبورد)
+                  OutlinedButton(
+                    onPressed: () async {
+                      final clip = await Clipboard.getData(Clipboard.kTextPlain);
+                      controller.text = clip?.text ?? '';
+                      recheck();
+                    },
+                    child: const Text('📋 چسباندن از کلیپ‌بورد'),
+                  ),
+                  if (check.message.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        check.message,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: check.ok ? const Color(0xFF2E7D32) : Colors.red, fontSize: 12),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
           actionsAlignment: MainAxisAlignment.center,
@@ -1044,16 +1063,10 @@ class _ChartMakerScreenState extends State<ChartMakerScreen> {
             TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('انصراف')),
             ElevatedButton(
               onPressed: () async {
-                final text = controller.text.trim();
-                if (text.isEmpty) {
-                  setDialogState(() => error = 'متنی جای‌گذاری نشده است.');
-                  return;
-                }
-                final parsed = _storage.parseBackupJson(text);
-                if (parsed == null) {
-                  setDialogState(() => error = 'متن وارد شده یک پشتیبان معتبر نیست.');
-                  return;
-                }
+                final c = _inspectBackup(controller.text, _storage);
+                setDialogState(() => check = c);
+                final parsed = c.data;
+                if (parsed == null) return;
                 Navigator.pop(dialogContext);
                 final ok = await _confirm(
                     'بازیابی از پشتیبان، تمام اطلاعات فعلی برنامه را با اطلاعات این فایل جایگزین می‌کند. آیا مطمئن هستید؟');
@@ -1716,6 +1729,45 @@ class _ZoomChartPainter extends CustomPainter {
 // =============================================================================
 // نقاش نسخه‌ی خروجیِ (کامل و بدون اسکرول) نمودار، برای تبدیل به تصویر PNG
 // =============================================================================
+
+/// نتیجه‌ی بررسیِ متنِ پشتیبان
+class _BackupCheck {
+  final ChartBoardData? data;
+  final String message;
+  const _BackupCheck(this.data, this.message);
+  bool get ok => data != null;
+}
+
+/// متنِ پشتیبان را بررسی می‌کند و اگر مشکلی دارد (مثلاً هنگامِ انتقال بریده شده)
+/// دقیق می‌گوید چیست. متنِ اضافه قبل از { و بعد از } (مثلاً از پیام‌رسان) نادیده گرفته می‌شود.
+_BackupCheck _inspectBackup(String raw, ChartStorageService storage) {
+  var text = raw.trim();
+  if (text.isEmpty) return const _BackupCheck(null, '');
+  final start = text.indexOf('{');
+  final end = text.lastIndexOf('}');
+  if (start < 0 || end < start) {
+    return _BackupCheck(null,
+        'متن ناقص است (${toFaDigits(text.length.toString())} کاراکتر) و پایانِ آن نیست؛ کپی کامل انجام نشده است.');
+  }
+  text = text.substring(start, end + 1);
+  final data = storage.parseBackupJson(text);
+  if (data != null) {
+    final rows = data.dataByVariable.values.fold<int>(0, (a, b) => a + b.length);
+    return _BackupCheck(
+        data,
+        '✓ پشتیبانِ معتبر: ${toFaDigits(data.individuals.length.toString())} نفر، '
+        '${toFaDigits(data.variables.length.toString())} متغیر، ${toFaDigits(rows.toString())} ردیف '
+        '(${toFaDigits(text.length.toString())} کاراکتر)');
+  }
+  try {
+    jsonDecode(text);
+    return const _BackupCheck(null, 'ساختارِ این متن، پشتیبانِ این برنامه نیست.');
+  } on FormatException {
+    return _BackupCheck(null,
+        'متن بریده یا ناقص است (${toFaDigits(text.length.toString())} کاراکتر). '
+        'احتمالاً هنگامِ انتقال کوتاه شده؛ دوباره کپی کنید یا از «چسباندن از کلیپ‌بورد» استفاده کنید.');
+  }
+}
 
 /// فقط بخشِ عددیِ مقدار («۵۲ کیلو» ← «۵۲»؛ «51.65» ← «۵۱٫۶۵»)
 String chartValueLabel(String raw) {
